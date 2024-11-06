@@ -152,3 +152,13 @@ In order to build the compiler for the Oberon-0 programming language using CMake
 
 Once the build successfully terminates, the executable of the compiler for the Oberon-0 programming language can be 
 found in the `build` directory. 
+
+
+### docker
+
+```bash
+docker build -t oberon0c-build . 
+docker create --name extract-container oberon0c-build
+docker cp extract-container:/usr/src/app/build/oberon0c .
+docker rm extract-container
+```
