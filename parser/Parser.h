@@ -21,6 +21,39 @@ private:
     Logger &logger_;
 
     const string ident();
+    void integer();
+    void selector();
+    void number();
+    void factor();
+    void term();
+
+    void simple_expression();
+    void expression();
+    void assignment();
+
+    void actual_parameters();
+    void procedure_call();
+
+    void if_statement();
+    void while_statement();
+    void repeat_statement();
+    void statement();
+    void statement_sequence();
+
+    void ident_list();
+    void field_list();
+
+    void type();
+    void array_type();
+    void record_type();
+
+    void fp_section();
+    void formal_parameters();
+
+    void procedure_heading();
+    void procedure_body();
+    void procedure_declaration();
+    void declarations();
 
     void module();
 
