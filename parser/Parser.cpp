@@ -12,7 +12,7 @@ const string Parser::ident() {
         return nullptr;                                    // success
     }
 
-    return nullptr; // Syntax Error
+    return nullptr; // Syntax Error (Expected Identifier, but got)
 
 }
 
@@ -23,7 +23,7 @@ void Parser::integer() {
         return; // Success
     }
 
-    return; // Syntax Error
+    return; // Syntax Error (Expected Integer, but got)
 }
 
 // number -> integer
@@ -49,7 +49,7 @@ void Parser::selector() {
             if(token_type == TokenType::rbrack){
                 scanner_.next();
             }else{
-                return; // Syntax Error
+                return; // Syntax Error (Expected ")" but got)
             }
         }
 
@@ -67,10 +67,10 @@ void Parser::factor() {
         case TokenType::const_ident:
             ident();
             selector();
-            break;
+            return;
         case TokenType::int_literal:
             number();
-            break;
+            return;
         case TokenType::lparen:
             scanner_.next();
             expression();
@@ -80,17 +80,16 @@ void Parser::factor() {
                 return;
                 // successful
             }
-            break;
+            return;
         case TokenType::op_not:
             scanner_.next();
             factor();
             return;                 // successful
         default:
-            // syntax error
-            break;
+            // syntax error (Expected identifier, integer, "(" or "~", but got)
+            return;
     }
 
-    return; // report Syntax Error
 }
 
 // term -> factor (("*" | "DIV" | "MOD" | "&") factor)*
@@ -157,7 +156,7 @@ void Parser::assignment() {
         return;
     }
 
-    return; //Syntax Error
+    return; //Syntax Error (Expected ":=", but got...) (Special Cases: Did you put "=" instead ":=" ? Did you forget the "=" after the ":")
 }
 
 // ActualParameters -> "(" (expression ("," expression)*)? ")"
@@ -189,11 +188,11 @@ void Parser::actual_parameters() {
             return;
         }
         else{
-            // Syntax Error
+            // Syntax Error (Expected ")", but got...)
         }
     }
 
-    return; // Syntax Error
+    return; // Syntax Error (Expected "(", but got...)
 
 }
 
@@ -240,7 +239,7 @@ void Parser::if_statement() {
                     scanner_.next();
                     statement_sequence();
                 }else{
-                    return; // Syntax Error
+                    return; // Syntax Error (Expected "THEN" after "ELSIF")
                 }
 
                 token_type = scanner_.peek()->type();
@@ -261,10 +260,13 @@ void Parser::if_statement() {
 
 
         }
+        else{
+            return; // Syntax Error (Expected "THEN" after IF)
+        }
 
     }
 
-    return; // Syntax Error
+    return; // Syntax Error (Expected "if", but got...)
 }
 
 // WhileStatement -> "WHILE" expression "DO" StatementSequence "END"
@@ -285,10 +287,16 @@ void Parser::while_statement() {
                 scanner_.next();
                 return; // successful;
             }
+            else{
+                return; // Syntax Error (No "END" after While Statement)
+            }
+        }
+        else{
+            return; // Syntax Error (No "DO" after "WHILE")
         }
     }
 
-    return; // Syntax Error
+    return; // Syntax Error (Expected "While", but got...)
 }
 
 // RepeatStatement -> "REPEAT" StatementSequence "UNTIL" expression
@@ -305,13 +313,16 @@ void Parser::repeat_statement() {
             expression();
             return;
         }
+        else{
+            return; // Syntax Error (No "UNTIL" after "REPEAT")
+        }
     }
 
-    return; // Syntax Error
+    return; // Syntax Error (Expected "REPEAT" but got...)
 }
 
 // Statement -> (assignment | Procedure Call | IfStatement | WhileStatement)
-// Note: While not included in the CompilerConstruction book, this should contain "RepeatStatement" as well?
+// Note: While not included in the CompilerConstruction book, this should contain "RepeatStatement" as well
 void Parser::statement() {
 
     auto token_type = scanner_.peek()->type();
@@ -373,7 +384,7 @@ void Parser::statement() {
         return;
     }
 
-    return; // Syntax Error
+    return; // Syntax Error (Empty or Undefined Statement. Expected Identifier, "IF", "WHILE" or "REPEAT" but got...)
 
 }
 
@@ -421,7 +432,7 @@ void Parser::field_list() {
         return;
     }
 
-    return; // Syntax Error
+    return; // Syntax Error (Expected ":", but got...)
 
 }
 
@@ -464,12 +475,12 @@ void Parser::array_type() {
             return;
         }
         else{
-            return; // Syntax Error
+            return; // Syntax Error (No "OF" after "ARRAY" in Type Description)
         }
 
     }
 
-    return; // Syntax Error
+    return; // Syntax Error (Expected "ARRAY" but got, ...)
 }
 
 // RecordType = "RECORD" FieldList (";" FieldList)* "END"
@@ -492,12 +503,12 @@ void Parser::record_type() {
             return; // Success
         }
         else{
-            return; // Syntax Error
+            return; // Syntax Error (No "END" after Record Type Declaration)
         }
 
     }
 
-    return; // Syntax Error
+    return; // Syntax Error (Expected "RECORD", but got...)
 }
 
 // FPSection -> ("VAR")? IdentList ":" type
@@ -517,7 +528,7 @@ void Parser::fp_section() {
         return;
     }
 
-    return; // Syntax Error
+    return; // Syntax Error(Expected ":", but got...)
 
 }
 
@@ -551,12 +562,12 @@ void Parser::formal_parameters() {
             return; // Success
         }
         else{
-            return; // Syntax Error
+            return; // Syntax Error (Expected ")", but got...)
         }
 
     }
 
-    return; // Syntax Error
+    return; // Syntax Error (Expected "(", but got...)
 }
 
 // ProcedureHeading -> "PROCEDURE" Ident (FormalParameters)?
@@ -577,7 +588,7 @@ void Parser::procedure_heading() {
 
     }
 
-    return; // Syntax Error
+    return; // Syntax Error (Expected "PROCEDURE", but got...)
 }
 
 // ProcedureBody -> declarations ("BEGIN" StatementSequence)? "END" ident
@@ -599,7 +610,7 @@ void Parser::procedure_body() {
         return;
     }
 
-    return; // Syntax Error
+    return; // Syntax Error (No "END" in Procedure Body) / (Expected "END", but got...)
 }
 
 // ProcedureDeclaration = ProcedureHeading ";" ProcedureBody
@@ -614,7 +625,7 @@ void Parser::procedure_declaration() {
         return;
     }
 
-    return; // Syntax Error
+    return; // Syntax Error (Expected ";", but got...)
 
 }
 
@@ -644,13 +655,13 @@ void Parser::declarations() {
                     scanner_.next();
                     token_type = scanner_.peek()->type();
                 }else{
-                    return; // Syntax Error
+                    return; // Syntax Error (Expected ";", but got...)
                 }
 
 
             }
             else{
-                return; // Syntax Error
+                return; // Syntax Error (Expected "=" after identifier)
             }
 
 
@@ -676,12 +687,12 @@ void Parser::declarations() {
                     scanner_.next();
                     token_type = scanner_.peek()->type();
                 }else{
-                    return; // Syntax error
+                    return; // Syntax error (Expected ";", but got...)
                 }
 
             }
             else{
-                return; // Syntax Error
+                return; // Syntax Error (Expected "=" after identifier, but got...)
             }
 
 
@@ -708,11 +719,11 @@ void Parser::declarations() {
                     scanner_.next();
                     token_type = scanner_.peek()->type();
                 }else{
-                    return; // Syntax Error
+                    return; // Syntax Error (Expected ";", but got...)
                 }
 
             }else{
-                return; // Syntax Error
+                return; // Syntax Error (Expected ":" after identifiers, but got...)
             }
 
         }
@@ -728,7 +739,7 @@ void Parser::declarations() {
             scanner_.next();
             token_type = scanner_.peek()->type();
         }else{
-            return; // Syntax Error
+            return; // Syntax Error (Expected ";" after Procedure Declarations, but got...)
         }
 
     }
@@ -767,32 +778,17 @@ void Parser::module() {
                     return;
                 }
 
-                return; // Syntax Error
+                return; // Syntax Error (Expected "." at the end of module, but got...)
 
             }
 
-            return; // Syntax Error
+            return; // Syntax Error (No "END" at the end of Module)
 
 
         }else{
-            return; // Syntax Error
+            return; // Syntax Error (Expected ";", but got...)
         }
     }
 
-    return; // Syntax Error
+    return; // Syntax Error (Expected keyword "Module", but got...)
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
