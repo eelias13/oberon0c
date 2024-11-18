@@ -9,6 +9,7 @@
 const string Parser::ident() {
     auto token = scanner_.peek();
     if(token->type() == TokenType::const_ident){
+        scanner_.next();
         return nullptr;                                    // success
     }
 
@@ -20,6 +21,7 @@ const string Parser::ident() {
 void Parser::integer() {
     auto token_type = scanner_.peek()->type();
     if(token_type == TokenType::int_literal){
+        scanner_.next();
         return; // Success
     }
 
@@ -201,19 +203,12 @@ void Parser::procedure_call() {
     ident();
     selector();
 
-    // Check FOLLOWS(ProcedureCall) to see whether the (ActualParameters) term exists
-    // FOLLOWS(ProcedureCall) = ; END ELSE ELSIF UNTIL
+    // Check for parenthesis to see whether ActualParameters term exists
     auto token_type = scanner_.peek()->type();
-    if(token_type == TokenType::semicolon || token_type == TokenType::kw_end ||
-       token_type == TokenType::kw_else   || token_type == TokenType::kw_elsif ||
-       token_type == TokenType::kw_until){
-
-        return; // Continue Parsing in the upper level
-
+    if(token_type == TokenType::lparen){
+        actual_parameters();
     }
 
-    // Otherwise try to parse the ActualParameters
-    actual_parameters();
 }
 
 // IfStatement -> "IF" expression "THEN" StatementSequence ("ELSIF" expression "THEN" StatementSequence)* ("ELSE" StatementSequence)? "END"
@@ -350,19 +345,11 @@ void Parser::statement() {
         }
 
         // Procedure Call
-        // Check FOLLOWS(ProcedureCall) to see whether the (ActualParameters) term exists
-        // FOLLOWS(ProcedureCall) = ; END ELSE ELSIF UNTIL
+        // Check for "(" to see whether the (ActualParameters) term exists
         token_type = scanner_.peek()->type();
-        if(token_type == TokenType::semicolon || token_type == TokenType::kw_end ||
-           token_type == TokenType::kw_else   || token_type == TokenType::kw_elsif ||
-           token_type == TokenType::kw_until){
-
-            return; // Continue Parsing in the upper level
-
+        if(token_type == TokenType::lparen){
+            actual_parameters();
         }
-
-        // Otherwise try to parse the ActualParameters
-        actual_parameters();
         return;
     }
 
