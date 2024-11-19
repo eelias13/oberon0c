@@ -58,6 +58,11 @@ set(PARSER_SOURCES
         parser/ast/Node.cpp parser/ast/Node.h
         parser/ast/NodeVisitor.cpp parser/ast/NodeVisitor.h
         parser/Parser.cpp
+        #parser/ast/ArrayTypeNode.cpp parser/ast/ArrayTypeNode.h
+        #parser/ast/FieldListNode.cpp parser/ast/FieldListNode.h
+        #parser/ast/ActualParametersNode.cpp parser/ast/ActualParametersNode.h
+        #parser/ast/ProcedureCallNode.cpp parser/ast/ProcedureCallNode.h
+        #parser/ast/IdentListNode.cpp parser/ast/IdentListNode.h
         #parser/ast/StatementSequenceNode.cpp parser/ast/StatementSequenceNode.h
         #parser/ast/RepeatStatement.cpp parser/ast/RepeatStatement.h
         #parser/ast/WhileStatementNode.cpp parser/ast/WhileStatementNode.h
