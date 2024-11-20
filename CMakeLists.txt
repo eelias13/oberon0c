@@ -58,6 +58,20 @@ set(PARSER_SOURCES
         parser/ast/Node.cpp parser/ast/Node.h
         parser/ast/NodeVisitor.cpp parser/ast/NodeVisitor.h
         parser/Parser.cpp
+        parser/ast/FPSectionNode.cpp
+        parser/ast/FPSectionNode.h
+        parser/ast/RecordTypeNode.cpp
+        parser/ast/RecordTypeNode.h
+        parser/ast/ModuleNode.cpp
+        parser/ast/ModuleNode.h
+        parser/ast/FormalParameterNode.cpp
+        parser/ast/FormalParameterNode.h
+        parser/ast/ProcedureHeadingNode.cpp
+        parser/ast/ProcedureHeadingNode.h
+        parser/ast/ProcedureBodyNode.cpp
+        parser/ast/ProcedureBodyNode.h
+        parser/ast/ProcedureDeclarationNode.cpp
+        parser/ast/ProcedureDeclarationNode.h
         #parser/ast/ArrayTypeNode.cpp parser/ast/ArrayTypeNode.h
         #parser/ast/FieldListNode.cpp parser/ast/FieldListNode.h
         #parser/ast/ActualParametersNode.cpp parser/ast/ActualParametersNode.h

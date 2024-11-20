@@ -557,7 +557,7 @@ void Parser::formal_parameters() {
     return; // Syntax Error (Expected "(", but got...)
 }
 
-// ProcedureHeading -> "PROCEDURE" Ident (FormalParameters)?
+// ProcedureHeadingNode -> "PROCEDURE" Ident (FormalParameters)?
 void Parser::procedure_heading() {
     auto token_type = scanner_.peek()->type();
 
@@ -578,7 +578,7 @@ void Parser::procedure_heading() {
     return; // Syntax Error (Expected "PROCEDURE", but got...)
 }
 
-// ProcedureBody -> declarations ("BEGIN" StatementSequence)? "END" ident
+// ProcedureBodyNode -> declarations ("BEGIN" StatementSequence)? "END" ident
 void Parser::procedure_body() {
     declarations();
 
@@ -600,7 +600,7 @@ void Parser::procedure_body() {
     return; // Syntax Error (No "END" in Procedure Body) / (Expected "END", but got...)
 }
 
-// ProcedureDeclaration = ProcedureHeading ";" ProcedureBody
+// ProcedureDeclaration = ProcedureHeadingNode ";" ProcedureBodyNode
 void Parser::procedure_declaration() {
 
     procedure_heading();
