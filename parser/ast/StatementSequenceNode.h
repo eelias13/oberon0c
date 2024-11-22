@@ -5,10 +5,9 @@
 #ifndef OBERON0C_STATEMENTSEQUENCENODE_H
 #define OBERON0C_STATEMENTSEQUENCENODE_H
 
-#include "Node.h"
+#include "StatementNode.h"
 #include <vector>
 
-class StatementNode;
 
 class StatementSequenceNode : public Node{
 
@@ -16,7 +15,9 @@ class StatementSequenceNode : public Node{
         std::vector<std::unique_ptr<StatementNode>> statements_;
 
     public:
-        // StatementSequenceNode(const NodeType nodeType, FilePos pos,std::unique_ptr<StatementNode> first_statement) : Node(nodeType, pos) {statements_.emplace_back(std::move(first_statement));}
+        StatementSequenceNode(FilePos pos,std::unique_ptr<StatementNode> first_statement) : Node(NodeType::statement_sequence, pos) {statements_.emplace_back(std::move(first_statement));}
+
+        void add_statement(std::unique_ptr<StatementNode> statement){statements_.emplace_back(std::move(statement));};
 
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;

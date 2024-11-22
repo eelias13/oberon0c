@@ -14,6 +14,8 @@ class FormalParameterNode : Node {
         std::vector<std::unique_ptr<FPSectionNode>> parameter_sections_;
     private:
 
+        explicit FormalParameterNode(FilePos pos) : Node(NodeType::formal_parameters,pos){};
+
         void add_parameter_section(std::unique_ptr<FPSectionNode> section){parameter_sections_.emplace_back(std::move(section));};
 
         void accept(NodeVisitor &visitor) override;

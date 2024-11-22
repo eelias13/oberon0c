@@ -15,7 +15,7 @@ class ProcedureDeclarationNode : Node {
         std::unique_ptr<ProcedureBodyNode> body_;
 
     public:
-        ProcedureDeclarationNode(const NodeType node_type, FilePos pos, std::unique_ptr<ProcedureHeadingNode> heading, std::unique_ptr<ProcedureBodyNode> body) : Node(node_type,pos),heading_(std::move(heading)),body_(std::move(body)) {};
+        ProcedureDeclarationNode(FilePos pos, std::unique_ptr<ProcedureHeadingNode> heading, std::unique_ptr<ProcedureBodyNode> body) : Node(NodeType::procedure_declaration,pos),heading_(std::move(heading)),body_(std::move(body)) {};
 
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;

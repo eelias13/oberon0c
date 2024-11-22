@@ -23,14 +23,11 @@ void IfStatementNode::print(ostream &stream) const {
 
 }
 
-/*
-void IfStatementNode::add_else_if(ElseIfPair elsif) {
 
-    // Emplace elsif into elsifs_
-
+void IfStatementNode::add_else_if(std::unique_ptr<ExpressionNode> expr, std::unique_ptr<StatementSequenceNode> statements) {
+    else_ifs_.emplace_back(std::move(expr),std::move(statements));
 }
 
 void IfStatementNode::add_else(std::unique_ptr<StatementSequenceNode> else_statements) {
     else_statements_ = std::move(else_statements);
 }
-*/

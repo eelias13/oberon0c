@@ -15,7 +15,7 @@ class ProcedureHeadingNode : Node {
 
     public:
 
-        ProcedureHeadingNode(const NodeType node_type, FilePos pos, std::unique_ptr<IdentNode> name, std::unique_ptr<FormalParameterNode> params) : Node(node_type, pos), name_(std::move(name)), params_(std::move(params)) {};
+        ProcedureHeadingNode(FilePos pos, std::unique_ptr<IdentNode> name, std::unique_ptr<FormalParameterNode> params) : Node(NodeType::procedure_heading, pos), name_(std::move(name)), params_(std::move(params)) {};
 
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;

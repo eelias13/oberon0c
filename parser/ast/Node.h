@@ -15,7 +15,33 @@
 #include "../../util/Logger.h"
 
 enum class NodeType : char {
-    module
+    actual_parameters,
+    array_type,
+    assignment,
+    declarations,
+    expression,
+    factor,
+    field_list,
+    formal_parameters,
+    fp_section,
+    ident_list,
+    ident,
+    if_statement,
+    integer,
+    module,
+    procedure_body,
+    procedure_call,
+    procedure_declaration,
+    procedure_heading,
+    record_type,
+    repeat_statement,
+    selector,
+    simple_expression,
+    statement,
+    statement_sequence,
+    term,
+    type,
+    while_statement
 };
 
 class NodeVisitor;

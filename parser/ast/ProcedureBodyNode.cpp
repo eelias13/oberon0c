@@ -3,6 +3,7 @@
 //
 
 #include "ProcedureBodyNode.h"
+#include "DeclarationsNode.h"
 
 void ProcedureBodyNode::accept(NodeVisitor &visitor) {
 

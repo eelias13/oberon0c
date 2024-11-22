@@ -5,10 +5,9 @@
 #ifndef OBERON0C_ACTUALPARAMETERSNODE_H
 #define OBERON0C_ACTUALPARAMETERSNODE_H
 
-#include "Node.h"
+#include "ExpressionNode.h"
 #include <vector>
 
-class ExpressionNode;
 
 class ActualParametersNode : Node {
 
@@ -16,6 +15,8 @@ class ActualParametersNode : Node {
         std::vector<std::unique_ptr<ExpressionNode>> expressions_;
 
     public:
+
+        ActualParametersNode(FilePos pos) : Node(NodeType::actual_parameters,pos){};
 
         void add_expression(std::unique_ptr<ExpressionNode> expr);
 

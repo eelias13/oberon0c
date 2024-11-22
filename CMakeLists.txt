@@ -54,35 +54,37 @@ set(SCANNER_SOURCES
         scanner/UndefinedToken.cpp scanner/UndefinedToken.h)
 
 set(PARSER_SOURCES
-        parser/Parser.h
+        parser/Parser.cpp parser/Parser.h
         parser/ast/Node.cpp parser/ast/Node.h
         parser/ast/NodeVisitor.cpp parser/ast/NodeVisitor.h
-        parser/Parser.cpp
-        parser/ast/FPSectionNode.cpp
-        parser/ast/FPSectionNode.h
-        parser/ast/RecordTypeNode.cpp
-        parser/ast/RecordTypeNode.h
-        parser/ast/ModuleNode.cpp
-        parser/ast/ModuleNode.h
-        parser/ast/FormalParameterNode.cpp
-        parser/ast/FormalParameterNode.h
-        parser/ast/ProcedureHeadingNode.cpp
-        parser/ast/ProcedureHeadingNode.h
-        parser/ast/ProcedureBodyNode.cpp
-        parser/ast/ProcedureBodyNode.h
-        parser/ast/ProcedureDeclarationNode.cpp
-        parser/ast/ProcedureDeclarationNode.h
-        #parser/ast/ArrayTypeNode.cpp parser/ast/ArrayTypeNode.h
-        #parser/ast/FieldListNode.cpp parser/ast/FieldListNode.h
+        parser/ast/IdentNode.cpp parser/ast/IdentNode.h
+        parser/ast/IntNode.cpp parser/ast/IntNode.h
+        parser/ast/SelectorNode.cpp parser/ast/SelectorNode.h
+        parser/ast/FactorNode.cpp parser/ast/FactorNode.h
+        parser/ast/TermNode.cpp parser/ast/TermNode.h
+        parser/ast/SimpleExpressionNode.cpp parser/ast/SimpleExpressionNode.h
+        parser/ast/ExpressionNode.cpp parser/ast/ExpressionNode.h
+        #parser/ast/StatementNode.h
+        #parser/ast/AssignmentNode.cpp parser/ast/AssignmentNode.h
         #parser/ast/ActualParametersNode.cpp parser/ast/ActualParametersNode.h
         #parser/ast/ProcedureCallNode.cpp parser/ast/ProcedureCallNode.h
-        #parser/ast/IdentListNode.cpp parser/ast/IdentListNode.h
-        #parser/ast/StatementSequenceNode.cpp parser/ast/StatementSequenceNode.h
-        #parser/ast/RepeatStatement.cpp parser/ast/RepeatStatement.h
+        #parser/ast/RepeatStatementNode.cpp parser/ast/RepeatStatementNode.h
         #parser/ast/WhileStatementNode.cpp parser/ast/WhileStatementNode.h
         #parser/ast/IfStatementNode.cpp parser/ast/IfStatementNode.h
+        #parser/ast/StatementSequenceNode.cpp parser/ast/StatementSequenceNode.h
+        #parser/ast/TypeNode.h
+        #parser/ast/ArrayTypeNode.cpp parser/ast/ArrayTypeNode.h
+        #parser/ast/FieldListNode.cpp parser/ast/FieldListNode.h
+        #parser/ast/IdentListNode.cpp parser/ast/IdentListNode.h
+        #parser/ast/FPSectionNode.cpp parser/ast/FPSectionNode.h
+        #parser/ast/RecordTypeNode.cpp parser/ast/RecordTypeNode.h
+        #parser/ast/ModuleNode.cpp parser/ast/ModuleNode.h
+        #parser/ast/FormalParameterNode.cpp parser/ast/FormalParameterNode.h
+        #parser/ast/ProcedureHeadingNode.cpp parser/ast/ProcedureHeadingNode.h
+        #parser/ast/ProcedureBodyNode.cpp parser/ast/ProcedureBodyNode.h
+        #parser/ast/ProcedureDeclarationNode.cpp parser/ast/ProcedureDeclarationNode.h
+        #parser/ast/DeclarationsNode.cpp parser/ast/DeclarationsNode.h
 )
-
 
 set(ALL_SOURCES global.h ${UTIL_SOURCES} ${SCANNER_SOURCES} ${PARSER_SOURCES}
 )

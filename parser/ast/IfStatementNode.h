@@ -4,16 +4,15 @@
 
 #ifndef OBERON0C_IFSTATEMENTNODE_H
 #define OBERON0C_IFSTATEMENTNODE_H
-#include "Node.h"
 
+#include "StatementNode.h"
+#include "StatementSequenceNode.h"
+#include "ExpressionNode.h"
 #include <vector>
-
-class ExpressionNode;
-class StatementSequenceNode;
 
 typedef std::pair<std::unique_ptr<ExpressionNode>, std::unique_ptr<StatementSequenceNode>> ElseIfPair;
 
-class IfStatementNode : public Node {
+class IfStatementNode : public StatementNode {
 
     private:
         std::unique_ptr<ExpressionNode> condition_;
@@ -23,12 +22,10 @@ class IfStatementNode : public Node {
 
     public:
 
-        // Commented out until NodeTypes exist
+        IfStatementNode(FilePos pos, std::unique_ptr<ExpressionNode> condition, std::unique_ptr<StatementSequenceNode> then_statements) : StatementNode(NodeType::if_statement,pos), condition_(std::move(condition)), then_statements_(std::move(then_statements)) {};
 
-        // IfStatementNode(const NodeType nodeType, FilePos pos, std::unique_ptr<ExpressionNode> condition, std::unique_ptr<StatementSequenceNode> then_statements) : Node(nodeType,pos), condition_(std::move(condition)), then_statements_(std::move(then_statements)) {};
-
-        //void add_else_if(ElseIfPair elsif);
-        //void add_else(std::unique_ptr<StatementSequenceNode> else_statements);
+        void add_else_if(std::unique_ptr<ExpressionNode> expr, std::unique_ptr<StatementSequenceNode> statements);
+        void add_else(std::unique_ptr<StatementSequenceNode> else_statements);
 
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;

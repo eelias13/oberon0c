@@ -20,7 +20,7 @@ const string Parser::ident() {
 // integer -> digit (digit)*  (already recognized by the scanner in full)
 void Parser::integer() {
     auto token_type = scanner_.peek()->type();
-    if(token_type == TokenType::int_literal){
+    if(token_type == TokenType::int_literal || token_type == TokenType::short_literal || token_type == TokenType::long_literal){
         scanner_.next();
         return; // Success
     }

@@ -5,12 +5,12 @@
 #ifndef OBERON0C_PROCEDURECALLNODE_H
 #define OBERON0C_PROCEDURECALLNODE_H
 
+#include "StatementNode.h"
 #include "ActualParametersNode.h"
+#include "IdentNode.h"
+#include "SelectorNode.h"
 
-class IdentNode;
-class SelectorNode;
-
-class ProcedureCallNode : Node {
+class ProcedureCallNode : StatementNode {
 
     private:
         std::unique_ptr<IdentNode> name_;
@@ -20,7 +20,7 @@ class ProcedureCallNode : Node {
 
     public:
 
-        explicit ProcedureCallNode(const NodeType nodeType, FilePos pos, std::unique_ptr<IdentNode> name, std::unique_ptr<SelectorNode> selector, std::unique_ptr<ActualParametersNode> parameters) : Node(nodeType,pos), name_(name), selector_(selector), parameters_(parameters) { };
+        explicit ProcedureCallNode(FilePos pos, std::unique_ptr<IdentNode> name, std::unique_ptr<SelectorNode> selector, std::unique_ptr<ActualParametersNode> parameters) : StatementNode(NodeType::procedure_call,pos), name_(std::move(name)), selector_(std::move(selector)), parameters_(std::move(parameters)) { };
 
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;

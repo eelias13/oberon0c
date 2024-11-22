@@ -5,10 +5,9 @@
 #ifndef OBERON0C_IDENTLISTNODE_H
 #define OBERON0C_IDENTLISTNODE_H
 
-#include "Node.h"
+#include "IdentNode.h"
 #include <vector>
 
-class IdentNode;
 
 class IdentListNode : Node {
 
@@ -17,7 +16,7 @@ class IdentListNode : Node {
 
     public:
 
-        explicit IdentListNode(const NodeType nodeType, FilePos pos, std::unique_ptr<IdentNode> first_identifier) : Node(nodeType,pos) { identifier_.emplace_back(std::move(first_identifier));};
+        IdentListNode(FilePos pos, std::unique_ptr<IdentNode> first_identifier) : Node(NodeType::ident_list,pos) { identifier_.emplace_back(std::move(first_identifier));};
 
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;
