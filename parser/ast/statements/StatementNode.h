@@ -5,7 +5,7 @@
 #ifndef OBERON0C_STATEMENTNODE_H
 #define OBERON0C_STATEMENTNODE_H
 
-#include "Node.h"
+#include "parser/ast/Node.h"
 
 class StatementNode : public Node {
 

@@ -5,8 +5,8 @@
 #ifndef OBERON0C_PROCEDUREBODYNODE_H
 #define OBERON0C_PROCEDUREBODYNODE_H
 
-#include "StatementSequenceNode.h"
-#include "IdentNode.h"
+#include "parser/ast/statements/StatementSequenceNode.h"
+#include "parser/ast/base_blocks/IdentNode.h"
 
 class DeclarationsNode;
 

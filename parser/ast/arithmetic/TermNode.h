@@ -6,7 +6,7 @@
 #define OBERON0C_TERMNODE_H
 
 #include <vector>
-#include "Node.h"
+#include "parser/ast/Node.h"
 
 class FactorNode;
 

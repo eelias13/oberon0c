@@ -57,13 +57,13 @@ set(PARSER_SOURCES
         parser/Parser.cpp parser/Parser.h
         parser/ast/Node.cpp parser/ast/Node.h
         parser/ast/NodeVisitor.cpp parser/ast/NodeVisitor.h
-        parser/ast/IdentNode.cpp parser/ast/IdentNode.h
-        parser/ast/IntNode.cpp parser/ast/IntNode.h
-        parser/ast/SelectorNode.cpp parser/ast/SelectorNode.h
-        parser/ast/FactorNode.cpp parser/ast/FactorNode.h
-        parser/ast/TermNode.cpp parser/ast/TermNode.h
-        parser/ast/SimpleExpressionNode.cpp parser/ast/SimpleExpressionNode.h
-        parser/ast/ExpressionNode.cpp parser/ast/ExpressionNode.h
+        parser/ast/base_blocks/IdentNode.cpp parser/ast/base_blocks/IdentNode.h
+        parser/ast/base_blocks/IntNode.cpp parser/ast/base_blocks/IntNode.h
+        parser/ast/base_blocks/SelectorNode.cpp parser/ast/base_blocks/SelectorNode.h
+        parser/ast/arithmetic/FactorNode.cpp parser/ast/arithmetic/FactorNode.h
+        parser/ast/arithmetic/TermNode.cpp parser/ast/arithmetic/TermNode.h
+        parser/ast/arithmetic/SimpleExpressionNode.cpp parser/ast/arithmetic/SimpleExpressionNode.h
+        parser/ast/arithmetic/ExpressionNode.cpp parser/ast/arithmetic/ExpressionNode.h
         #parser/ast/StatementNode.h
         #parser/ast/AssignmentNode.cpp parser/ast/AssignmentNode.h
         #parser/ast/ActualParametersNode.cpp parser/ast/ActualParametersNode.h

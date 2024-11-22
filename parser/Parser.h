@@ -20,7 +20,7 @@ private:
     Scanner &scanner_;
     Logger &logger_;
 
-    const string ident();
+    void ident();
     void integer();
     void selector();
     void number();

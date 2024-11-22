@@ -5,7 +5,7 @@
 #ifndef OBERON0C_SELECTORNODE_H
 #define OBERON0C_SELECTORNODE_H
 
-#include "IdentNode.h"
+#include "parser/ast/base_blocks/IdentNode.h"
 #include <vector>
 
 class ExpressionNode;

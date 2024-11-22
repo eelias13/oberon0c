@@ -5,7 +5,7 @@
 #ifndef OBERON0C_REPEATSTATEMENT_H
 #define OBERON0C_REPEATSTATEMENT_H
 
-#include "ExpressionNode.h"
+#include "parser/ast/arithmetic/ExpressionNode.h"
 #include "StatementSequenceNode.h"
 
 class RepeatStatementNode : StatementNode {

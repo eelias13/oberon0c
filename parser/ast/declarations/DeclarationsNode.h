@@ -7,8 +7,8 @@
 
 #include "IdentListNode.h"
 #include "ProcedureDeclarationNode.h"
-#include "IdentNode.h"
-#include "ExpressionNode.h"
+#include "parser/ast/base_blocks/IdentNode.h"
+#include "parser/ast/arithmetic/ExpressionNode.h"
 
 typedef std::pair<std::unique_ptr<IdentNode>,std::unique_ptr<ExpressionNode>> id_expr_pair;
 typedef std::pair<std::unique_ptr<IdentNode>,std::unique_ptr<TypeNode>> id_type_pair;

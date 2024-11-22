@@ -7,7 +7,7 @@
 
 #include "StatementNode.h"
 #include "StatementSequenceNode.h"
-#include "ExpressionNode.h"
+#include "parser/ast/arithmetic/ExpressionNode.h"
 #include <vector>
 
 typedef std::pair<std::unique_ptr<ExpressionNode>, std::unique_ptr<StatementSequenceNode>> ElseIfPair;

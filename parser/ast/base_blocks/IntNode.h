@@ -5,7 +5,7 @@
 #ifndef OBERON0C_INTNODE_H
 #define OBERON0C_INTNODE_H
 
-#include "FactorNode.h"
+#include "parser/ast/arithmetic/FactorNode.h"
 
 class IntNode : FactorNode {
 

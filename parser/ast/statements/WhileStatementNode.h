@@ -5,8 +5,8 @@
 #ifndef OBERON0C_WHILESTATEMENTNODE_H
 #define OBERON0C_WHILESTATEMENTNODE_H
 
-#include "StatementSequenceNode.h"
-#include "ExpressionNode.h"
+#include "parser/ast/statements/StatementSequenceNode.h"
+#include "parser/ast/arithmetic/ExpressionNode.h"
 
 class WhileStatementNode : StatementNode {
 

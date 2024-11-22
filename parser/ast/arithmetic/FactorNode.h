@@ -5,8 +5,8 @@
 #ifndef OBERON0C_FACTORNODE_H
 #define OBERON0C_FACTORNODE_H
 
-#include "IdentNode.h"
-#include "SelectorNode.h"
+#include "parser/ast/base_blocks/IdentNode.h"
+#include "parser/ast/base_blocks/SelectorNode.h"
 
 class ExpressionNode;
 

@@ -6,9 +6,9 @@
 #define OBERON0C_ASSIGNMENTNODE_H
 
 #include "StatementNode.h"
-#include "IdentNode.h"
-#include "SelectorNode.h"
-#include "ExpressionNode.h"
+#include "parser/ast/base_blocks/IdentNode.h"
+#include "parser/ast/base_blocks/SelectorNode.h"
+#include "parser/ast/arithmetic/ExpressionNode.h"
 
 class AssignmentNode : StatementNode{
     private:

@@ -3,7 +3,7 @@
 //
 
 #include "ProcedureBodyNode.h"
-#include "DeclarationsNode.h"
+#include "parser/ast/declarations/DeclarationsNode.h"
 
 void ProcedureBodyNode::accept(NodeVisitor &visitor) {
 

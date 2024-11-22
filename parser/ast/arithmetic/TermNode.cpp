@@ -3,7 +3,7 @@
 //
 
 #include "TermNode.h"
-#include "FactorNode.h"
+#include "parser/ast/arithmetic/FactorNode.h"
 
 const string TermNode::op_to_string[] = {"*", "DIV", "MOD", "&","<NONE>"};
 

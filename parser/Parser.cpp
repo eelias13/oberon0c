@@ -6,19 +6,21 @@
 #include "Parser.h"
 
 // ident -> letter (letter | digit)*  (already recognized by the scanner in full)
-const string Parser::ident() {
+void Parser::ident() {
+    logger_.info("Ident");
     auto token = scanner_.peek();
     if(token->type() == TokenType::const_ident){
         scanner_.next();
-        return nullptr;                                    // success
+        return;                                    // success
     }
 
-    return nullptr; // Syntax Error (Expected Identifier, but got)
+    return; // Syntax Error (Expected Identifier, but got)
 
 }
 
 // integer -> digit (digit)*  (already recognized by the scanner in full)
 void Parser::integer() {
+    logger_.info("Integer");
     auto token_type = scanner_.peek()->type();
     if(token_type == TokenType::int_literal || token_type == TokenType::short_literal || token_type == TokenType::long_literal){
         scanner_.next();
@@ -35,6 +37,7 @@ void Parser::number() {
 
 // selector -> ("." ident | "[" expression "]" )*
 void Parser::selector() {
+    logger_.info("Selector");
     auto token_type = scanner_.peek()->type();
 
     while(token_type == TokenType::period || token_type == TokenType::lbrack){
@@ -63,6 +66,7 @@ void Parser::selector() {
 
 // factor -> ident selector | number | "(" expression ")" | "~" factor
 void Parser::factor() {
+    logger_.info("Factor");
     auto token = scanner_.peek();
     switch (token->type()) {
 
@@ -71,6 +75,8 @@ void Parser::factor() {
             selector();
             return;
         case TokenType::int_literal:
+        case TokenType::short_literal:
+        case TokenType::long_literal:
             number();
             return;
         case TokenType::lparen:
@@ -96,6 +102,7 @@ void Parser::factor() {
 
 // term -> factor (("*" | "DIV" | "MOD" | "&") factor)*
 void Parser::term() {
+    logger_.info("Term");
     factor();
     auto token_type = scanner_.peek()->type();
     while(token_type == TokenType::op_times || token_type == TokenType::op_div ||
@@ -112,6 +119,7 @@ void Parser::term() {
 
 // SimpleExpression -> ("+" | "-" | €) term (("+"|"-"|"OR") term)*
 void Parser::simple_expression() {
+    logger_.info("Simple Expression");
     auto token_type = scanner_.peek()->type();
     if(token_type == TokenType::op_plus || token_type == TokenType::op_minus){
         scanner_.next();
@@ -132,6 +140,7 @@ void Parser::simple_expression() {
 
 // Expression -> SimpleExpression (("="|"#"|"<"|"<="|">"|">=") SimpleExpression)?
 void Parser::expression() {
+    logger_.info("Expression");
     simple_expression();
 
     auto token_type = scanner_.peek()->type();
@@ -148,6 +157,7 @@ void Parser::expression() {
 
 // Assignment -> Ident Selector ":=" Expression
 void Parser::assignment() {
+    logger_.info("Assignment");
     ident();
     selector();
 
@@ -163,6 +173,7 @@ void Parser::assignment() {
 
 // ActualParameters -> "(" (expression ("," expression)*)? ")"
 void Parser::actual_parameters() {
+    logger_.info("Actual Parameters");
     auto token_type = scanner_.peek()->type();
     if(token_type == TokenType::lparen){
         scanner_.next();
@@ -200,6 +211,7 @@ void Parser::actual_parameters() {
 
 // ProcedureCall -> Ident Selector (ActualParameters)?
 void Parser::procedure_call() {
+    logger_.info("Procedure Call");
     ident();
     selector();
 
@@ -213,6 +225,7 @@ void Parser::procedure_call() {
 
 // IfStatement -> "IF" expression "THEN" StatementSequence ("ELSIF" expression "THEN" StatementSequence)* ("ELSE" StatementSequence)? "END"
 void Parser::if_statement() {
+    logger_.info("If Statement");
     auto token_type = scanner_.peek()->type();
     if(token_type == TokenType::kw_if){
 
@@ -266,6 +279,7 @@ void Parser::if_statement() {
 
 // WhileStatement -> "WHILE" expression "DO" StatementSequence "END"
 void Parser::while_statement() {
+    logger_.info("While Statement");
     auto token_type = scanner_.peek()->type();
 
     if(token_type == TokenType::kw_while){
@@ -296,6 +310,7 @@ void Parser::while_statement() {
 
 // RepeatStatement -> "REPEAT" StatementSequence "UNTIL" expression
 void Parser::repeat_statement() {
+    logger_.info("Repeat Statement");
     auto token_type = scanner_.peek()->type();
 
     if(token_type == TokenType::kw_repeat){
@@ -319,6 +334,8 @@ void Parser::repeat_statement() {
 // Statement -> (assignment | Procedure Call | IfStatement | WhileStatement)
 // Note: While not included in the CompilerConstruction book, this should contain "RepeatStatement" as well
 void Parser::statement() {
+
+    logger_.info("Statement");
 
     auto token_type = scanner_.peek()->type();
 
@@ -377,6 +394,7 @@ void Parser::statement() {
 
 // StatementSequence -> Statement (";" statement)*
 void Parser::statement_sequence() {
+    logger_.info("Statement Sequence");
     statement();
 
     auto token_type = scanner_.peek()->type();
@@ -390,6 +408,7 @@ void Parser::statement_sequence() {
 
 // IdentList -> Ident ("," ident)*
 void Parser::ident_list() {
+    logger_.info("Ident List");
     ident();
 
     auto token_type = scanner_.peek()->type();
@@ -402,7 +421,7 @@ void Parser::ident_list() {
 
 // FieldList -> (IdentList ":" type)?
 void Parser::field_list() {
-
+    logger_.info("Field List");
     // Check Follows(FieldList) to decide whether this FieldList is empty or not
     // Follows(FieldList) = ; END
 
@@ -425,7 +444,7 @@ void Parser::field_list() {
 
 // Type -> Ident | ArrayType | RecordType
 void Parser::type() {
-
+    logger_.info("Type");
     auto token_type = scanner_.peek()->type();
 
     // We decide the according production by the next token
@@ -449,6 +468,7 @@ void Parser::type() {
 
 // ArrayType -> "ARRAY" expression "OF" type
 void Parser::array_type() {
+    logger_.info("Array Type");
     auto token_type = scanner_.peek()->type();
 
     if(token_type == TokenType::kw_array){
@@ -472,6 +492,7 @@ void Parser::array_type() {
 
 // RecordType = "RECORD" FieldList (";" FieldList)* "END"
 void Parser::record_type() {
+    logger_.info("Record Type");
     auto token_type = scanner_.peek()->type();
 
     if(token_type == TokenType::kw_record){
@@ -500,6 +521,7 @@ void Parser::record_type() {
 
 // FPSection -> ("VAR")? IdentList ":" type
 void Parser::fp_section() {
+    logger_.info("FPSection");
     auto token_type = scanner_.peek()->type();
 
     if(token_type == TokenType::kw_var){
@@ -521,6 +543,7 @@ void Parser::fp_section() {
 
 // FormalParameters -> "(" (FPSection (";" FPSection)*  )? ")"
 void Parser::formal_parameters() {
+    logger_.info("Formal Parameters");
     auto token_type = scanner_.peek()->type();
 
     if(token_type == TokenType::lparen){
@@ -559,6 +582,7 @@ void Parser::formal_parameters() {
 
 // ProcedureHeadingNode -> "PROCEDURE" Ident (FormalParameters)?
 void Parser::procedure_heading() {
+    logger_.info("Procedure Heading");
     auto token_type = scanner_.peek()->type();
 
     if(token_type == TokenType::kw_procedure){
@@ -580,6 +604,7 @@ void Parser::procedure_heading() {
 
 // ProcedureBodyNode -> declarations ("BEGIN" StatementSequence)? "END" ident
 void Parser::procedure_body() {
+    logger_.info("Procedure Body");
     declarations();
 
     auto token_type = scanner_.peek()->type();
@@ -602,7 +627,7 @@ void Parser::procedure_body() {
 
 // ProcedureDeclaration = ProcedureHeadingNode ";" ProcedureBodyNode
 void Parser::procedure_declaration() {
-
+    logger_.info("Procedure Declaration");
     procedure_heading();
 
     auto token_type = scanner_.peek()->type();
@@ -621,6 +646,7 @@ void Parser::procedure_declaration() {
 //                     ("VAR"   (identList ":" type ";")*   )?
 //                     (ProcedureDeclaration ";"            )*
 void Parser::declarations() {
+    logger_.info("Declarations");
     auto token_type = scanner_.peek()->type();
 
     // CONST declarations
@@ -735,6 +761,7 @@ void Parser::declarations() {
 
 // Module -> "Module" ident ";" declarations ("BEGIN" StatementSequence)? "END" ident "."
 void Parser::module() {
+    logger_.info("Module");
     auto token_type = scanner_.peek()->type();
 
     if(token_type == TokenType::kw_module){
@@ -778,4 +805,8 @@ void Parser::module() {
     }
 
     return; // Syntax Error (Expected keyword "Module", but got...)
+}
+
+void Parser::parse() {
+    module();
 }

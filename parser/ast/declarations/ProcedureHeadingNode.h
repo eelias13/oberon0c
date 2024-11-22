@@ -5,7 +5,7 @@
 #ifndef OBERON0C_PROCEDUREHEADINGNODE_H
 #define OBERON0C_PROCEDUREHEADINGNODE_H
 
-#include "FormalParameterNode.h"
+#include "parser/ast/declarations/FormalParameterNode.h"
 
 class ProcedureHeadingNode : Node {
 

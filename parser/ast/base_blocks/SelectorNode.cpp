@@ -3,7 +3,7 @@
 //
 
 #include "SelectorNode.h"
-#include "ExpressionNode.h"
+#include "parser/ast/arithmetic/ExpressionNode.h"
 
 void SelectorNode::accept(NodeVisitor &visitor) {
 

@@ -5,10 +5,10 @@
 #ifndef OBERON0C_PROCEDURECALLNODE_H
 #define OBERON0C_PROCEDURECALLNODE_H
 
-#include "StatementNode.h"
-#include "ActualParametersNode.h"
-#include "IdentNode.h"
-#include "SelectorNode.h"
+#include "parser/ast/statements/StatementNode.h"
+#include "parser/ast/statements/ActualParametersNode.h"
+#include "parser/ast/base_blocks/IdentNode.h"
+#include "parser/ast/base_blocks/SelectorNode.h"
 
 class ProcedureCallNode : StatementNode {
 

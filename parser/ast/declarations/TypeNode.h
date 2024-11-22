@@ -5,7 +5,7 @@
 #ifndef OBERON0C_TYPENODE_H
 #define OBERON0C_TYPENODE_H
 
-#include "Node.h"
+#include "parser/ast/Node.h"
 
 class TypeNode : Node {
 

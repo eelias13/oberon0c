@@ -5,9 +5,9 @@
 #ifndef OBERON0C_MODULENODE_H
 #define OBERON0C_MODULENODE_H
 
-#include "StatementSequenceNode.h"
-#include "IdentNode.h"
-#include "DeclarationsNode.h"
+#include "parser/ast/statements/StatementSequenceNode.h"
+#include "parser/ast/base_blocks/IdentNode.h"
+#include "parser/ast/declarations/DeclarationsNode.h"
 
 class ModuleNode : Node {
 

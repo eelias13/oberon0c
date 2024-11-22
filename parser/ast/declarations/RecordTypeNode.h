@@ -5,7 +5,7 @@
 #ifndef OBERON0C_RECORDTYPENODE_H
 #define OBERON0C_RECORDTYPENODE_H
 
-#include "FieldListNode.h"
+#include "parser/ast/declarations/FieldListNode.h"
 #include "TypeNode.h"
 
 class RecordTypeNode : TypeNode{

@@ -5,7 +5,7 @@
 #ifndef OBERON0C_IDENTNODE_H
 #define OBERON0C_IDENTNODE_H
 
-#include "TypeNode.h"
+#include "parser/ast/declarations/TypeNode.h"
 
 class IdentNode : TypeNode {
 

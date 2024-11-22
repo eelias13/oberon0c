@@ -3,7 +3,7 @@
 //
 
 #include "FactorNode.h"
-#include "ExpressionNode.h"
+#include "parser/ast/arithmetic/ExpressionNode.h"
 
 void NegatedFactorNode::accept(NodeVisitor &visitor) {
 
