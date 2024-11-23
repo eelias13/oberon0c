@@ -16,7 +16,7 @@ void RecordTypeNode::print(ostream &stream) const {
         if(itr > fields_.begin()){
             stream << "; ";
         }
-        stream << itr->get();
+        stream << (*itr);
 
     }
 

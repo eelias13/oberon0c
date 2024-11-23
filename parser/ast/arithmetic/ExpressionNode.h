@@ -9,7 +9,7 @@
 
 enum expr_operator {EQ = 0, NEQ, LT, LEQ, GT, GEQ, ERR};
 
-class ExpressionNode : Node {
+class ExpressionNode : public Node {
 
     private:
         std::unique_ptr<SimpleExpressionNode> left_;

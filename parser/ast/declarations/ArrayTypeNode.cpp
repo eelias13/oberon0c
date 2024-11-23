@@ -9,5 +9,5 @@ void ArrayTypeNode::accept(NodeVisitor &visitor) {
 }
 
 void ArrayTypeNode::print(ostream &stream) const {
-    stream << "ARRAY " << name_ << " OF " << type_;
+    stream << "ARRAY " << *name_ << " OF " << *type_;
 }

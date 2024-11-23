@@ -8,7 +8,7 @@
 #include "ProcedureHeadingNode.h"
 #include "ProcedureBodyNode.h"
 
-class ProcedureDeclarationNode : Node {
+class ProcedureDeclarationNode : public Node {
 
     private:
         std::unique_ptr<ProcedureHeadingNode> heading_;

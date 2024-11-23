@@ -7,7 +7,7 @@
 
 #include "parser/ast/Node.h"
 
-class TypeNode : Node {
+class TypeNode : public Node {
 
     public:
     TypeNode(NodeType node_type, FilePos pos) : Node(node_type,pos) {};

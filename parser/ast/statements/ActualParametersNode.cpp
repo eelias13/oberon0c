@@ -16,7 +16,7 @@ void ActualParametersNode::print(ostream &stream) const {
         stream << "(";
 
         for(auto itr = expressions_.begin(); itr != expressions_.end(); itr++){
-            stream << itr->get();
+            stream << *(*itr);
         }
 
         stream << ")";

@@ -33,7 +33,7 @@ int main(const int argc, const char *argv[]) {
 
     Parser parser(scanner,logger);
     auto ast = parser.parse();
-    ast->print(std::cout);
+    std::cout << *ast;
 
 
     std::cout << "Parsed";

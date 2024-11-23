@@ -10,7 +10,7 @@
 
 class ExpressionNode;
 
-class FactorNode : Node {
+class FactorNode : public Node {
     public:
         FactorNode(NodeType node_type, FilePos pos);
 

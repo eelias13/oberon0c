@@ -9,11 +9,11 @@ void AssignmentNode::accept(NodeVisitor &visitor) {
 }
 
 void AssignmentNode::print(ostream &stream) const {
-    stream << variable_;
+    stream << *variable_;
 
     if(selector_){
-        stream << selector_;
+        stream << *selector_;
     }
 
-    stream << " := " << expr_;
+    stream << " := " << *expr_;
 }

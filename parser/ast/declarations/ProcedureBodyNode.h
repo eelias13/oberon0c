@@ -10,7 +10,7 @@
 
 class DeclarationsNode;
 
-class ProcedureBodyNode : Node {
+class ProcedureBodyNode : public Node {
 
     private:
 

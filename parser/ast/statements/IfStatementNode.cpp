@@ -9,14 +9,14 @@ void IfStatementNode::accept(NodeVisitor &visitor) {
 }
 
 void IfStatementNode::print(ostream &stream) const {
-    stream << "IF " << condition_ << " THEN " << then_statements_;
+    stream << "IF " << *condition_ << " THEN " << *then_statements_;
 
     for(auto itr = else_ifs_.begin(); itr != else_ifs_.end(); itr++){
-        stream << "ELSE IF " << itr->first << " THEN " << itr->second;
+        stream << "ELSE IF " << *(itr->first) << " THEN " << *(itr->second);
     }
 
     if(else_statements_){
-        stream << "ELSE " << else_statements_;
+        stream << "ELSE " << *else_statements_;
     }
 
     stream << "END";

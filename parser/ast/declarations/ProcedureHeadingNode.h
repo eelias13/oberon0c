@@ -7,7 +7,7 @@
 
 #include "parser/ast/declarations/FormalParameterNode.h"
 
-class ProcedureHeadingNode : Node {
+class ProcedureHeadingNode : public Node {
 
     private:
         std::unique_ptr<IdentNode> name_;

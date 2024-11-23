@@ -8,7 +8,7 @@
 #include "IdentListNode.h"
 #include "TypeNode.h"
 
-class FPSectionNode : Node {
+class FPSectionNode : public Node {
     private:
         bool var_included_;
         std::unique_ptr<IdentListNode> param_list_;

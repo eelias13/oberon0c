@@ -10,13 +10,13 @@ void ProcedureBodyNode::accept(NodeVisitor &visitor) {
 }
 
 void ProcedureBodyNode::print(ostream &stream) const {
-    stream << declarations_;
+    stream << *declarations_;
 
     if(statements_){
-        stream << " BEGIN " << statements_;
+        stream << " BEGIN " << *statements_;
     }
 
-    stream << " END " << name_;
+    stream << " END " << *name_;
 
 }
 

@@ -7,7 +7,7 @@
 
 #include "FPSectionNode.h"
 
-class FormalParameterNode : Node {
+class FormalParameterNode : public Node {
 
     private:
 

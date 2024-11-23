@@ -12,7 +12,7 @@ class ExpressionNode;
 
 typedef std::tuple<bool,std::unique_ptr<IdentNode>,std::unique_ptr<ExpressionNode>> id_indx_tuple;
 
-class SelectorNode : Node {
+class SelectorNode : public Node {
 
     private:
         std::vector<id_indx_tuple> selectors;

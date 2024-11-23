@@ -14,7 +14,7 @@ enum simpexpr_op {PLUS = 0, MINUS, OR, NONE};
 
 typedef std::pair<simpexpr_op,std::unique_ptr<TermNode>> op_term_pair;
 
-class SimpleExpressionNode : Node {
+class SimpleExpressionNode : public Node {
 
     private:
 

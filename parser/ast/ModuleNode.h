@@ -9,7 +9,7 @@
 #include "parser/ast/base_blocks/IdentNode.h"
 #include "parser/ast/declarations/DeclarationsNode.h"
 
-class ModuleNode : Node {
+class ModuleNode : public Node {
 
     private:
     std::unique_ptr<IdentNode> module_name_begin_;

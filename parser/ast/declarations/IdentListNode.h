@@ -9,7 +9,7 @@
 #include <vector>
 
 
-class IdentListNode : Node {
+class IdentListNode : public Node {
 
     private:
         std::vector<std::unique_ptr<IdentNode>> identifier_;

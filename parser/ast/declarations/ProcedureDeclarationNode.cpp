@@ -9,5 +9,5 @@ void ProcedureDeclarationNode::accept(NodeVisitor &visitor) {
 }
 
 void ProcedureDeclarationNode::print(ostream &stream) const {
-    stream << heading_ <<  "; " << body_;
+    stream << *heading_ <<  "; " << *body_;
 }

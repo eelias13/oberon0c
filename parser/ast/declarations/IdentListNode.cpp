@@ -16,7 +16,7 @@ void IdentListNode::print(ostream &stream) const {
             stream << ", ";
         }
 
-        stream << itr->get();
+        stream << *(*itr);
 
     }
 }

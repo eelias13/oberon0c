@@ -9,7 +9,7 @@
 #include <vector>
 
 
-class ActualParametersNode : Node {
+class ActualParametersNode : public Node {
 
     private:
         std::vector<std::unique_ptr<ExpressionNode>> expressions_;

@@ -9,5 +9,5 @@ void RepeatStatementNode::accept(NodeVisitor &visitor) {
 }
 
 void RepeatStatementNode::print(ostream &stream) const {
-    stream << "REPEAT " << statements_ << " UNTIL " << condition_;
+    stream << "REPEAT " << *statements_ << " UNTIL " << *condition_;
 }

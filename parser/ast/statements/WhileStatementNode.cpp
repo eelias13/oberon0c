@@ -10,6 +10,6 @@ void WhileStatementNode::accept(NodeVisitor &visitor) {
 
 void WhileStatementNode::print(ostream &stream) const {
 
-    stream << "WHILE " << condition_ << " DO " << statements_ << " END";
+    stream << "WHILE " << *condition_ << " DO " << *statements_ << " END";
 
 }

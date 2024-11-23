@@ -13,6 +13,6 @@ void FPSectionNode::print(ostream &stream) const {
         stream << "VAR ";
     }
 
-    stream << param_list_ << " : " << type_;
+    stream << *param_list_ << " : " << *type_;
 
 }

@@ -14,7 +14,7 @@ typedef std::pair<std::unique_ptr<IdentNode>,std::unique_ptr<ExpressionNode>> id
 typedef std::pair<std::unique_ptr<IdentNode>,std::unique_ptr<TypeNode>> id_type_pair;
 typedef std::pair<std::unique_ptr<IdentListNode>,std::unique_ptr<TypeNode>> idlist_type_pair;
 
-class DeclarationsNode : Node {
+class DeclarationsNode : public Node {
 
     private:
         std::vector<id_expr_pair> const_list_;

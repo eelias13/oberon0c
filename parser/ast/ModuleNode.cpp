@@ -9,12 +9,12 @@ void ModuleNode::accept(NodeVisitor &visitor) {
 }
 
 void ModuleNode::print(ostream &stream) const {
-    stream << "MODULE " << module_name_begin_ << " ; " << declarations_;
+    stream << "MODULE " << *module_name_begin_ << " ; " << *declarations_;
 
     if(statements_){
-        stream << statements_;
+        stream << *statements_;
     }
 
-    stream << " END " << module_name_end_ << ".";
+    stream << " END " << *module_name_end_ << ".";
 
 }

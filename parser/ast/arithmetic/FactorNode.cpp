@@ -10,7 +10,7 @@ void NegatedFactorNode::accept(NodeVisitor &visitor) {
 }
 
 void NegatedFactorNode::print(ostream &stream) const {
-    stream << "~" << factor_;
+    stream << "~" << *factor_;
 }
 
 NegatedFactorNode::NegatedFactorNode(FilePos pos, std::unique_ptr<FactorNode> factor)
@@ -22,7 +22,7 @@ void ExpressionInFactorNode::accept(NodeVisitor &visitor) {
 }
 
 void ExpressionInFactorNode::print(ostream &stream) const {
-    stream << "(" << expr_ << ")";
+    stream << "(" << *expr_ << ")";
 }
 
 ExpressionInFactorNode::ExpressionInFactorNode(FilePos pos, std::unique_ptr<ExpressionNode> expr) : FactorNode(NodeType::factor,pos),expr_(std::move(expr)){};
@@ -32,7 +32,7 @@ void IdentSelectorFactorNode::accept(NodeVisitor &visitor) {
 }
 
 void IdentSelectorFactorNode::print(ostream &stream) const {
-    stream << ident_ << selector_;
+    stream << *ident_ << *selector_;
 }
 
 IdentSelectorFactorNode::IdentSelectorFactorNode(FilePos pos, std::unique_ptr<IdentNode> ident, std::unique_ptr<SelectorNode> selector)

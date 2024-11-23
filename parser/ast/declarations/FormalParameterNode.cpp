@@ -18,7 +18,7 @@ void FormalParameterNode::print(ostream &stream) const {
             stream << "; ";
         }
 
-        stream << itr->get();
+        stream << *(*itr);
 
     }
 

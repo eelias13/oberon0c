@@ -9,9 +9,9 @@ void ProcedureCallNode::accept(NodeVisitor &visitor) {
 }
 
 void ProcedureCallNode::print(ostream &stream) const {
-    stream << name_ << selector_;
+    stream << *name_ << *selector_;
 
     if(parameters_) {
-        stream << parameters_;
+        stream << *parameters_;
     }
 }

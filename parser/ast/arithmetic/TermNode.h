@@ -14,7 +14,7 @@ enum term_ops {MULT = 0, DIV, MOD, AND, TERM_NONE};
 
 typedef std::pair<term_ops, std::unique_ptr<FactorNode>> op_fact_pair;
 
-class TermNode : Node {
+class TermNode : public Node {
 
     private:
         std::vector<op_fact_pair> factors_;

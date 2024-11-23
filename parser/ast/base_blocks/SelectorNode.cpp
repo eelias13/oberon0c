@@ -16,12 +16,12 @@ void SelectorNode::print(ostream &stream) const {
         if(std::get<0>(*itr)){
 
             // Array Index
-            stream << "[" << std::get<2>(*itr).get() << "]";
+            stream << "[" << *std::get<2>(*itr) << "]";
 
         }else{
 
             // Field
-            stream << "." << std::get<1>(*itr).get();
+            stream << "." << *std::get<1>(*itr);
 
         }
 

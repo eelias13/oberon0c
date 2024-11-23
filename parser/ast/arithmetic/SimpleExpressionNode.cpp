@@ -19,7 +19,7 @@ void SimpleExpressionNode::print(ostream &stream) const {
             stream << " " << op_to_string[itr->first] << " ";
         }
 
-        stream << itr->second.get();
+        stream << *(itr->second);
 
     }
 

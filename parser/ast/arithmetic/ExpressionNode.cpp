@@ -13,10 +13,10 @@ void ExpressionNode::accept(NodeVisitor &visitor) {
 }
 
 void ExpressionNode::print(ostream &stream) const {
-    stream << left_;
+    stream << *left_;
 
     if(right_){
-        stream << " " << op_to_string[op_] << " " << right_;
+        stream << " " << op_to_string[op_] << " " << *right_;
     }
 }
 
