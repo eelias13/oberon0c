@@ -20,3 +20,7 @@ void IdentListNode::print(ostream &stream) const {
 
     }
 }
+
+void IdentListNode::add_identifier(std::unique_ptr<IdentNode> ident) {
+    identifier_.emplace_back(std::move(ident));
+}

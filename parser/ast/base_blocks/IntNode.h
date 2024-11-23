@@ -7,7 +7,7 @@
 
 #include "parser/ast/arithmetic/FactorNode.h"
 
-class IntNode : FactorNode {
+class IntNode : public FactorNode {
 
     private:
         long value_;

@@ -16,6 +16,7 @@ class FieldListNode : Node {
 
     public:
 
+    explicit FieldListNode(FilePos pos) : Node(NodeType::field_list,pos), fields_(nullptr),type_(nullptr){};
     explicit FieldListNode(FilePos pos, std::unique_ptr<IdentListNode> fields, std::unique_ptr<TypeNode> type) : Node(NodeType::field_list,pos),fields_(std::move(fields)),type_(std::move(type)) {};
 
     void accept(NodeVisitor &visitor) override;

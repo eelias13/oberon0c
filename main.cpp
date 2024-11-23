@@ -32,7 +32,9 @@ int main(const int argc, const char *argv[]) {
     //cout << *token << endl;
 
     Parser parser(scanner,logger);
-    parser.parse();
+    auto ast = parser.parse();
+    ast->print(std::cout);
+
 
     std::cout << "Parsed";
 

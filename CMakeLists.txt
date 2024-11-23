@@ -64,26 +64,30 @@ set(PARSER_SOURCES
         parser/ast/arithmetic/TermNode.cpp parser/ast/arithmetic/TermNode.h
         parser/ast/arithmetic/SimpleExpressionNode.cpp parser/ast/arithmetic/SimpleExpressionNode.h
         parser/ast/arithmetic/ExpressionNode.cpp parser/ast/arithmetic/ExpressionNode.h
-        #parser/ast/StatementNode.h
-        #parser/ast/AssignmentNode.cpp parser/ast/AssignmentNode.h
-        #parser/ast/ActualParametersNode.cpp parser/ast/ActualParametersNode.h
-        #parser/ast/ProcedureCallNode.cpp parser/ast/ProcedureCallNode.h
-        #parser/ast/RepeatStatementNode.cpp parser/ast/RepeatStatementNode.h
-        #parser/ast/WhileStatementNode.cpp parser/ast/WhileStatementNode.h
-        #parser/ast/IfStatementNode.cpp parser/ast/IfStatementNode.h
-        #parser/ast/StatementSequenceNode.cpp parser/ast/StatementSequenceNode.h
-        #parser/ast/TypeNode.h
-        #parser/ast/ArrayTypeNode.cpp parser/ast/ArrayTypeNode.h
-        #parser/ast/FieldListNode.cpp parser/ast/FieldListNode.h
-        #parser/ast/IdentListNode.cpp parser/ast/IdentListNode.h
-        #parser/ast/FPSectionNode.cpp parser/ast/FPSectionNode.h
-        #parser/ast/RecordTypeNode.cpp parser/ast/RecordTypeNode.h
-        #parser/ast/ModuleNode.cpp parser/ast/ModuleNode.h
-        #parser/ast/FormalParameterNode.cpp parser/ast/FormalParameterNode.h
-        #parser/ast/ProcedureHeadingNode.cpp parser/ast/ProcedureHeadingNode.h
-        #parser/ast/ProcedureBodyNode.cpp parser/ast/ProcedureBodyNode.h
-        #parser/ast/ProcedureDeclarationNode.cpp parser/ast/ProcedureDeclarationNode.h
-        #parser/ast/DeclarationsNode.cpp parser/ast/DeclarationsNode.h
+
+        parser/ast/statements/StatementNode.h
+        parser/ast/statements/AssignmentNode.cpp parser/ast/statements/AssignmentNode.h
+        parser/ast/statements/ActualParametersNode.cpp parser/ast/statements/ActualParametersNode.h
+        parser/ast/statements/ProcedureCallNode.cpp parser/ast/statements/ProcedureCallNode.h
+        parser/ast/statements/RepeatStatementNode.cpp parser/ast/statements/RepeatStatementNode.h
+        parser/ast/statements/WhileStatementNode.cpp parser/ast/statements/WhileStatementNode.h
+        parser/ast/statements/IfStatementNode.cpp parser/ast/statements/IfStatementNode.h
+        parser/ast/statements/StatementSequenceNode.cpp parser/ast/statements/StatementSequenceNode.h
+
+        parser/ast/declarations/TypeNode.h
+        parser/ast/declarations/ArrayTypeNode.cpp parser/ast/declarations/ArrayTypeNode.h
+        parser/ast/declarations/FieldListNode.cpp parser/ast/declarations/FieldListNode.h
+        parser/ast/declarations/IdentListNode.cpp parser/ast/declarations/IdentListNode.h
+        parser/ast/declarations/FPSectionNode.cpp parser/ast/declarations/FPSectionNode.h
+        parser/ast/declarations/RecordTypeNode.cpp parser/ast/declarations/RecordTypeNode.h
+        parser/ast/declarations/FormalParameterNode.cpp parser/ast/declarations/FormalParameterNode.h
+        parser/ast/declarations/ProcedureHeadingNode.cpp parser/ast/declarations/ProcedureHeadingNode.h
+        parser/ast/declarations/ProcedureBodyNode.cpp parser/ast/declarations/ProcedureBodyNode.h
+        parser/ast/declarations/ProcedureDeclarationNode.cpp parser/ast/declarations/ProcedureDeclarationNode.h
+        parser/ast/declarations/DeclarationsNode.cpp parser/ast/declarations/DeclarationsNode.h
+
+        parser/ast/ModuleNode.cpp parser/ast/ModuleNode.h
+
 )
 
 set(ALL_SOURCES global.h ${UTIL_SOURCES} ${SCANNER_SOURCES} ${PARSER_SOURCES}

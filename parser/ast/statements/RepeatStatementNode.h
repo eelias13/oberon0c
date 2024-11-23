@@ -8,7 +8,7 @@
 #include "parser/ast/arithmetic/ExpressionNode.h"
 #include "StatementSequenceNode.h"
 
-class RepeatStatementNode : StatementNode {
+class RepeatStatementNode : public StatementNode {
 
     private:
         std::unique_ptr<ExpressionNode> condition_;

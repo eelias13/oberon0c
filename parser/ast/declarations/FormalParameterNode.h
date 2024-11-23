@@ -9,10 +9,10 @@
 
 class FormalParameterNode : Node {
 
-    public:
+    private:
 
         std::vector<std::unique_ptr<FPSectionNode>> parameter_sections_;
-    private:
+    public:
 
         explicit FormalParameterNode(FilePos pos) : Node(NodeType::formal_parameters,pos){};
 

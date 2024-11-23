@@ -18,7 +18,7 @@ class ExpressionNode : Node {
 
         const static string op_to_string[7];
     public:
-        ExpressionNode(NodeType node_type, FilePos pos, std::unique_ptr<SimpleExpressionNode> left, expr_operator op = ERR, std::unique_ptr<SimpleExpressionNode> right = nullptr);
+        ExpressionNode(FilePos pos, std::unique_ptr<SimpleExpressionNode> left, expr_operator op = ERR, std::unique_ptr<SimpleExpressionNode> right = nullptr);
 
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;

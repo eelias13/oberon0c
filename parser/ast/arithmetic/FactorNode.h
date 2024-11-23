@@ -18,7 +18,7 @@ class FactorNode : Node {
         virtual void print(std::ostream &stream) const = 0;
 };
 
-class NegatedFactorNode : FactorNode {
+class NegatedFactorNode : public FactorNode {
 
     private:
         std::unique_ptr<FactorNode> factor_;
@@ -32,7 +32,7 @@ class NegatedFactorNode : FactorNode {
 };
 
 
-class ExpressionInFactorNode : FactorNode{
+class ExpressionInFactorNode : public FactorNode {
     private:
         std::unique_ptr<ExpressionNode> expr_;
 
@@ -44,7 +44,7 @@ class ExpressionInFactorNode : FactorNode{
 };
 
 
-class IdentSelectorFactorNode : FactorNode{
+class IdentSelectorFactorNode : public FactorNode {
     private:
         std::unique_ptr<IdentNode> ident_;
         std::unique_ptr<SelectorNode> selector_;

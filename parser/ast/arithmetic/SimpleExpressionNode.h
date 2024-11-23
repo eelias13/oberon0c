@@ -5,9 +5,10 @@
 #ifndef OBERON0C_SIMPLEEXPRESSIONNODE_H
 #define OBERON0C_SIMPLEEXPRESSIONNODE_H
 
-#include "TermNode.h"
+#include "../Node.h"
 #include <vector>
 
+class TermNode;
 
 enum simpexpr_op {PLUS = 0, MINUS, OR, NONE};
 
@@ -22,9 +23,9 @@ class SimpleExpressionNode : Node {
 
     public:
 
-        SimpleExpressionNode(FilePos pos, std::unique_ptr<TermNode> initial_expr, simpexpr_op initial_op = NONE) : Node(NodeType::simple_expression,pos) {expressions_.emplace_back(initial_op, std::move(initial_expr));};
+        SimpleExpressionNode(FilePos pos, std::unique_ptr<TermNode> initial_expr, simpexpr_op initial_op = NONE);
 
-        void addTerm(std::unique_ptr<TermNode> term, simpexpr_op op){expressions_.emplace_back(op,std::move(term));};
+        void addTerm(std::unique_ptr<TermNode> term, simpexpr_op op);
 
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;

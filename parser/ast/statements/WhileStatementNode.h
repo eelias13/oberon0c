@@ -8,7 +8,7 @@
 #include "parser/ast/statements/StatementSequenceNode.h"
 #include "parser/ast/arithmetic/ExpressionNode.h"
 
-class WhileStatementNode : StatementNode {
+class WhileStatementNode : public StatementNode {
 
     protected:
         std::unique_ptr<ExpressionNode> condition_;

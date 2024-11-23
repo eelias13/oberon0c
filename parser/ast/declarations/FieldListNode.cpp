@@ -10,6 +10,8 @@ void FieldListNode::accept(NodeVisitor &visitor) {
 
 void FieldListNode::print(ostream &stream) const {
 
-    stream << fields_ << " : " << type_;
+    if(fields_){
+        stream << fields_ << " : " << type_;
+    }
 
 }

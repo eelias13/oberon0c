@@ -20,8 +20,7 @@ class ProcedureBodyNode : Node {
 
     public:
 
-        ProcedureBodyNode(FilePos pos, std::unique_ptr<DeclarationsNode> declarations, std::unique_ptr<IdentNode> name, std::unique_ptr<StatementSequenceNode> statements = nullptr) :
-                        Node(NodeType::procedure_body,pos), declarations_(std::move(declarations)), statements_(std::move(statements)), name_(std::move(name)) {};
+        ProcedureBodyNode(FilePos pos, std::unique_ptr<DeclarationsNode> declarations, std::unique_ptr<IdentNode> name, std::unique_ptr<StatementSequenceNode> statements = nullptr);
 
 
         void accept(NodeVisitor &visitor) override;

@@ -10,7 +10,7 @@
 #include "parser/ast/base_blocks/IdentNode.h"
 #include "parser/ast/base_blocks/SelectorNode.h"
 
-class ProcedureCallNode : StatementNode {
+class ProcedureCallNode : public StatementNode {
 
     private:
         std::unique_ptr<IdentNode> name_;
@@ -20,7 +20,7 @@ class ProcedureCallNode : StatementNode {
 
     public:
 
-        explicit ProcedureCallNode(FilePos pos, std::unique_ptr<IdentNode> name, std::unique_ptr<SelectorNode> selector, std::unique_ptr<ActualParametersNode> parameters) : StatementNode(NodeType::procedure_call,pos), name_(std::move(name)), selector_(std::move(selector)), parameters_(std::move(parameters)) { };
+        explicit ProcedureCallNode(FilePos pos, std::unique_ptr<IdentNode> name, std::unique_ptr<SelectorNode> selector, std::unique_ptr<ActualParametersNode> parameters = nullptr) : StatementNode(NodeType::procedure_call,pos), name_(std::move(name)), selector_(std::move(selector)), parameters_(std::move(parameters)) { };
 
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;

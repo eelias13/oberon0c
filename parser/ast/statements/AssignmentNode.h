@@ -10,7 +10,7 @@
 #include "parser/ast/base_blocks/SelectorNode.h"
 #include "parser/ast/arithmetic/ExpressionNode.h"
 
-class AssignmentNode : StatementNode{
+class AssignmentNode : public StatementNode{
     private:
         std::unique_ptr<IdentNode> variable_;
         std::unique_ptr<SelectorNode> selector_;

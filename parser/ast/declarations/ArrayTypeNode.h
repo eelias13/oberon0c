@@ -8,7 +8,7 @@
 #include "TypeNode.h"
 #include "parser/ast/arithmetic/ExpressionNode.h"
 
-class ArrayTypeNode : TypeNode {
+class ArrayTypeNode : public TypeNode {
 
     private:
         std::unique_ptr<ExpressionNode> name_;

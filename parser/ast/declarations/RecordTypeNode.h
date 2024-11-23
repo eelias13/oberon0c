@@ -8,7 +8,7 @@
 #include "parser/ast/declarations/FieldListNode.h"
 #include "TypeNode.h"
 
-class RecordTypeNode : TypeNode{
+class RecordTypeNode : public TypeNode{
 
     private:
         std::vector<std::unique_ptr<FieldListNode>> fields_;

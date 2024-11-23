@@ -9,5 +9,10 @@ void ProcedureHeadingNode::accept(NodeVisitor &visitor) {
 }
 
 void ProcedureHeadingNode::print(ostream &stream) const {
-    stream << "PROCEDURE " << name_ << params_;
+    stream << "PROCEDURE " << name_;
+
+    if(params_){
+        stream << params_;
+    }
+
 }

@@ -4,250 +4,369 @@
 //
 
 #include "Parser.h"
+#include "../scanner/IdentToken.h"
 
 // ident -> letter (letter | digit)*  (already recognized by the scanner in full)
-void Parser::ident() {
+std::unique_ptr<IdentNode> Parser::ident() {
     logger_.info("Ident");
+    auto start = scanner_.peek()->start();
     auto token = scanner_.peek();
     if(token->type() == TokenType::const_ident){
-        scanner_.next();
-        return;                                    // success
+        auto ident_pntr = scanner_.next();
+        auto ident_token = dynamic_cast<const IdentToken*>(ident_pntr.get());
+        return std::make_unique<IdentNode>(start, ident_token->value());                                    // success
     }
 
-    return; // Syntax Error (Expected Identifier, but got)
+    return nullptr; // Syntax Error (Expected Identifier, but got)
 
 }
 
 // integer -> digit (digit)*  (already recognized by the scanner in full)
-void Parser::integer() {
+std::unique_ptr<IntNode> Parser::integer() {
     logger_.info("Integer");
     auto token_type = scanner_.peek()->type();
     if(token_type == TokenType::int_literal || token_type == TokenType::short_literal || token_type == TokenType::long_literal){
-        scanner_.next();
-        return; // Success
+        auto int_pntr = scanner_.next();
+
+        long int_value;
+        switch(token_type){
+            case TokenType::int_literal:
+                int_value = dynamic_cast<const IntLiteralToken*>(int_pntr.get())->value();
+                break;
+            case TokenType::short_literal:
+                int_value = dynamic_cast<const ShortLiteralToken*>(int_pntr.get())->value();
+                break;
+            case TokenType::long_literal:
+                int_value = dynamic_cast<const LongLiteralToken*>(int_pntr.get())->value();
+                break;
+        }
+
+
+        return std::make_unique<IntNode>(int_pntr->start(),int_value); // Success
     }
 
-    return; // Syntax Error (Expected Integer, but got)
+    return nullptr; // Syntax Error (Expected Integer, but got)
 }
 
 // number -> integer
-void Parser::number() {
-    integer();
+std::unique_ptr<IntNode> Parser::number() {
+    return integer();
 }
 
 // selector -> ("." ident | "[" expression "]" )*
-void Parser::selector() {
+std::unique_ptr<SelectorNode> Parser::selector() {
     logger_.info("Selector");
-    auto token_type = scanner_.peek()->type();
+    auto start = scanner_.peek()->start();
+    auto token = scanner_.peek();
 
-    while(token_type == TokenType::period || token_type == TokenType::lbrack){
+    auto selector = std::make_unique<SelectorNode>(start);
 
-        if(token_type == TokenType::period){
+    while(token->type() == TokenType::period || token->type() == TokenType::lbrack){
+
+        if(token->type() == TokenType::period){
             scanner_.next();
-            ident();
+            auto identifier = ident();
+            selector->add_field(std::move(identifier));
         }
         else{
             scanner_.next();
-            expression();
-            token_type = scanner_.peek()->type();
+            auto expr = expression();
+            token = scanner_.peek();
 
-            if(token_type == TokenType::rbrack){
+            if(token->type() == TokenType::rbrack){
                 scanner_.next();
+                selector->add_index(std::move(expr));
             }else{
-                return; // Syntax Error (Expected ")" but got)
+                return nullptr; // Syntax Error (Expected ")" but got)
             }
         }
 
-        token_type = scanner_.peek()->type();
+        token = scanner_.peek();
 
     }
+
+    return selector;
 
 }
 
 // factor -> ident selector | number | "(" expression ")" | "~" factor
-void Parser::factor() {
+std::unique_ptr<FactorNode> Parser::factor() {
     logger_.info("Factor");
+    auto start = scanner_.peek()->start();
     auto token = scanner_.peek();
-    switch (token->type()) {
 
-        case TokenType::const_ident:
-            ident();
-            selector();
-            return;
-        case TokenType::int_literal:
-        case TokenType::short_literal:
-        case TokenType::long_literal:
-            number();
-            return;
-        case TokenType::lparen:
+    if(token->type() == TokenType::const_ident){
+        auto id = ident();
+        auto sel = selector();
+        return std::make_unique<IdentSelectorFactorNode>(start,std::move(id),std::move(sel));
+    }
+
+    else if(token->type() == TokenType::int_literal || token->type() == TokenType::short_literal || token->type() == TokenType::long_literal){
+        return number();
+    }
+
+    else if(token->type() == TokenType::lparen){
+        scanner_.next();
+        auto expr = expression();
+        token = scanner_.peek();
+        if(token->type() == TokenType::rparen){
             scanner_.next();
-            expression();
-            token = scanner_.peek();
-            if(token->type() == TokenType::rparen){
-                scanner_.next();
-                return;
-                // successful
-            }
-            return;
-        case TokenType::op_not:
-            scanner_.next();
-            factor();
-            return;                 // successful
-        default:
-            // syntax error (Expected identifier, integer, "(" or "~", but got)
-            return;
+            return std::make_unique<ExpressionInFactorNode>(start,std::move(expr));
+        }
+        return nullptr;
+    }
+
+    else if(token->type() == TokenType::op_not){
+        auto factor_token = scanner_.next();
+        auto fact = factor();
+        return std::make_unique<NegatedFactorNode>(factor_token->start(),std::move(fact));
+    }
+
+    else{
+        // syntax error (Expected identifier, integer, "(" or "~", but got)
+        return nullptr;
     }
 
 }
 
 // term -> factor (("*" | "DIV" | "MOD" | "&") factor)*
-void Parser::term() {
+std::unique_ptr<TermNode>  Parser::term() {
     logger_.info("Term");
-    factor();
+    auto start = scanner_.peek()->start();
+    auto fact = factor();
     auto token_type = scanner_.peek()->type();
+
+    auto term_node = std::make_unique<TermNode>(start,std::move(fact));
+
     while(token_type == TokenType::op_times || token_type == TokenType::op_div ||
           token_type == TokenType::op_mod   || token_type == TokenType::op_and) {
 
+        term_ops op;
+        switch (token_type) {
+            case TokenType::op_times:
+                op = term_ops::MULT;
+                break;
+            case TokenType::op_div:
+                op = term_ops::DIV;
+                break;
+            case TokenType::op_mod:
+                op = term_ops::MOD;
+                break;
+            case TokenType::op_and:
+                op = term_ops::AND;
+                break;
+        }
+
         scanner_.next();
-        factor();
+        term_node->addFactor(op,factor());
         token_type = scanner_.peek()->type();
     }
 
-    return;
+    return term_node;
 
 }
 
 // SimpleExpression -> ("+" | "-" | €) term (("+"|"-"|"OR") term)*
-void Parser::simple_expression() {
+std::unique_ptr<SimpleExpressionNode> Parser::simple_expression() {
+
     logger_.info("Simple Expression");
-    auto token_type = scanner_.peek()->type();
-    if(token_type == TokenType::op_plus || token_type == TokenType::op_minus){
+
+    auto start = scanner_.peek()->start();
+    auto token = scanner_.peek();
+    auto op = simpexpr_op::NONE;
+
+    if(token->type() == TokenType::op_plus || token->type() == TokenType::op_minus){
+        op = (token->type() == TokenType::op_plus) ? simpexpr_op::PLUS : simpexpr_op::OR;
         scanner_.next();
     }
-    term();
+    auto fst_term = term();
 
-    token_type = scanner_.peek()->type();
-    while(token_type == TokenType::op_plus || token_type == TokenType::op_minus || token_type == TokenType::op_or){
+    auto simp_expr = std::make_unique<SimpleExpressionNode>(start,std::move(fst_term),op);
+
+    token = scanner_.peek();
+    while(token->type() == TokenType::op_plus || token->type() == TokenType::op_minus || token->type() == TokenType::op_or){
+
+        simpexpr_op op;
+        switch (token->type()) {
+            case TokenType::op_plus:
+                op = simpexpr_op::PLUS;
+                break;
+            case TokenType::op_minus:
+                op = simpexpr_op::MINUS;
+                break;
+            case TokenType::op_or:
+                op = simpexpr_op::OR;
+                break;
+        }
 
         scanner_.next();
-        term();
-        token_type = scanner_.peek()->type();
+        auto trm = term();
+        simp_expr->addTerm(std::move(trm),op);
+
+        token = scanner_.peek();
     }
 
-    return;
+    return simp_expr;
 
 }
 
 // Expression -> SimpleExpression (("="|"#"|"<"|"<="|">"|">=") SimpleExpression)?
-void Parser::expression() {
+std::unique_ptr<ExpressionNode> Parser::expression() {
     logger_.info("Expression");
-    simple_expression();
+    auto start = scanner_.peek()->start();
+    auto fst_expr = simple_expression();
 
     auto token_type = scanner_.peek()->type();
     if(token_type == TokenType::op_eq || token_type == TokenType::op_neq ||
        token_type == TokenType::op_lt || token_type == TokenType::op_leq ||
        token_type == TokenType::op_gt || token_type == TokenType::op_geq) {
 
+        expr_operator op;
+        switch (token_type) {
+            case TokenType::op_eq:
+                op = expr_operator::EQ;
+                break;
+            case TokenType::op_neq:
+                op = expr_operator::NEQ;
+                break;
+            case TokenType::op_lt:
+                op = expr_operator::LT;
+                break;
+            case TokenType::op_leq:
+                op = expr_operator::LEQ;
+                break;
+            case TokenType::op_gt:
+                op = expr_operator::GT;
+                break;
+            case TokenType::op_geq:
+                op = expr_operator::GEQ;
+                break;
+        }
+
         scanner_.next();
-        simple_expression();
+        auto snd_expr = simple_expression();
+
+        return std::make_unique<ExpressionNode>(start,std::move(fst_expr),op,std::move(snd_expr));
+
+    }
+    else{
+        return std::make_unique<ExpressionNode>(start,std::move(fst_expr));
     }
 
 
 }
 
 // Assignment -> Ident Selector ":=" Expression
-void Parser::assignment() {
+std::unique_ptr<AssignmentNode> Parser::assignment() {
     logger_.info("Assignment");
-    ident();
-    selector();
+
+    auto start = scanner_.peek()->start();
+    auto id = ident();
+    auto sel = selector();
 
     auto token = scanner_.peek();
     if(token->type() == TokenType::op_becomes){
         scanner_.next();
-        expression();
-        return;
+        auto expr = expression();
+        return std::make_unique<AssignmentNode>(start,std::move(id),std::move(sel),std::move(expr));
     }
 
-    return; //Syntax Error (Expected ":=", but got...) (Special Cases: Did you put "=" instead ":=" ? Did you forget the "=" after the ":")
+    return nullptr; //Syntax Error (Expected ":=", but got...) (Special Cases: Did you put "=" instead ":=" ? Did you forget the "=" after the ":")
 }
 
 // ActualParameters -> "(" (expression ("," expression)*)? ")"
-void Parser::actual_parameters() {
+std::unique_ptr<ActualParametersNode> Parser::actual_parameters() {
     logger_.info("Actual Parameters");
-    auto token_type = scanner_.peek()->type();
-    if(token_type == TokenType::lparen){
+    auto token = scanner_.peek();
+
+    auto actual_params = std::make_unique<ActualParametersNode>(token->start());
+
+    if(token->type() == TokenType::lparen){
         scanner_.next();
-        token_type = scanner_.peek()->type();
+        token = scanner_.peek();
 
         // Case: No expression
-        if(token_type == TokenType::rparen){
+        if(token->type() == TokenType::rparen){
             scanner_.next();
-            return; //Success
+            return actual_params; //Success
         }
 
         // Case: (At Least) One Expression
-        expression();
-        token_type = scanner_.peek()->type();
+        actual_params->add_expression(expression());
+        token = scanner_.peek();
 
         // Multiple Expressions
-        while(token_type == TokenType::comma){
+        while(token->type() == TokenType::comma){
             scanner_.next();
-            expression();
-            token_type = scanner_.peek()->type();
+            actual_params->add_expression(expression());
+            token = scanner_.peek();
         }
 
-        if(token_type == TokenType::rparen){
+        if(token->type() == TokenType::rparen){
             scanner_.next();
-            return;
+            return actual_params;
         }
         else{
-            // Syntax Error (Expected ")", but got...)
+            return nullptr; // Syntax Error (Expected ")", but got...)
         }
     }
 
-    return; // Syntax Error (Expected "(", but got...)
+    return nullptr; // Syntax Error (Expected "(", but got...)
 
 }
 
 // ProcedureCall -> Ident Selector (ActualParameters)?
-void Parser::procedure_call() {
+std::unique_ptr<ProcedureCallNode> Parser::procedure_call() {
     logger_.info("Procedure Call");
-    ident();
-    selector();
+
+    auto start = scanner_.peek()->start();
+    auto id = ident();
+    auto sel = selector();
 
     // Check for parenthesis to see whether ActualParameters term exists
     auto token_type = scanner_.peek()->type();
     if(token_type == TokenType::lparen){
-        actual_parameters();
+        auto params = actual_parameters();
+        return std::make_unique<ProcedureCallNode>(start,std::move(id),std::move(sel), std::move(params));
     }
+
+    return std::make_unique<ProcedureCallNode>(start,std::move(id),std::move(sel));
 
 }
 
 // IfStatement -> "IF" expression "THEN" StatementSequence ("ELSIF" expression "THEN" StatementSequence)* ("ELSE" StatementSequence)? "END"
-void Parser::if_statement() {
+std::unique_ptr<IfStatementNode> Parser::if_statement() {
     logger_.info("If Statement");
+    auto start = scanner_.peek()->start();
     auto token_type = scanner_.peek()->type();
+
     if(token_type == TokenType::kw_if){
 
         scanner_.next();
-        expression();
+        auto condition = expression();
         token_type = scanner_.peek()->type();
         if(token_type == TokenType::kw_then){
             scanner_.next();
-            statement_sequence();
+            auto then = statement_sequence();
             token_type = scanner_.peek()->type();
+
+            // CONSTRUCT NODE
+            auto if_node = std::make_unique<IfStatementNode>(start,std::move(condition),std::move(then));
 
             // ELSE IF
             while(token_type == TokenType::kw_elsif){
                 scanner_.next();
-                expression();
+                auto elif_cond = expression();
+                std::unique_ptr<StatementSequenceNode> elif_then;
+
                 token_type = scanner_.peek()->type();
 
                 if(token_type == TokenType::kw_then){
                     scanner_.next();
-                    statement_sequence();
+                    elif_then = statement_sequence();
+                    if_node->add_else_if(std::move(elif_cond),std::move(elif_then));
                 }else{
-                    return; // Syntax Error (Expected "THEN" after "ELSIF")
+                    return nullptr; // Syntax Error (Expected "THEN" after "ELSIF")
                 }
 
                 token_type = scanner_.peek()->type();
@@ -257,86 +376,91 @@ void Parser::if_statement() {
             // ELSE
             if(token_type == TokenType::kw_else){
                 scanner_.next();
-                statement_sequence();
+                if_node->add_else(statement_sequence());
                 token_type = scanner_.peek()->type();
             }
 
             if(token_type == TokenType::kw_end){
                 scanner_.next();
-                return; // All successful
+                return if_node; // All successful
             }
 
 
         }
         else{
-            return; // Syntax Error (Expected "THEN" after IF)
+            return nullptr; // Syntax Error (Expected "THEN" after IF)
         }
 
     }
 
-    return; // Syntax Error (Expected "if", but got...)
+    return nullptr; // Syntax Error (Expected "if", but got...)
 }
 
 // WhileStatement -> "WHILE" expression "DO" StatementSequence "END"
-void Parser::while_statement() {
+std::unique_ptr<WhileStatementNode> Parser::while_statement() {
     logger_.info("While Statement");
+
+    auto start = scanner_.peek()->start();
     auto token_type = scanner_.peek()->type();
 
     if(token_type == TokenType::kw_while){
         scanner_.next();
-        expression();
+        auto cond = expression();
         token_type = scanner_.peek()->type();
 
         if(token_type == TokenType::kw_do){
             scanner_.next();
-            statement_sequence();
+            auto statements = statement_sequence();
             token_type = scanner_.peek()->type();
 
             if(token_type == TokenType::kw_end){
                 scanner_.next();
-                return; // successful;
+                return std::make_unique<WhileStatementNode>(start, std::move(cond),std::move(statements)); // successful;
             }
             else{
-                return; // Syntax Error (No "END" after While Statement)
+                return nullptr; // Syntax Error (No "END" after While Statement)
             }
         }
         else{
-            return; // Syntax Error (No "DO" after "WHILE")
+            return nullptr; // Syntax Error (No "DO" after "WHILE")
         }
     }
 
-    return; // Syntax Error (Expected "While", but got...)
+    return nullptr; // Syntax Error (Expected "While", but got...)
 }
 
 // RepeatStatement -> "REPEAT" StatementSequence "UNTIL" expression
-void Parser::repeat_statement() {
+std::unique_ptr<RepeatStatementNode> Parser::repeat_statement() {
     logger_.info("Repeat Statement");
+
+    auto start = scanner_.peek()->start();
     auto token_type = scanner_.peek()->type();
 
     if(token_type == TokenType::kw_repeat){
         scanner_.next();
-        statement_sequence();
+        auto statements = statement_sequence();
         token_type = scanner_.peek()->type();
 
         if(token_type == TokenType::kw_until) {
             scanner_.next();
-            expression();
-            return;
+            auto cond = expression();
+            return std::make_unique<RepeatStatementNode>(start,std::move(cond),std::move(statements));
         }
         else{
-            return; // Syntax Error (No "UNTIL" after "REPEAT")
+            return nullptr; // Syntax Error (No "UNTIL" after "REPEAT")
         }
     }
 
-    return; // Syntax Error (Expected "REPEAT" but got...)
+    return nullptr; // Syntax Error (Expected "REPEAT" but got...)
 }
 
 // Statement -> (assignment | Procedure Call | IfStatement | WhileStatement)
 // Note: While not included in the CompilerConstruction book, this should contain "RepeatStatement" as well
-void Parser::statement() {
+std::unique_ptr<StatementNode>  Parser::statement() {
 
     logger_.info("Statement");
 
+    auto start = scanner_.peek()->start();
     auto token_type = scanner_.peek()->type();
 
     // Check the next token to decide which Non-terminal "Statement" is derived into
@@ -349,101 +473,108 @@ void Parser::statement() {
         //  assignment -> ident selector ":=" expression
         //  procedureCall -> ident selector [ActualParameters]?
 
-        ident();
-        selector();
+        auto id = ident();
+        auto sel = selector();
 
         token_type = scanner_.peek()->type();
 
         // Assignment
         if(token_type == TokenType::op_becomes){
             scanner_.next();
-            expression();
-            return;
+            auto expr = expression();
+            return std::make_unique<AssignmentNode>(start,std::move(id),std::move(sel),std::move(expr));
         }
 
         // Procedure Call
         // Check for "(" to see whether the (ActualParameters) term exists
         token_type = scanner_.peek()->type();
         if(token_type == TokenType::lparen){
-            actual_parameters();
+            auto params = actual_parameters();
+            return std::make_unique<ProcedureCallNode>(start,std::move(id),std::move(sel), std::move(params));
         }
-        return;
+        return std::make_unique<ProcedureCallNode>(start,std::move(id),std::move(sel));
     }
 
     // IfStatement
     if(token_type == TokenType::kw_if){
-        if_statement();
-        return;
+        return if_statement();
     }
 
     // WhileStatement
     if(token_type == TokenType::kw_while){
-        while_statement();
-        return;
+        return while_statement();
     }
 
     // RepeatStatement
     if(token_type == TokenType::kw_repeat){
-        repeat_statement();
-        return;
+        return repeat_statement();
     }
 
-    return; // Syntax Error (Empty or Undefined Statement. Expected Identifier, "IF", "WHILE" or "REPEAT" but got...)
+    return nullptr; // Syntax Error (Empty or Undefined Statement. Expected Identifier, "IF", "WHILE" or "REPEAT" but got...)
 
 }
 
 // StatementSequence -> Statement (";" statement)*
-void Parser::statement_sequence() {
+std::unique_ptr<StatementSequenceNode> Parser::statement_sequence() {
     logger_.info("Statement Sequence");
-    statement();
+    auto start = scanner_.peek()->start();
+    auto first = statement();
+
+    auto sequence = std::make_unique<StatementSequenceNode>(start,std::move(first));
 
     auto token_type = scanner_.peek()->type();
     while(token_type == TokenType::semicolon){
         scanner_.next();
-        statement();
+        sequence->add_statement(statement());
         token_type = scanner_.peek()->type();
     }
+
+    return sequence;
 
 }
 
 // IdentList -> Ident ("," ident)*
-void Parser::ident_list() {
+std::unique_ptr<IdentListNode> Parser::ident_list() {
     logger_.info("Ident List");
-    ident();
+    auto start = scanner_.peek()->start();
+    auto id_list = std::make_unique<IdentListNode>(start,ident());
 
     auto token_type = scanner_.peek()->type();
     while(token_type == TokenType::comma){
         scanner_.next();
-        ident();
+        id_list->add_identifier(ident());
         token_type = scanner_.peek()->type();
     }
+
+    return id_list;
 }
 
 // FieldList -> (IdentList ":" type)?
-void Parser::field_list() {
+std::unique_ptr<FieldListNode>  Parser::field_list() {
     logger_.info("Field List");
+    auto start = scanner_.peek()->start();
+
     // Check Follows(FieldList) to decide whether this FieldList is empty or not
     // Follows(FieldList) = ; END
-
     auto token_type = scanner_.peek()->type();
     if(token_type == TokenType::semicolon || token_type == TokenType::kw_end){
-        return; // Field List empty, continue parsing in upper layer
+        return std::make_unique<FieldListNode>(start); // Field List empty, continue parsing in upper layer
     }
 
-    ident_list();
+    auto idents = ident_list();
     token_type = scanner_.peek()->type();
     if(token_type == TokenType::colon){
         scanner_.next();
-        type();
-        return;
+        auto idents_type = type();
+        return std::make_unique<FieldListNode>(start,std::move(idents),std::move(idents_type));
     }
 
-    return; // Syntax Error (Expected ":", but got...)
+    return nullptr; // Syntax Error (Expected ":", but got...)
 
 }
 
 // Type -> Ident | ArrayType | RecordType
-void Parser::type() {
+std::unique_ptr<TypeNode> Parser::type() {
     logger_.info("Type");
     auto token_type = scanner_.peek()->type();
 
@@ -451,100 +582,108 @@ void Parser::type() {
 
     // ArrayType
     if(token_type == TokenType::kw_array){
-        array_type();
-        return;
+        return array_type();
     }
 
     // RecordType
     if(token_type == TokenType::kw_record){
-        record_type();
-        return;
+        return record_type();
     }
 
     // Identifier
-    ident();
+    return ident();
 
 }
 
 // ArrayType -> "ARRAY" expression "OF" type
-void Parser::array_type() {
+std::unique_ptr<ArrayTypeNode> Parser::array_type() {
     logger_.info("Array Type");
+    auto start = scanner_.peek()->start();
     auto token_type = scanner_.peek()->type();
 
     if(token_type == TokenType::kw_array){
         scanner_.next();
-        expression();
+        auto expr = expression();
         token_type = scanner_.peek()->type();
 
         if(token_type == TokenType::kw_of){
             scanner_.next();
-            type();
-            return;
+            auto arr_type = type();
+            return std::make_unique<ArrayTypeNode>(start,std::move(expr),std::move(arr_type));
         }
         else{
-            return; // Syntax Error (No "OF" after "ARRAY" in Type Description)
+            return nullptr; // Syntax Error (No "OF" after "ARRAY" in Type Description)
         }
 
     }
 
-    return; // Syntax Error (Expected "ARRAY" but got, ...)
+    return nullptr; // Syntax Error (Expected "ARRAY" but got, ...)
 }
 
 // RecordType = "RECORD" FieldList (";" FieldList)* "END"
-void Parser::record_type() {
+std::unique_ptr<RecordTypeNode> Parser::record_type() {
     logger_.info("Record Type");
+    auto start = scanner_.peek()->start();
     auto token_type = scanner_.peek()->type();
 
     if(token_type == TokenType::kw_record){
         scanner_.next();
-        field_list();
+        auto rec_type = std::make_unique<RecordTypeNode>(start,std::move(field_list()));
+
         token_type = scanner_.peek()->type();
 
         while (token_type == TokenType::semicolon){
             scanner_.next();
-            field_list();
+            rec_type->add_field_list(field_list());
             token_type = scanner_.peek()->type();
         }
 
         if(token_type == TokenType::kw_end){
             scanner_.next();
-            return; // Success
+            return rec_type; // Success
         }
         else{
-            return; // Syntax Error (No "END" after Record Type Declaration)
+            return nullptr; // Syntax Error (No "END" after Record Type Declaration)
         }
 
     }
 
-    return; // Syntax Error (Expected "RECORD", but got...)
+    return nullptr; // Syntax Error (Expected "RECORD", but got...)
 }
 
 // FPSection -> ("VAR")? IdentList ":" type
-void Parser::fp_section() {
+std::unique_ptr<FPSectionNode> Parser::fp_section() {
     logger_.info("FPSection");
+    auto start = scanner_.peek()->start();
     auto token_type = scanner_.peek()->type();
+
+    bool var_included = false;
 
     if(token_type == TokenType::kw_var){
         scanner_.next();
+        var_included = true;
     }
 
-    ident_list();
+    auto id_list = ident_list();
 
     token_type = scanner_.peek()->type();
     if(token_type == TokenType::colon){
         scanner_.next();
-        type();
-        return;
+        auto var_type = type();
+        return std::make_unique<FPSectionNode>(start,var_included,std::move(id_list),std::move(var_type));
     }
 
-    return; // Syntax Error(Expected ":", but got...)
+    return nullptr; // Syntax Error(Expected ":", but got...)
 
 }
 
 // FormalParameters -> "(" (FPSection (";" FPSection)*  )? ")"
-void Parser::formal_parameters() {
+std::unique_ptr<FormalParameterNode> Parser::formal_parameters() {
     logger_.info("Formal Parameters");
+    auto start = scanner_.peek()->start();
     auto token_type = scanner_.peek()->type();
+
+    auto formal_params = std::make_unique<FormalParameterNode>(start);
 
     if(token_type == TokenType::lparen){
 
@@ -554,90 +693,93 @@ void Parser::formal_parameters() {
         // Empty Parameters
         if(token_type == TokenType::rparen){
             scanner_.next();
-            return; // Success
+            return formal_params; // Success
         }
 
         // FPSections
-        fp_section();
+        formal_params->add_parameter_section(fp_section());
         token_type = scanner_.peek()->type();
 
         while(token_type == TokenType::semicolon){
             scanner_.next();
-            fp_section();
+            formal_params->add_parameter_section(fp_section());
             token_type = scanner_.peek()->type();
         }
 
         if(token_type == TokenType::rparen){
             scanner_.next();
-            return; // Success
+            return formal_params; // Success
         }
         else{
-            return; // Syntax Error (Expected ")", but got...)
+            return nullptr; // Syntax Error (Expected ")", but got...)
         }
 
     }
 
-    return; // Syntax Error (Expected "(", but got...)
+    return nullptr; // Syntax Error (Expected "(", but got...)
 }
 
 // ProcedureHeadingNode -> "PROCEDURE" Ident (FormalParameters)?
-void Parser::procedure_heading() {
+std::unique_ptr<ProcedureHeadingNode>  Parser::procedure_heading() {
     logger_.info("Procedure Heading");
+    auto start = scanner_.peek()->start();
     auto token_type = scanner_.peek()->type();
 
     if(token_type == TokenType::kw_procedure){
         scanner_.next();
-        ident();
+        auto id = ident();
 
         // To see whether FormalParameters follow, we check if an "(" follows
         token_type = scanner_.peek()->type();
         if(token_type == TokenType::lparen){
-            formal_parameters();
+            return std::make_unique<ProcedureHeadingNode>(start,std::move(id),formal_parameters());
         }
 
-        return; // Success
+        return std::make_unique<ProcedureHeadingNode>(start,std::move(id));
 
     }
 
-    return; // Syntax Error (Expected "PROCEDURE", but got...)
+    return nullptr; // Syntax Error (Expected "PROCEDURE", but got...)
 }
 
 // ProcedureBodyNode -> declarations ("BEGIN" StatementSequence)? "END" ident
-void Parser::procedure_body() {
+std::unique_ptr<ProcedureBodyNode> Parser::procedure_body() {
     logger_.info("Procedure Body");
-    declarations();
+    auto start = scanner_.peek()->start();
+    auto declars = declarations();
 
     auto token_type = scanner_.peek()->type();
 
     // Statement Sequence
+    std::unique_ptr<StatementSequenceNode> statements = nullptr;
     if(token_type == TokenType::kw_begin){
         scanner_.next();
-        statement_sequence();
+        statements = statement_sequence();
         token_type = scanner_.peek()->type();
     }
 
     if(token_type == TokenType::kw_end){
         scanner_.next();
-        ident();
-        return;
+        return std::make_unique<ProcedureBodyNode>(start,std::move(declars),ident(),std::move(statements));
     }
 
-    return; // Syntax Error (No "END" in Procedure Body) / (Expected "END", but got...)
+    return nullptr; // Syntax Error (No "END" in Procedure Body) / (Expected "END", but got...)
 }
 
 // ProcedureDeclaration = ProcedureHeadingNode ";" ProcedureBodyNode
-void Parser::procedure_declaration() {
+std::unique_ptr<ProcedureDeclarationNode> Parser::procedure_declaration() {
     logger_.info("Procedure Declaration");
-    procedure_heading();
+    auto start = scanner_.peek()->start();
+    auto heading = procedure_heading();
 
     auto token_type = scanner_.peek()->type();
     if(token_type == TokenType::semicolon){
         scanner_.next();
-        procedure_body();
-        return;
+        auto body = procedure_body();
+        return std::make_unique<ProcedureDeclarationNode>(start,std::move(heading),std::move(body));
     }
 
-    return; // Syntax Error (Expected ";", but got...)
+    return nullptr; // Syntax Error (Expected ";", but got...)
 
 }
 
@@ -645,9 +787,12 @@ void Parser::procedure_declaration() {
 //                     ("TYPE"  (ident "=" type ";") *      )?
 //                     ("VAR"   (identList ":" type ";")*   )?
 //                     (ProcedureDeclaration ";"            )*
-void Parser::declarations() {
+std::unique_ptr<DeclarationsNode> Parser::declarations() {
     logger_.info("Declarations");
+    auto start = scanner_.peek()->start();
     auto token_type = scanner_.peek()->type();
+
+    auto declarations_node = std::make_unique<DeclarationsNode>(start);
 
     // CONST declarations
     if(token_type == TokenType::kw_const){
@@ -656,25 +801,26 @@ void Parser::declarations() {
 
         // (ident "=" expression ";")*
         while(token_type == TokenType::const_ident){
-            ident();
+            auto id = ident();
             token_type = scanner_.peek()->type();
 
             if(token_type == TokenType::op_eq){
                 scanner_.next();
-                expression();
+                auto expr = expression();
 
                 token_type = scanner_.peek()->type();
                 if(token_type == TokenType::semicolon){
                     scanner_.next();
                     token_type = scanner_.peek()->type();
+                    declarations_node->add_constant(std::move(id),std::move(expr));
                 }else{
-                    return; // Syntax Error (Expected ";", but got...)
+                    return nullptr; // Syntax Error (Expected ";", but got...)
                 }
 
 
             }
             else{
-                return; // Syntax Error (Expected "=" after identifier)
+                return nullptr; // Syntax Error (Expected "=" after identifier)
             }
 
 
@@ -688,24 +834,25 @@ void Parser::declarations() {
 
         // (ident "=" type ";")*
         while (token_type == TokenType::const_ident){
-            ident();
+            auto id = ident();
             token_type = scanner_.peek()->type();
 
             if(token_type == TokenType::op_eq){
                 scanner_.next();
-                type();
+                auto id_type = type();
                 token_type = scanner_.peek()->type();
 
                 if(token_type == TokenType::semicolon){
                     scanner_.next();
                     token_type = scanner_.peek()->type();
+                    declarations_node->add_type(std::move(id),std::move(id_type));
                 }else{
-                    return; // Syntax error (Expected ";", but got...)
+                    return nullptr; // Syntax error (Expected ";", but got...)
                 }
 
             }
             else{
-                return; // Syntax Error (Expected "=" after identifier, but got...)
+                return nullptr; // Syntax Error (Expected "=" after identifier, but got...)
             }
 
 
@@ -720,23 +867,24 @@ void Parser::declarations() {
 
         // (identList ":" type ";")*
         while(token_type == TokenType::const_ident){
-            ident_list();
+            auto id_list = ident_list();
             token_type = scanner_.peek()->type();
 
             if(token_type == TokenType::colon){
                 scanner_.next();
-                type();
+                auto id_type = type();
                 token_type = scanner_.peek()->type();
 
                 if(token_type == TokenType::semicolon){
                     scanner_.next();
                     token_type = scanner_.peek()->type();
+                    declarations_node->add_var(std::move(id_list),std::move(id_type));
                 }else{
-                    return; // Syntax Error (Expected ";", but got...)
+                    return nullptr; // Syntax Error (Expected ";", but got...)
                 }
 
             }else{
-                return; // Syntax Error (Expected ":" after identifiers, but got...)
+                return nullptr; // Syntax Error (Expected ":" after identifiers, but got...)
             }
 
         }
@@ -745,68 +893,73 @@ void Parser::declarations() {
 
     // Procedure Declarations
     while(token_type == TokenType::kw_procedure){
-        procedure_declaration();
+        auto procedure = procedure_declaration();
         token_type = scanner_.peek()->type();
 
         if(token_type == TokenType::semicolon){
             scanner_.next();
             token_type = scanner_.peek()->type();
+            declarations_node->add_procedure(std::move(procedure));
         }else{
-            return; // Syntax Error (Expected ";" after Procedure Declarations, but got...)
+            return nullptr; // Syntax Error (Expected ";" after Procedure Declarations, but got...)
         }
 
     }
 
+    return declarations_node;
+
 }
 
 // Module -> "Module" ident ";" declarations ("BEGIN" StatementSequence)? "END" ident "."
-void Parser::module() {
+std::unique_ptr<ModuleNode> Parser::module() {
     logger_.info("Module");
+    auto start = scanner_.peek()->start();
     auto token_type = scanner_.peek()->type();
 
     if(token_type == TokenType::kw_module){
         scanner_.next();
-        ident();
+        auto module_name_begin = ident();
         token_type = scanner_.peek()->type();
 
         if(token_type == TokenType::semicolon){
             scanner_.next();
-            declarations();
+            auto declars = declarations();
             token_type = scanner_.peek()->type();
 
             // Statement Sequence
+            std::unique_ptr<StatementSequenceNode> statements = nullptr;
             if(token_type == TokenType::kw_begin){
                 scanner_.next();
-                statement_sequence();
+                statements = statement_sequence();
                 token_type = scanner_.peek()->type();
             }
 
             // "END" ident "."
             if(token_type == TokenType::kw_end){
                 scanner_.next();
-                ident();
+                auto module_name_end = ident();
                 token_type = scanner_.peek()->type();
 
                 if(token_type == TokenType::period){
                     scanner_.next();
-                    return;
+                    return std::make_unique<ModuleNode>(start,std::move(module_name_begin),std::move(declars),std::move(statements),std::move(module_name_end));
                 }
 
-                return; // Syntax Error (Expected "." at the end of module, but got...)
+                return nullptr; // Syntax Error (Expected "." at the end of module, but got...)
 
             }
 
-            return; // Syntax Error (No "END" at the end of Module)
+            return nullptr; // Syntax Error (No "END" at the end of Module)
 
 
         }else{
-            return; // Syntax Error (Expected ";", but got...)
+            return nullptr; // Syntax Error (Expected ";", but got...)
         }
     }
 
-    return; // Syntax Error (Expected keyword "Module", but got...)
+    return nullptr; // Syntax Error (Expected keyword "Module", but got...)
 }
 
-void Parser::parse() {
-    module();
+std::unique_ptr<ModuleNode> Parser::parse() {
+    return module();
 }

@@ -7,7 +7,7 @@
 
 #include "parser/ast/declarations/TypeNode.h"
 
-class IdentNode : TypeNode {
+class IdentNode : public TypeNode {
 
     private:
         const string name_;

@@ -3,6 +3,7 @@
 //
 
 #include "SimpleExpressionNode.h"
+#include "TermNode.h"
 
 const string SimpleExpressionNode::op_to_string[] = {"+","-","OR","<NONE>"};
 
@@ -23,3 +24,7 @@ void SimpleExpressionNode::print(ostream &stream) const {
     }
 
 }
+
+SimpleExpressionNode::SimpleExpressionNode(FilePos pos, std::unique_ptr<TermNode> initial_expr, simpexpr_op initial_op) : Node(NodeType::simple_expression,pos) {expressions_.emplace_back(initial_op, std::move(initial_expr));}
+
+void SimpleExpressionNode::addTerm(std::unique_ptr<TermNode> term, simpexpr_op op) {expressions_.emplace_back(op,std::move(term));};

@@ -20,5 +20,5 @@ void ExpressionNode::print(ostream &stream) const {
     }
 }
 
-ExpressionNode::ExpressionNode(NodeType node_type, FilePos pos, std::unique_ptr<SimpleExpressionNode> left, expr_operator op, std::unique_ptr<SimpleExpressionNode> right) :
-        Node(node_type,pos), left_(std::move(left)), op_(op), right_(std::move(right)) {};
+ExpressionNode::ExpressionNode(FilePos pos, std::unique_ptr<SimpleExpressionNode> left, expr_operator op, std::unique_ptr<SimpleExpressionNode> right) :
+        Node(NodeType::expression,pos), left_(std::move(left)), op_(op), right_(std::move(right)) {};
