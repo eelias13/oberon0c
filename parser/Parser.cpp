@@ -487,7 +487,6 @@ std::unique_ptr<StatementNode>  Parser::statement() {
 
         // Procedure Call
         // Check for "(" to see whether the (ActualParameters) term exists
-        token_type = scanner_.peek()->type();
         if(token_type == TokenType::lparen){
             auto params = actual_parameters();
             return std::make_unique<ProcedureCallNode>(start,std::move(id),std::move(sel), std::move(params));
@@ -942,6 +941,11 @@ std::unique_ptr<ModuleNode> Parser::module() {
 
                 if(token_type == TokenType::period){
                     scanner_.next();
+
+                    if(scanner_.peek()->type() != TokenType::eof){
+                        return nullptr; // Not all tokens consumed
+                    }
+
                     return std::make_unique<ModuleNode>(start,std::move(module_name_begin),std::move(declars),std::move(statements),std::move(module_name_end));
                 }
 

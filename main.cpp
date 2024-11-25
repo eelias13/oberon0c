@@ -24,19 +24,18 @@ int main(const int argc, const char *argv[]) {
     logger.setLevel(LogLevel::DEBUG);
     Scanner scanner(filename, logger);
 
-    //auto token = scanner.next();
-    //while (token->type() != TokenType::eof) {
-    //    cout << *token << endl;
-    //    token = scanner.next();
-    //}
-    //cout << *token << endl;
-
     Parser parser(scanner,logger);
     auto ast = parser.parse();
-    std::cout << *ast;
+
+    if(ast && logger.getErrorCount() == 0){
+        std::cout << *ast << std::endl;
+        std::cout << "Parsing successful" << std::endl;
+    }else{
+        std::cout << "Errors occurred during parsing" << std::endl;
+    }
 
 
-    std::cout << "Parsed";
+
 
     string status = (logger.getErrorCount() == 0 ? "complete" : "failed");
     logger.info("Compilation " + status + ": " +
