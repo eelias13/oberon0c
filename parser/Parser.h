@@ -7,7 +7,6 @@
 #ifndef OBERON0C_PARSER_H
 #define OBERON0C_PARSER_H
 
-
 #include <string>
 #include "scanner/Scanner.h"
 #include "ast/Node.h"
@@ -47,11 +46,19 @@
 
 using std::string;
 
-class Parser {
+class Parser
+{
 
 private:
     Scanner &scanner_;
     Logger &logger_;
+    bool has_error;
+
+    std::unique_ptr<Token> expect(TokenType);
+    std::unique_ptr<Token> expect_many(std::vector<TokenType>);
+    bool if_next(TokenType);
+
+    FilePos pos();
 
     std::unique_ptr<IdentNode> ident();
     std::unique_ptr<IntNode> integer();
@@ -95,8 +102,6 @@ public:
     ~Parser() = default;
 
     std::unique_ptr<ModuleNode> parse();
-
 };
 
-
-#endif //OBERON0C_PARSER_H
+#endif // OBERON0C_PARSER_H

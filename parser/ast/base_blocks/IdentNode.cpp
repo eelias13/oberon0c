@@ -4,10 +4,12 @@
 
 #include "IdentNode.h"
 
-void IdentNode::accept(NodeVisitor &visitor) {
-
+void IdentNode::accept(NodeVisitor &visitor)
+{
+    (void)visitor;
 }
 
-void IdentNode::print(ostream &stream) const {
+void IdentNode::print(ostream &stream) const
+{
     stream << name_;
 }

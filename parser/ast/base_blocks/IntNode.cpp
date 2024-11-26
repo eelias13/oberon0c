@@ -4,10 +4,12 @@
 
 #include "IntNode.h"
 
-void IntNode::accept(NodeVisitor &visitor) {
-
+void IntNode::accept(NodeVisitor &visitor)
+{
+    (void)visitor;
 }
 
-void IntNode::print(ostream &stream) const {
+void IntNode::print(ostream &stream) const
+{
     stream << value_;
 }
