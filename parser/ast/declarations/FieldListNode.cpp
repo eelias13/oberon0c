@@ -4,6 +4,7 @@
 
 #include "FieldListNode.h"
 #include "IdentListNode.h"
+#include "../base_blocks/IdentNode.h"
 #include "TypeNode.h"
 
 void FieldListNode::accept(NodeVisitor &visitor) {

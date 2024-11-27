@@ -4,6 +4,9 @@
 
 #include "ActualParametersNode.h"
 #include "parser/ast/arithmetic/ExpressionNode.h"
+#include "parser/ast/arithmetic/SimpleExpressionNode.h"
+#include "parser/ast/arithmetic/TermNode.h"
+#include "parser/ast/arithmetic/FactorNode.h"
 
 void ActualParametersNode::add_expression(std::unique_ptr<ExpressionNode> expr) {
         expressions_.emplace_back(std::move(expr));

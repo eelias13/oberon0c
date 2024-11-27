@@ -6,6 +6,7 @@
 #include "parser/ast/arithmetic/ExpressionNode.h"
 #include "parser/ast/arithmetic/SimpleExpressionNode.h"
 #include "parser/ast/arithmetic/TermNode.h"
+#include "parser/ast/arithmetic/FactorNode.h"
 #include "StatementSequenceNode.h"
 
 void RepeatStatementNode::accept(NodeVisitor &visitor) {

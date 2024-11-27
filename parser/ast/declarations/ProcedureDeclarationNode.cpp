@@ -5,6 +5,17 @@
 #include "ProcedureDeclarationNode.h"
 #include "ProcedureHeadingNode.h"
 #include "ProcedureBodyNode.h"
+#include "DeclarationsNode.h"
+#include "parser/ast/base_blocks/IdentNode.h"
+#include "IdentListNode.h"
+#include "parser/ast/statements/StatementSequenceNode.h"
+#include "parser/ast/statements/StatementNode.h"
+#include "parser/ast/arithmetic/ExpressionNode.h"
+#include "parser/ast/arithmetic/SimpleExpressionNode.h"
+#include "parser/ast/arithmetic/TermNode.h"
+#include "parser/ast/arithmetic/FactorNode.h"
+#include "FormalParameterNode.h"
+#include "FPSectionNode.h"
 
 
 void ProcedureDeclarationNode::accept(NodeVisitor &visitor) {

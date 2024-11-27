@@ -4,6 +4,8 @@
 
 #include "FactorNode.h"
 #include "parser/ast/arithmetic/ExpressionNode.h"
+#include "parser/ast/arithmetic/SimpleExpressionNode.h"
+#include "parser/ast/arithmetic/TermNode.h"
 #include "parser/ast/base_blocks/IdentNode.h"
 #include "parser/ast/base_blocks/SelectorNode.h"
 

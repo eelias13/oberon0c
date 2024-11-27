@@ -4,6 +4,7 @@
 
 #include "SimpleExpressionNode.h"
 #include "TermNode.h"
+#include "FactorNode.h"
 
 const string SimpleExpressionNode::op_to_string[] = {"+","-","OR","<NONE>"};
 
