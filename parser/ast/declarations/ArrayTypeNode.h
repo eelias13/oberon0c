@@ -6,6 +6,8 @@
 #define OBERON0C_ARRAYTYPENODE_H
 
 #include "TypeNode.h"
+#include <memory>
+
 class ExpressionNode;
 
 class ArrayTypeNode : public TypeNode {

@@ -6,6 +6,7 @@
 #define OBERON0C_PROCEDURECALLNODE_H
 
 #include "parser/ast/statements/StatementNode.h"
+#include <memory>
 
 class IdentNode;
 class SelectorNode;

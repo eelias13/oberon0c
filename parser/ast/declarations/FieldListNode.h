@@ -6,6 +6,7 @@
 #define OBERON0C_FIELDLISTNODE_H
 
 #include "parser/ast/Node.h"
+#include <memory>
 
 class IdentListNode;
 class TypeNode;

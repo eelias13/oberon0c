@@ -7,6 +7,7 @@
 
 #include <vector>
 #include "parser/ast/Node.h"
+#include <memory>
 
 class FPSectionNode;
 

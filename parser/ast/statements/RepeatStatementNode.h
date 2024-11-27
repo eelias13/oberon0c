@@ -6,6 +6,7 @@
 #define OBERON0C_REPEATSTATEMENT_H
 
 #include "parser/ast/statements/StatementNode.h"
+#include <memory>
 
 class ExpressionNode;
 class StatementSequenceNode;

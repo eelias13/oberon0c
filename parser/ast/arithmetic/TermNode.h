@@ -7,6 +7,7 @@
 
 #include "parser/ast/Node.h"
 #include <vector>
+#include <memory>
 
 class FactorNode;
 

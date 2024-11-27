@@ -6,6 +6,7 @@
 #define OBERON0C_STATEMENTNODE_H
 
 #include "parser/ast/Node.h"
+#include <memory>
 
 class StatementNode : public Node {
 

@@ -6,6 +6,7 @@
 #define OBERON0C_EXPRESSIONNODE_H
 
 #include "parser/ast/Node.h"
+#include <memory>
 
 class SimpleExpressionNode;
 

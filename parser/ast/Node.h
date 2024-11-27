@@ -13,6 +13,8 @@
 #include <ostream>
 #include <utility>
 #include "../../util/Logger.h"
+#include <memory>
+
 
 enum class NodeType : char {
     actual_parameters,

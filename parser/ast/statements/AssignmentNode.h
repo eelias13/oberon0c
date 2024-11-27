@@ -6,6 +6,7 @@
 #define OBERON0C_ASSIGNMENTNODE_H
 
 #include "StatementNode.h"
+#include <memory>
 
 class IdentNode;
 class SelectorNode;
