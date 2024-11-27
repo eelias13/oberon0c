@@ -7,7 +7,13 @@
 
 #include <vector>
 #include "parser/ast/Node.h"
-#include <memory>
+#include "ProcedureBodyNode.h"
+#include "parser/ast/statements/StatementSequenceNode.h"
+#include "parser/ast/statements/StatementNode.h"
+#include "ProcedureHeadingNode.h"
+#include "FormalParameterNode.h"
+#include "FPSectionNode.h"
+
 
 class IdentListNode;
 class IdentNode;
