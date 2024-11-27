@@ -8,10 +8,12 @@
 #include "parser/ast/arithmetic/TermNode.h"
 #include "parser/ast/arithmetic/FactorNode.h"
 
-void ArrayTypeNode::accept(NodeVisitor &visitor) {
-
+void ArrayTypeNode::accept(NodeVisitor &visitor)
+{
+    (void)visitor;
 }
 
-void ArrayTypeNode::print(ostream &stream) const {
+void ArrayTypeNode::print(ostream &stream) const
+{
     stream << "ARRAY " << *name_ << " OF " << *type_;
 }

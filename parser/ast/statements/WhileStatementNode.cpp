@@ -9,15 +9,15 @@
 #include "parser/ast/arithmetic/TermNode.h"
 #include "parser/ast/arithmetic/FactorNode.h"
 
-
-void WhileStatementNode::accept(NodeVisitor &visitor) {
-
+void WhileStatementNode::accept(NodeVisitor &visitor)
+{
+    (void)visitor;
 }
 
-void WhileStatementNode::print(ostream &stream) const {
+void WhileStatementNode::print(ostream &stream) const
+{
 
     stream << "WHILE " << *condition_ << " DO " << *statements_ << " END";
-
 }
 
-WhileStatementNode::WhileStatementNode(FilePos pos, std::unique_ptr<ExpressionNode> condition, std::unique_ptr<StatementSequenceNode> statements) : StatementNode(NodeType::while_statement,pos), condition_(std::move(condition)), statements_(std::move(statements)) {};
+WhileStatementNode::WhileStatementNode(FilePos pos, std::unique_ptr<ExpressionNode> condition, std::unique_ptr<StatementSequenceNode> statements) : StatementNode(NodeType::while_statement, pos), condition_(std::move(condition)), statements_(std::move(statements)) {};

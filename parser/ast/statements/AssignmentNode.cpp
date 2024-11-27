@@ -10,14 +10,17 @@
 #include "parser/ast/arithmetic/TermNode.h"
 #include "parser/ast/arithmetic/FactorNode.h"
 
-void AssignmentNode::accept(NodeVisitor &visitor) {
-
+void AssignmentNode::accept(NodeVisitor &visitor)
+{
+    (void)visitor;
 }
 
-void AssignmentNode::print(ostream &stream) const {
+void AssignmentNode::print(ostream &stream) const
+{
     stream << *variable_;
 
-    if(selector_){
+    if (selector_)
+    {
         stream << *selector_;
     }
 
@@ -25,4 +28,4 @@ void AssignmentNode::print(ostream &stream) const {
 }
 
 AssignmentNode::AssignmentNode(FilePos pos, std::unique_ptr<IdentNode> variable, std::unique_ptr<SelectorNode> selector, std::unique_ptr<ExpressionNode> expr)
-        : StatementNode(NodeType::assignment,pos), variable_(std::move(variable)), selector_(std::move(selector)), expr_(std::move(expr)) {};
+    : StatementNode(NodeType::assignment, pos), variable_(std::move(variable)), selector_(std::move(selector)), expr_(std::move(expr)) {};

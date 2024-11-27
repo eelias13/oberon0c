@@ -5,23 +5,25 @@
 #include "StatementSequenceNode.h"
 #include "StatementNode.h"
 
-void StatementSequenceNode::accept(NodeVisitor &visitor) {
-
+void StatementSequenceNode::accept(NodeVisitor &visitor)
+{
+    (void)visitor;
 }
 
-void StatementSequenceNode::print(ostream &stream) const {
-    for(auto itr = statements_.begin(); itr != statements_.end(); itr++){
+void StatementSequenceNode::print(ostream &stream) const
+{
+    for (auto itr = statements_.begin(); itr != statements_.end(); itr++)
+    {
 
-        if(itr > statements_.begin()){
+        if (itr > statements_.begin())
+        {
             stream << "; ";
         }
 
         stream << *(*itr);
-
     }
 }
 
-StatementSequenceNode::StatementSequenceNode(FilePos pos, std::unique_ptr<StatementNode> first_statement) : Node(NodeType::statement_sequence, pos) {statements_.emplace_back(std::move(first_statement));}
+StatementSequenceNode::StatementSequenceNode(FilePos pos, std::unique_ptr<StatementNode> first_statement) : Node(NodeType::statement_sequence, pos) { statements_.emplace_back(std::move(first_statement)); }
 
-void StatementSequenceNode::add_statement(std::unique_ptr<StatementNode> statement) {statements_.emplace_back(std::move(statement));};
-
+void StatementSequenceNode::add_statement(std::unique_ptr<StatementNode> statement) { statements_.emplace_back(std::move(statement)); };
