@@ -5,6 +5,9 @@
 #include "IfStatementNode.h"
 #include "StatementSequenceNode.h"
 #include "parser/ast/arithmetic/ExpressionNode.h"
+#include "parser/ast/arithmetic/SimpleExpressionNode.h"
+#include "parser/ast/arithmetic/TermNode.h"
+#include "parser/ast/arithmetic/FactorNode.h"
 
 void IfStatementNode::accept(NodeVisitor &visitor) {
 

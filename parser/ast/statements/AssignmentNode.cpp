@@ -6,6 +6,9 @@
 #include "parser/ast/base_blocks/IdentNode.h"
 #include "parser/ast/base_blocks/SelectorNode.h"
 #include "parser/ast/arithmetic/ExpressionNode.h"
+#include "parser/ast/arithmetic/SimpleExpressionNode.h"
+#include "parser/ast/arithmetic/TermNode.h"
+#include "parser/ast/arithmetic/FactorNode.h"
 
 void AssignmentNode::accept(NodeVisitor &visitor) {
 

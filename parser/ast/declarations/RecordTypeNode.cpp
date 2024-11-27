@@ -4,6 +4,8 @@
 
 #include "RecordTypeNode.h"
 #include "parser/ast/declarations/FieldListNode.h"
+#include "IdentListNode.h"
+#include "parser/ast/base_blocks/IdentNode.h"
 
 void RecordTypeNode::accept(NodeVisitor &visitor) {
 
