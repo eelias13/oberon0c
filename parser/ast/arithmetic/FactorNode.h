@@ -7,6 +7,7 @@
 
 #include "parser/ast/base_blocks/IdentNode.h"
 #include "parser/ast/base_blocks/SelectorNode.h"
+#include <memory>
 
 class ExpressionNode;
 

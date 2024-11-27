@@ -1,4 +1,4 @@
 #include <iostream>
 #include <cstdlib>
 
-void panic(const std::string& message);
+[[noreturn]] void panic(const std::string& message);

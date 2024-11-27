@@ -7,6 +7,7 @@
 
 #include "parser/ast/base_blocks/IdentNode.h"
 #include <vector>
+#include <memory>
 
 class ExpressionNode;
 
