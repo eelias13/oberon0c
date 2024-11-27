@@ -3,6 +3,7 @@
 //
 
 #include "ActualParametersNode.h"
+#include "parser/ast/arithmetic/ExpressionNode.h"
 
 void ActualParametersNode::add_expression(std::unique_ptr<ExpressionNode> expr) {
         expressions_.emplace_back(std::move(expr));
@@ -21,3 +22,5 @@ void ActualParametersNode::print(ostream &stream) const {
 
         stream << ")";
 }
+
+ActualParametersNode::ActualParametersNode(FilePos pos) : Node(NodeType::actual_parameters,pos){};

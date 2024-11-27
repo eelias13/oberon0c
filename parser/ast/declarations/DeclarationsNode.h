@@ -5,10 +5,14 @@
 #ifndef OBERON0C_DECLARATIONSNODE_H
 #define OBERON0C_DECLARATIONSNODE_H
 
-#include "IdentListNode.h"
-#include "ProcedureDeclarationNode.h"
-#include "parser/ast/base_blocks/IdentNode.h"
-#include "parser/ast/arithmetic/ExpressionNode.h"
+#include <vector>
+#include "parser/ast/Node.h"
+
+class IdentListNode;
+class IdentNode;
+class ExpressionNode;
+class TypeNode;
+class ProcedureDeclarationNode;
 
 typedef std::pair<std::unique_ptr<IdentNode>,std::unique_ptr<ExpressionNode>> id_expr_pair;
 typedef std::pair<std::unique_ptr<IdentNode>,std::unique_ptr<TypeNode>> id_type_pair;

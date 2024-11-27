@@ -5,8 +5,10 @@
 #ifndef OBERON0C_REPEATSTATEMENT_H
 #define OBERON0C_REPEATSTATEMENT_H
 
-#include "parser/ast/arithmetic/ExpressionNode.h"
-#include "StatementSequenceNode.h"
+#include "parser/ast/statements/StatementNode.h"
+
+class ExpressionNode;
+class StatementSequenceNode;
 
 class RepeatStatementNode : public StatementNode {
 
@@ -15,8 +17,7 @@ class RepeatStatementNode : public StatementNode {
         std::unique_ptr<StatementSequenceNode> statements_;
 
     public:
-        RepeatStatementNode(FilePos pos, std::unique_ptr<ExpressionNode> condition, std::unique_ptr<StatementSequenceNode> statements) : StatementNode(NodeType::repeat_statement,pos), condition_(std::move(condition)), statements_(std::move(statements)){};
-
+        RepeatStatementNode(FilePos pos, std::unique_ptr<ExpressionNode> condition, std::unique_ptr<StatementSequenceNode> statements);
         void print(std::ostream &stream) const override;
         void accept(NodeVisitor &visitor) override;
 

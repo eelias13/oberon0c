@@ -5,7 +5,11 @@
 #ifndef OBERON0C_PROCEDUREHEADINGNODE_H
 #define OBERON0C_PROCEDUREHEADINGNODE_H
 
-#include "parser/ast/declarations/FormalParameterNode.h"
+#include "parser/ast/Node.h"
+
+class IdentNode;
+class FormalParameterNode;
+
 
 class ProcedureHeadingNode : public Node {
 
@@ -15,7 +19,7 @@ class ProcedureHeadingNode : public Node {
 
     public:
 
-        ProcedureHeadingNode(FilePos pos, std::unique_ptr<IdentNode> name, std::unique_ptr<FormalParameterNode> params = nullptr) : Node(NodeType::procedure_heading, pos), name_(std::move(name)), params_(std::move(params)) {};
+        ProcedureHeadingNode(FilePos pos, std::unique_ptr<IdentNode> name, std::unique_ptr<FormalParameterNode> params = nullptr);
 
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;

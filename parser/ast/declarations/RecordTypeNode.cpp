@@ -3,6 +3,7 @@
 //
 
 #include "RecordTypeNode.h"
+#include "parser/ast/declarations/FieldListNode.h"
 
 void RecordTypeNode::accept(NodeVisitor &visitor) {
 
@@ -23,3 +24,5 @@ void RecordTypeNode::print(ostream &stream) const {
     stream << " END ";
 
 }
+
+RecordTypeNode::RecordTypeNode(FilePos pos, std::unique_ptr<FieldListNode> first_field)  : TypeNode(NodeType::record_type,pos) {fields_.emplace_back(std::move(first_field));};

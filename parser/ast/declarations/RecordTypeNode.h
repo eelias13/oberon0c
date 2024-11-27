@@ -5,8 +5,10 @@
 #ifndef OBERON0C_RECORDTYPENODE_H
 #define OBERON0C_RECORDTYPENODE_H
 
-#include "parser/ast/declarations/FieldListNode.h"
-#include "TypeNode.h"
+#include <vector>
+#include "parser/ast/declarations/TypeNode.h"
+
+class FieldListNode;
 
 class RecordTypeNode : public TypeNode{
 
@@ -15,7 +17,7 @@ class RecordTypeNode : public TypeNode{
 
     public:
 
-        RecordTypeNode(FilePos pos, std::unique_ptr<FieldListNode> first_field) : TypeNode(NodeType::record_type,pos) {fields_.emplace_back(std::move(first_field));};
+        RecordTypeNode(FilePos pos, std::unique_ptr<FieldListNode> first_field);
 
         void add_field_list(std::unique_ptr<FieldListNode> field_list){ fields_.emplace_back(std::move(field_list));};
 

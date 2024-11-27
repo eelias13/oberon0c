@@ -5,9 +5,10 @@
 #ifndef OBERON0C_IDENTLISTNODE_H
 #define OBERON0C_IDENTLISTNODE_H
 
-#include "parser/ast/base_blocks/IdentNode.h"
 #include <vector>
+#include "parser/ast/Node.h"
 
+class IdentNode;
 
 class IdentListNode : public Node {
 
@@ -16,7 +17,7 @@ class IdentListNode : public Node {
 
     public:
 
-        IdentListNode(FilePos pos, std::unique_ptr<IdentNode> first_identifier) : Node(NodeType::ident_list,pos) { identifier_.emplace_back(std::move(first_identifier));};
+        IdentListNode(FilePos pos, std::unique_ptr<IdentNode> first_identifier);
 
         void add_identifier(std::unique_ptr<IdentNode> ident);
 

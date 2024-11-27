@@ -5,11 +5,12 @@
 #ifndef OBERON0C_FACTORNODE_H
 #define OBERON0C_FACTORNODE_H
 
-#include "parser/ast/base_blocks/IdentNode.h"
-#include "parser/ast/base_blocks/SelectorNode.h"
+#include "../Node.h"
 #include <memory>
 
 class ExpressionNode;
+class IdentNode;
+class SelectorNode;
 
 class FactorNode : public Node {
     public:

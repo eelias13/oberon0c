@@ -4,6 +4,9 @@
 
 #include "FactorNode.h"
 #include "parser/ast/arithmetic/ExpressionNode.h"
+#include "parser/ast/base_blocks/IdentNode.h"
+#include "parser/ast/base_blocks/SelectorNode.h"
+
 
 void NegatedFactorNode::accept(NodeVisitor &visitor) {
 

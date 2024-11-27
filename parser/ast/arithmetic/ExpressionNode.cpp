@@ -3,7 +3,9 @@
 //
 
 #include "ExpressionNode.h"
+#include "SimpleExpressionNode.h"
 #include "FactorNode.h"
+#include "TermNode.h"
 
 const string ExpressionNode::op_to_string[] = {"=","#","<","<=",">",">=","ERROR"};
 

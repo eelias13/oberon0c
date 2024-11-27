@@ -5,7 +5,10 @@
 #ifndef OBERON0C_FORMALPARAMETERNODE_H
 #define OBERON0C_FORMALPARAMETERNODE_H
 
-#include "FPSectionNode.h"
+#include <vector>
+#include "parser/ast/Node.h"
+
+class FPSectionNode;
 
 class FormalParameterNode : public Node {
 
@@ -14,9 +17,9 @@ class FormalParameterNode : public Node {
         std::vector<std::unique_ptr<FPSectionNode>> parameter_sections_;
     public:
 
-        explicit FormalParameterNode(FilePos pos) : Node(NodeType::formal_parameters,pos){};
+        explicit FormalParameterNode(FilePos pos);
 
-        void add_parameter_section(std::unique_ptr<FPSectionNode> section){parameter_sections_.emplace_back(std::move(section));};
+        void add_parameter_section(std::unique_ptr<FPSectionNode> section);
 
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;

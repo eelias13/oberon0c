@@ -5,10 +5,11 @@
 #ifndef OBERON0C_IFSTATEMENTNODE_H
 #define OBERON0C_IFSTATEMENTNODE_H
 
-#include "StatementNode.h"
-#include "StatementSequenceNode.h"
-#include "parser/ast/arithmetic/ExpressionNode.h"
 #include <vector>
+#include "StatementNode.h"
+
+class ExpressionNode;
+class StatementSequenceNode;
 
 typedef std::pair<std::unique_ptr<ExpressionNode>, std::unique_ptr<StatementSequenceNode>> ElseIfPair;
 
@@ -22,7 +23,7 @@ class IfStatementNode : public StatementNode {
 
     public:
 
-        IfStatementNode(FilePos pos, std::unique_ptr<ExpressionNode> condition, std::unique_ptr<StatementSequenceNode> then_statements) : StatementNode(NodeType::if_statement,pos), condition_(std::move(condition)), then_statements_(std::move(then_statements)) {};
+        IfStatementNode(FilePos pos, std::unique_ptr<ExpressionNode> condition, std::unique_ptr<StatementSequenceNode> then_statements);
 
         void add_else_if(std::unique_ptr<ExpressionNode> expr, std::unique_ptr<StatementSequenceNode> statements);
         void add_else(std::unique_ptr<StatementSequenceNode> else_statements);

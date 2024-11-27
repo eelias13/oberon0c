@@ -3,6 +3,7 @@
 //
 
 #include "ArrayTypeNode.h"
+#include "parser/ast/arithmetic/ExpressionNode.h"
 
 void ArrayTypeNode::accept(NodeVisitor &visitor) {
 

@@ -3,6 +3,8 @@
 //
 
 #include "IfStatementNode.h"
+#include "StatementSequenceNode.h"
+#include "parser/ast/arithmetic/ExpressionNode.h"
 
 void IfStatementNode::accept(NodeVisitor &visitor) {
 
@@ -31,3 +33,5 @@ void IfStatementNode::add_else_if(std::unique_ptr<ExpressionNode> expr, std::uni
 void IfStatementNode::add_else(std::unique_ptr<StatementSequenceNode> else_statements) {
     else_statements_ = std::move(else_statements);
 }
+
+IfStatementNode::IfStatementNode(FilePos pos, std::unique_ptr<ExpressionNode> condition, std::unique_ptr<StatementSequenceNode> then_statements)  : StatementNode(NodeType::if_statement,pos), condition_(std::move(condition)), then_statements_(std::move(then_statements)) {};

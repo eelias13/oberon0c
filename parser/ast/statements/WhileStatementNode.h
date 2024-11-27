@@ -5,8 +5,10 @@
 #ifndef OBERON0C_WHILESTATEMENTNODE_H
 #define OBERON0C_WHILESTATEMENTNODE_H
 
-#include "parser/ast/statements/StatementSequenceNode.h"
-#include "parser/ast/arithmetic/ExpressionNode.h"
+#include "parser/ast/statements/StatementNode.h"
+
+class ExpressionNode;
+class StatementSequenceNode;
 
 class WhileStatementNode : public StatementNode {
 
@@ -16,8 +18,7 @@ class WhileStatementNode : public StatementNode {
 
     public:
 
-        WhileStatementNode(FilePos pos,std::unique_ptr<ExpressionNode> condition,std::unique_ptr<StatementSequenceNode> statements) : StatementNode(NodeType::while_statement,pos), condition_(std::move(condition)), statements_(std::move(statements)) {};
-
+        WhileStatementNode(FilePos pos,std::unique_ptr<ExpressionNode> condition,std::unique_ptr<StatementSequenceNode> statements);
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;
 };

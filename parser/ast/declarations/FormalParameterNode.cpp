@@ -3,6 +3,7 @@
 //
 
 #include "FormalParameterNode.h"
+#include "FPSectionNode.h"
 
 void FormalParameterNode::accept(NodeVisitor &visitor) {
 
@@ -25,3 +26,10 @@ void FormalParameterNode::print(ostream &stream) const {
     stream << ")";
 
 }
+
+FormalParameterNode::FormalParameterNode(FilePos pos)  : Node(NodeType::formal_parameters,pos){}
+
+void FormalParameterNode::add_parameter_section(std::unique_ptr<FPSectionNode> section) {
+    parameter_sections_.emplace_back(std::move(section));
+};
+

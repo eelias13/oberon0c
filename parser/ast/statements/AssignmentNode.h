@@ -6,9 +6,10 @@
 #define OBERON0C_ASSIGNMENTNODE_H
 
 #include "StatementNode.h"
-#include "parser/ast/base_blocks/IdentNode.h"
-#include "parser/ast/base_blocks/SelectorNode.h"
-#include "parser/ast/arithmetic/ExpressionNode.h"
+
+class IdentNode;
+class SelectorNode;
+class ExpressionNode;
 
 class AssignmentNode : public StatementNode{
     private:
@@ -17,7 +18,7 @@ class AssignmentNode : public StatementNode{
         std::unique_ptr<ExpressionNode> expr_;
 
     public:
-        AssignmentNode(FilePos pos, std::unique_ptr<IdentNode> variable,std::unique_ptr<SelectorNode> selector, std::unique_ptr<ExpressionNode> expr) : StatementNode(NodeType::assignment,pos), variable_(std::move(variable)), selector_(std::move(selector)), expr_(std::move(expr)) {};
+        AssignmentNode(FilePos pos, std::unique_ptr<IdentNode> variable,std::unique_ptr<SelectorNode> selector, std::unique_ptr<ExpressionNode> expr);
 
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;

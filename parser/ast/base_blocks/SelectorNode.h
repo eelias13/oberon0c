@@ -5,10 +5,11 @@
 #ifndef OBERON0C_SELECTORNODE_H
 #define OBERON0C_SELECTORNODE_H
 
-#include "parser/ast/base_blocks/IdentNode.h"
+#include "parser/ast/Node.h"
 #include <vector>
 #include <memory>
 
+class IdentNode;
 class ExpressionNode;
 
 typedef std::tuple<bool,std::unique_ptr<IdentNode>,std::unique_ptr<ExpressionNode>> id_indx_tuple;

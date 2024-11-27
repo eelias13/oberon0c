@@ -5,9 +5,10 @@
 #ifndef OBERON0C_ACTUALPARAMETERSNODE_H
 #define OBERON0C_ACTUALPARAMETERSNODE_H
 
-#include "parser/ast/arithmetic/ExpressionNode.h"
 #include <vector>
+#include "parser/ast/Node.h"
 
+class ExpressionNode;
 
 class ActualParametersNode : public Node {
 
@@ -16,7 +17,7 @@ class ActualParametersNode : public Node {
 
     public:
 
-        explicit ActualParametersNode(FilePos pos) : Node(NodeType::actual_parameters,pos){};
+        explicit ActualParametersNode(FilePos pos);
 
         void add_expression(std::unique_ptr<ExpressionNode> expr);
 

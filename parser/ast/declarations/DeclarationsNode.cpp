@@ -3,6 +3,10 @@
 //
 
 #include "DeclarationsNode.h"
+#include "ProcedureDeclarationNode.h"
+#include "parser/ast/arithmetic/ExpressionNode.h"
+#include "parser/ast/base_blocks/IdentNode.h"
+#include "parser/ast/declarations/IdentListNode.h"
 
 void DeclarationsNode::accept(NodeVisitor &visitor) {
 

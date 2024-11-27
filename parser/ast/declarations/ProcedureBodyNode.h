@@ -5,10 +5,11 @@
 #ifndef OBERON0C_PROCEDUREBODYNODE_H
 #define OBERON0C_PROCEDUREBODYNODE_H
 
-#include "parser/ast/statements/StatementSequenceNode.h"
-#include "parser/ast/base_blocks/IdentNode.h"
+#include "parser/ast/Node.h"
 
 class DeclarationsNode;
+class StatementSequenceNode;
+class IdentNode;
 
 class ProcedureBodyNode : public Node {
 
@@ -21,7 +22,6 @@ class ProcedureBodyNode : public Node {
     public:
 
         ProcedureBodyNode(FilePos pos, std::unique_ptr<DeclarationsNode> declarations, std::unique_ptr<IdentNode> name, std::unique_ptr<StatementSequenceNode> statements = nullptr);
-
 
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;

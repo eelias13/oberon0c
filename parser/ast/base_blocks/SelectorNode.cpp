@@ -4,6 +4,7 @@
 
 #include "SelectorNode.h"
 #include "parser/ast/arithmetic/ExpressionNode.h"
+#include "parser/ast/base_blocks/IdentNode.h"
 
 void SelectorNode::accept(NodeVisitor &visitor)
 {

@@ -3,6 +3,7 @@
 //
 
 #include "IdentListNode.h"
+#include "parser/ast/base_blocks/IdentNode.h"
 
 void IdentListNode::accept(NodeVisitor &visitor) {
 
@@ -24,3 +25,5 @@ void IdentListNode::print(ostream &stream) const {
 void IdentListNode::add_identifier(std::unique_ptr<IdentNode> ident) {
     identifier_.emplace_back(std::move(ident));
 }
+
+IdentListNode::IdentListNode(FilePos pos, std::unique_ptr<IdentNode> first_identifier) : Node(NodeType::ident_list,pos) { identifier_.emplace_back(std::move(first_identifier));};

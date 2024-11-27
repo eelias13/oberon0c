@@ -5,7 +5,9 @@
 #ifndef OBERON0C_EXPRESSIONNODE_H
 #define OBERON0C_EXPRESSIONNODE_H
 
-#include "SimpleExpressionNode.h"
+#include "parser/ast/Node.h"
+
+class SimpleExpressionNode;
 
 enum expr_operator {EQ = 0, NEQ, LT, LEQ, GT, GEQ, ERR};
 
