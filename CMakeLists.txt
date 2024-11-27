@@ -44,7 +44,9 @@ set(Boost_NO_WARN_NEW_VERSIONS 1)
 include_directories(BEFORE .)
 
 set(UTIL_SOURCES
-        util/Logger.cpp util/Logger.h)
+        util/Logger.cpp util/Logger.h
+        util/panic.cpp util/panic.h
+)
 
 set(SCANNER_SOURCES
         scanner/Scanner.cpp scanner/Scanner.h

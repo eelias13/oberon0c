@@ -8,13 +8,13 @@
 #include <format>
 #include "../util/panic.h"
 
-std::unique_ptr<Token> Parser::expect(TokenType exprect)
+std::unique_ptr<const Token> Parser::expect(TokenType exprect)
 {
 
     if (scanner_.peek()->type() == exprect)
     {
         auto token = scanner_.next();
-        return std::make_unique<Token>(std::move(*token));
+        return token;
     }
 
     std::ostringstream exprected;
@@ -28,7 +28,7 @@ std::unique_ptr<Token> Parser::expect(TokenType exprect)
     return nullptr;
 }
 
-std::unique_ptr<Token> Parser::expect_many(std::vector<TokenType> tokens)
+std::unique_ptr<const Token> Parser::expect_many(std::vector<TokenType> tokens)
 {
 
     auto token = scanner_.next();
@@ -40,7 +40,7 @@ std::unique_ptr<Token> Parser::expect_many(std::vector<TokenType> tokens)
     {
         if (exprect == token->type())
         {
-            return std::make_unique<Token>(std::move(*token));
+            return token;
         }
         exprected << exprect << ", ";
     }
@@ -72,8 +72,7 @@ std::unique_ptr<IdentNode> Parser::ident()
         return nullptr;
     }
 
-    auto ident_pntr = scanner_.next();
-    auto ident_token = dynamic_cast<const IdentToken *>(ident_pntr.get());
+    auto ident_token = dynamic_cast<const IdentToken *>(token.get());
     return std::make_unique<IdentNode>(start, ident_token->value()); // success
 }
 
@@ -778,7 +777,9 @@ std::unique_ptr<ModuleNode> Parser::module()
     this->expect(TokenType::kw_module);
     auto module_name_begin = ident();
     this->expect(TokenType::semicolon);
+
     auto declars = declarations();
+
 
     // Statement Sequence
     std::unique_ptr<StatementSequenceNode> statements = nullptr;

@@ -54,8 +54,8 @@ private:
     Logger &logger_;
     bool has_error;
 
-    std::unique_ptr<Token> expect(TokenType);
-    std::unique_ptr<Token> expect_many(std::vector<TokenType>);
+    std::unique_ptr<const Token> expect(TokenType);
+    std::unique_ptr<const Token> expect_many(std::vector<TokenType>);
     bool if_next(TokenType);
 
     FilePos pos();
