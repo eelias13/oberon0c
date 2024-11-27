@@ -5,7 +5,6 @@
 
 #include "Parser.h"
 #include "../scanner/IdentToken.h"
-#include <format>
 #include "../util/panic.h"
 
 std::unique_ptr<const Token> Parser::expect(TokenType exprect)
@@ -23,7 +22,15 @@ std::unique_ptr<const Token> Parser::expect(TokenType exprect)
     got << scanner_.peek()->type();
     exprected << exprect;
 
-    logger_.error("", std::format("Syntax Error (Expected {} but got {}", exprected.str(), got.str()));
+    std::ostringstream msg;
+
+    msg << "Syntax Error (Expected ";
+    msg << exprected.str();
+    msg << " but got ";
+    msg << got.str();
+    msg << ")";
+
+    logger_.error("", msg.str());
     this->has_error = true;
     return nullptr;
 }
@@ -50,7 +57,15 @@ std::unique_ptr<const Token> Parser::expect_many(std::vector<TokenType> tokens)
 
     got << token->type();
 
-    logger_.error("", std::format("Syntax Error (Expected {} but got {}", exprected.str(), got.str()));
+    std::ostringstream msg;
+
+    msg << "Syntax Error (Expected ";
+    msg << exprected.str();
+    msg << " but got ";
+    msg << got.str();
+    msg << ")";
+
+    logger_.error("", msg.str());
     this->has_error = true;
     return nullptr;
 }
@@ -779,7 +794,6 @@ std::unique_ptr<ModuleNode> Parser::module()
     this->expect(TokenType::semicolon);
 
     auto declars = declarations();
-
 
     // Statement Sequence
     std::unique_ptr<StatementSequenceNode> statements = nullptr;
