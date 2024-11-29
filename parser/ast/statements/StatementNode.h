@@ -12,6 +12,7 @@ class StatementNode : public Node {
 
     public:
         StatementNode(NodeType node_type, FilePos pos) : Node(node_type,pos) {};
+        ~StatementNode();
 
         virtual void accept(NodeVisitor &visitor) = 0;
         virtual void print(std::ostream &stream) const = 0;

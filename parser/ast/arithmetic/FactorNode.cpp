@@ -9,6 +9,8 @@
 #include "parser/ast/base_blocks/IdentNode.h"
 #include "parser/ast/base_blocks/SelectorNode.h"
 
+FactorNode::~FactorNode() = default;
+
 void NegatedFactorNode::accept(NodeVisitor &visitor)
 {
     (void)visitor;

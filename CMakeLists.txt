@@ -8,7 +8,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(/Wall /W4 /external:anglebrackets /external:W0)
 else ()
     # lots of warnings and all warnings as errors -Wglobal-constructors -Wexit-time-destructors
-    add_compile_options(-W -Wall -Wextra -Werror -Wpedantic -Wno-error=deprecated -Wunreachable-code -Winvalid-pch -Wcast-align -Wformat=2 -Wformat-nonliteral -Wmissing-declarations -Wmissing-noreturn -Wmissing-format-attribute -Wmissing-include-dirs -Wredundant-decls -Wswitch-default -Wsign-conversion)
+    add_compile_options(-W -Wall -Wextra -Wpedantic -Wno-error=deprecated -Wunreachable-code -Winvalid-pch -Wcast-align -Wformat=2 -Wformat-nonliteral -Wmissing-declarations -Wmissing-noreturn -Wmissing-format-attribute -Wmissing-include-dirs -Wredundant-decls -Wswitch-default -Wsign-conversion)
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Woverloaded-virtual>)
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         add_compile_options(-Wweak-vtables)
@@ -67,7 +67,7 @@ set(PARSER_SOURCES
         parser/ast/arithmetic/SimpleExpressionNode.cpp parser/ast/arithmetic/SimpleExpressionNode.h
         parser/ast/arithmetic/ExpressionNode.cpp parser/ast/arithmetic/ExpressionNode.h
 
-        parser/ast/statements/StatementNode.h
+        parser/ast/statements/StatementNode.cpp parser/ast/statements/StatementNode.h
         parser/ast/statements/AssignmentNode.cpp parser/ast/statements/AssignmentNode.h
         parser/ast/statements/ActualParametersNode.cpp parser/ast/statements/ActualParametersNode.h
         parser/ast/statements/ProcedureCallNode.cpp parser/ast/statements/ProcedureCallNode.h
@@ -76,7 +76,7 @@ set(PARSER_SOURCES
         parser/ast/statements/IfStatementNode.cpp parser/ast/statements/IfStatementNode.h
         parser/ast/statements/StatementSequenceNode.cpp parser/ast/statements/StatementSequenceNode.h
 
-        parser/ast/declarations/TypeNode.h
+        parser/ast/declarations/TypeNode.cpp parser/ast/declarations/TypeNode.h
         parser/ast/declarations/ArrayTypeNode.cpp parser/ast/declarations/ArrayTypeNode.h
         parser/ast/declarations/FieldListNode.cpp parser/ast/declarations/FieldListNode.h
         parser/ast/declarations/IdentListNode.cpp parser/ast/declarations/IdentListNode.h

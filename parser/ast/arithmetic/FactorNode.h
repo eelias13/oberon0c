@@ -15,6 +15,7 @@ class SelectorNode;
 class FactorNode : public Node {
     public:
         FactorNode(NodeType node_type, FilePos pos);
+        ~FactorNode();
 
         virtual void accept(NodeVisitor &visitor) = 0;
         virtual void print(std::ostream &stream) const = 0;

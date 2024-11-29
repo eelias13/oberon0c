@@ -610,7 +610,7 @@ std::unique_ptr<RecordTypeNode> Parser::record_type()
     logger_.info("Record Type");
     auto start = scanner_.peek()->start();
     this->expect(TokenType::kw_record);
-    auto rec_type = std::make_unique<RecordTypeNode>(start, std::move(field_list()));
+    auto rec_type = std::make_unique<RecordTypeNode>(start, field_list());
     while (this->if_next(TokenType::semicolon))
     {
         scanner_.next();
