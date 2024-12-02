@@ -23,7 +23,6 @@
 #include "ast/declarations/DeclarationsNode.h"
 #include "ast/declarations/TypeNode.h"
 #include "ast/declarations/ProcedureDeclarationNode.h"
-#include "ast/declarations/IdentListNode.h"
 #include "ast/declarations/ProcedureBodyNode.h"
 #include "ast/declarations/FormalParameterNode.h"
 #include "ast/declarations/FPSectionNode.h"
@@ -80,7 +79,7 @@ private:
     std::unique_ptr<StatementNode> statement();
     std::unique_ptr<StatementSequenceNode> statement_sequence();
 
-    std::unique_ptr<IdentListNode> ident_list();
+    std::unique_ptr<std::vector<std::unique_ptr<IdentNode>>> ident_list();
     std::unique_ptr<FieldListNode> field_list();
 
     std::unique_ptr<TypeNode> type();

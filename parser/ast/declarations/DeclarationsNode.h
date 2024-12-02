@@ -15,7 +15,6 @@
 #include "FPSectionNode.h"
 
 
-class IdentListNode;
 class IdentNode;
 class ExpressionNode;
 class TypeNode;
@@ -23,7 +22,7 @@ class ProcedureDeclarationNode;
 
 typedef std::pair<std::unique_ptr<IdentNode>,std::unique_ptr<ExpressionNode>> id_expr_pair;
 typedef std::pair<std::unique_ptr<IdentNode>,std::unique_ptr<TypeNode>> id_type_pair;
-typedef std::pair<std::unique_ptr<IdentListNode>,std::unique_ptr<TypeNode>> idlist_type_pair;
+typedef std::pair<std::unique_ptr<std::vector<std::unique_ptr<IdentNode>>>,std::unique_ptr<TypeNode>> idlist_type_pair;
 
 class DeclarationsNode : public Node {
 
@@ -40,7 +39,7 @@ class DeclarationsNode : public Node {
 
         void add_constant(std::unique_ptr<IdentNode> ident, std::unique_ptr<ExpressionNode> expr){const_list_.emplace_back(std::move(ident),std::move(expr));};
         void add_type(std::unique_ptr<IdentNode> ident, std::unique_ptr<TypeNode> type){type_list_.emplace_back(std::move(ident),std::move(type));};
-        void add_var(std::unique_ptr<IdentListNode> idents, std::unique_ptr<TypeNode> type) {var_list.emplace_back(std::move(idents), std::move(type));};
+        void add_var(std::unique_ptr<std::vector<std::unique_ptr<IdentNode>>> idents, std::unique_ptr<TypeNode> type) {var_list.emplace_back(std::move(idents), std::move(type));};
         void add_procedure(std::unique_ptr<ProcedureDeclarationNode> procedure){procedure_list.emplace_back(std::move(procedure));};
 
         void accept(NodeVisitor &visitor) override;

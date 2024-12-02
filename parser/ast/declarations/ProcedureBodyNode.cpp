@@ -11,7 +11,6 @@
 #include "parser/ast/statements/StatementSequenceNode.h"
 #include "parser/ast/statements/StatementNode.h"
 #include "parser/ast/base_blocks/IdentNode.h"
-#include "parser/ast/declarations/IdentListNode.h"
 #include "parser/ast/arithmetic/ExpressionNode.h"
 #include "parser/ast/arithmetic/SimpleExpressionNode.h"
 #include "parser/ast/arithmetic/TermNode.h"

@@ -4,7 +4,6 @@
 
 #include "ModuleNode.h"
 #include "parser/ast/base_blocks/IdentNode.h"
-#include "parser/ast/declarations/IdentListNode.h"
 #include "parser/ast/declarations/DeclarationsNode.h"
 #include "parser/ast/declarations/ProcedureDeclarationNode.h"
 #include "parser/ast/declarations/ProcedureHeadingNode.h"

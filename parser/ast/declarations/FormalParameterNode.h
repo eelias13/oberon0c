@@ -5,8 +5,8 @@
 #ifndef OBERON0C_FORMALPARAMETERNODE_H
 #define OBERON0C_FORMALPARAMETERNODE_H
 
-#include <vector>
 #include "parser/ast/Node.h"
+#include <vector>
 #include <memory>
 
 class FPSectionNode;

@@ -3,7 +3,6 @@
 //
 
 #include "FieldListNode.h"
-#include "IdentListNode.h"
 #include "../base_blocks/IdentNode.h"
 #include "TypeNode.h"
 
@@ -17,10 +16,16 @@ void FieldListNode::print(ostream &stream) const
 
     if (fields_)
     {
-        stream << *fields_ << " : " << *type_;
+        for(auto itr = fields_->begin(); itr != fields_->end(); itr++){
+            if(itr > fields_->begin()){
+                stream << *(*itr);
+            }
+        }
+
+        stream << " : " << *type_;
     }
 }
 
 FieldListNode::FieldListNode(FilePos pos) : Node(NodeType::field_list, pos), fields_(nullptr), type_(nullptr) {};
 
-FieldListNode::FieldListNode(FilePos pos, std::unique_ptr<IdentListNode> fields, std::unique_ptr<TypeNode> type) : Node(NodeType::field_list, pos), fields_(std::move(fields)), type_(std::move(type)) {};
+FieldListNode::FieldListNode(FilePos pos, std::unique_ptr<std::vector<std::unique_ptr<IdentNode>>> fields, std::unique_ptr<TypeNode> type) : Node(NodeType::field_list, pos), fields_(std::move(fields)), type_(std::move(type)) {};

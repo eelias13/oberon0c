@@ -4,7 +4,6 @@
 
 #include "FormalParameterNode.h"
 #include "FPSectionNode.h"
-#include "IdentListNode.h"
 #include "parser/ast/base_blocks/IdentNode.h"
 
 void FormalParameterNode::accept(NodeVisitor &visitor)

@@ -9,7 +9,6 @@
 #include "parser/ast/arithmetic/TermNode.h"
 #include "parser/ast/arithmetic/FactorNode.h"
 #include "parser/ast/base_blocks/IdentNode.h"
-#include "parser/ast/declarations/IdentListNode.h"
 
 void DeclarationsNode::accept(NodeVisitor &visitor)
 {
@@ -45,7 +44,15 @@ void DeclarationsNode::print(ostream &stream) const
 
         for (auto itr = var_list.begin(); itr != var_list.end(); itr++)
         {
-            stream << *(itr->first) << " : " << *(itr->second) << "; ";
+
+            for(auto list_itr = itr->first->begin(); list_itr != itr->first->end(); list_itr++){
+                if(list_itr > itr->first->begin()){
+                    stream << ", ";
+                }
+                stream << *(*list_itr);
+            }
+
+            stream << " : " << *(itr->second) << "; ";
         }
     }
 

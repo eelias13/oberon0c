@@ -535,16 +535,17 @@ std::unique_ptr<StatementSequenceNode> Parser::statement_sequence()
 }
 
 // IdentList -> Ident ("," ident)*
-std::unique_ptr<IdentListNode> Parser::ident_list()
+std::unique_ptr<std::vector<std::unique_ptr<IdentNode>>> Parser::ident_list()
 {
     logger_.info("Ident List");
     auto start = scanner_.peek()->start();
-    auto id_list = std::make_unique<IdentListNode>(start, ident());
+    auto id_list = std::make_unique<std::vector<std::unique_ptr<IdentNode>>>();
+    id_list->emplace_back(ident());
 
     while (this->if_next(TokenType::comma))
     {
         scanner_.next();
-        id_list->add_identifier(ident());
+        id_list->emplace_back(ident());
     }
 
     return id_list;
