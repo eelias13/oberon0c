@@ -9,18 +9,21 @@
 #include <vector>
 #include <memory>
 
-class FPSectionNode;
+class IdentNode;
+class TypeNode;
+
+typedef std::tuple<bool,std::unique_ptr<std::vector<std::unique_ptr<IdentNode>>>,std::unique_ptr<TypeNode>> fp_section;
 
 class FormalParameterNode : public Node {
 
     private:
 
-        std::vector<std::unique_ptr<FPSectionNode>> parameter_sections_;
+        std::vector<std::unique_ptr<fp_section>> parameter_sections_;
     public:
 
         explicit FormalParameterNode(FilePos pos);
 
-        void add_parameter_section(std::unique_ptr<FPSectionNode> section);
+        void add_parameter_section(std::unique_ptr<fp_section> section);
 
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;

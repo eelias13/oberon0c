@@ -4,7 +4,6 @@
 
 #include "ProcedureHeadingNode.h"
 #include "parser/ast/declarations/FormalParameterNode.h"
-#include "FPSectionNode.h"
 #include "parser/ast/base_blocks/IdentNode.h"
 
 void ProcedureHeadingNode::accept(NodeVisitor &visitor)

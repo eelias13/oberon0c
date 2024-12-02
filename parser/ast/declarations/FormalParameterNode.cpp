@@ -3,7 +3,6 @@
 //
 
 #include "FormalParameterNode.h"
-#include "FPSectionNode.h"
 #include "parser/ast/base_blocks/IdentNode.h"
 
 void FormalParameterNode::accept(NodeVisitor &visitor)
@@ -24,7 +23,23 @@ void FormalParameterNode::print(ostream &stream) const
             stream << "; ";
         }
 
-        stream << *(*itr);
+        // Print FPSection
+        if(std::get<0>(*(*itr))){
+            stream << "VAR ";
+        }
+
+        for(auto param_list_itr = (*std::get<1>(*(*itr))).begin(); param_list_itr != (*std::get<1>(*(*itr))).end(); param_list_itr++){
+
+            if(param_list_itr > (*std::get<1>(*(*itr))).begin()){
+                stream << ", ";
+            }
+
+            stream << *(*param_list_itr);
+
+        }
+
+        stream << " : " << *(std::get<2>(*(*itr)));
+
     }
 
     stream << ")";
@@ -32,7 +47,7 @@ void FormalParameterNode::print(ostream &stream) const
 
 FormalParameterNode::FormalParameterNode(FilePos pos) : Node(NodeType::formal_parameters, pos) {}
 
-void FormalParameterNode::add_parameter_section(std::unique_ptr<FPSectionNode> section)
+void FormalParameterNode::add_parameter_section(std::unique_ptr<fp_section> section)
 {
     parameter_sections_.emplace_back(std::move(section));
 };

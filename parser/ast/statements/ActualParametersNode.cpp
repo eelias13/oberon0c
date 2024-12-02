@@ -24,6 +24,10 @@ void ActualParametersNode::print(ostream &stream) const
 
         for (auto itr = expressions_.begin(); itr != expressions_.end(); itr++)
         {
+                if(itr > expressions_.begin()){
+                    stream << ", ";
+                }
+
                 stream << *(*itr);
         }
 

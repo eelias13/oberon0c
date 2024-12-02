@@ -14,7 +14,6 @@
 #include "parser/ast/arithmetic/TermNode.h"
 #include "parser/ast/arithmetic/FactorNode.h"
 #include "FormalParameterNode.h"
-#include "FPSectionNode.h"
 
 void ProcedureDeclarationNode::accept(NodeVisitor &visitor)
 {

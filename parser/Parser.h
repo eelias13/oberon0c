@@ -25,7 +25,6 @@
 #include "ast/declarations/ProcedureDeclarationNode.h"
 #include "ast/declarations/ProcedureBodyNode.h"
 #include "ast/declarations/FormalParameterNode.h"
-#include "ast/declarations/FPSectionNode.h"
 #include "ast/declarations/FieldListNode.h"
 #include "ast/declarations/ArrayTypeNode.h"
 #include "parser/ast/statements/ProcedureCallNode.h"
@@ -86,7 +85,7 @@ private:
     std::unique_ptr<ArrayTypeNode> array_type();
     std::unique_ptr<RecordTypeNode> record_type();
 
-    std::unique_ptr<FPSectionNode> fp_section();
+    std::unique_ptr<fp_section> fp_section();
     std::unique_ptr<FormalParameterNode> formal_parameters();
 
     std::unique_ptr<ProcedureHeadingNode> procedure_heading();

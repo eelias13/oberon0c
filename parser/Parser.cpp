@@ -623,7 +623,7 @@ std::unique_ptr<RecordTypeNode> Parser::record_type()
 }
 
 // FPSection -> ("VAR")? IdentList ":" type
-std::unique_ptr<FPSectionNode> Parser::fp_section()
+std::unique_ptr<fp_section> Parser::fp_section()
 {
     logger_.info("FPSection");
     auto start = scanner_.peek()->start();
@@ -638,7 +638,7 @@ std::unique_ptr<FPSectionNode> Parser::fp_section()
     auto id_list = ident_list();
     this->expect(TokenType::colon);
     auto var_type = type();
-    return std::make_unique<FPSectionNode>(start, var_included, std::move(id_list), std::move(var_type));
+    return std::make_unique<std::tuple<bool, unique_ptr<std::vector<unique_ptr<IdentNode>>>, unique_ptr<TypeNode>>>(var_included, std::move(id_list), std::move(var_type));
 }
 
 // FormalParameters -> "(" (FPSection (";" FPSection)*  )? ")"

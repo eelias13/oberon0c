@@ -12,7 +12,6 @@
 #include "parser/ast/statements/StatementNode.h"
 #include "ProcedureHeadingNode.h"
 #include "FormalParameterNode.h"
-#include "FPSectionNode.h"
 
 
 class IdentNode;

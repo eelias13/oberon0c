@@ -79,7 +79,6 @@ set(PARSER_SOURCES
         parser/ast/declarations/TypeNode.cpp parser/ast/declarations/TypeNode.h
         parser/ast/declarations/ArrayTypeNode.cpp parser/ast/declarations/ArrayTypeNode.h
         parser/ast/declarations/FieldListNode.cpp parser/ast/declarations/FieldListNode.h
-        parser/ast/declarations/FPSectionNode.cpp parser/ast/declarations/FPSectionNode.h
         parser/ast/declarations/RecordTypeNode.cpp parser/ast/declarations/RecordTypeNode.h
         parser/ast/declarations/FormalParameterNode.cpp parser/ast/declarations/FormalParameterNode.h
         parser/ast/declarations/ProcedureHeadingNode.cpp parser/ast/declarations/ProcedureHeadingNode.h
