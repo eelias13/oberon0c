@@ -7,7 +7,6 @@
 #include "parser/ast/declarations/DeclarationsNode.h"
 #include "parser/ast/declarations/ProcedureDeclarationNode.h"
 #include "parser/ast/declarations/ProcedureHeadingNode.h"
-#include "parser/ast/declarations/FormalParameterNode.h"
 #include "parser/ast/declarations/ProcedureBodyNode.h"
 
 #include "parser/ast/arithmetic/ExpressionNode.h"

@@ -642,11 +642,13 @@ std::unique_ptr<fp_section> Parser::fp_section()
 }
 
 // FormalParameters -> "(" (FPSection (";" FPSection)*  )? ")"
-std::unique_ptr<FormalParameterNode> Parser::formal_parameters()
+std::unique_ptr<formal_parameters> Parser::formal_parameters()
 {
     logger_.info("Formal Parameters");
     auto start = scanner_.peek()->start();
-    auto formal_params = std::make_unique<FormalParameterNode>(start);
+
+
+    auto formal_params = std::make_unique<std::vector<std::unique_ptr<std::tuple<bool,std::unique_ptr<std::vector<std::unique_ptr<IdentNode>>>,std::unique_ptr<TypeNode>>>>>();
     this->expect(TokenType::lparen);
 
     // Empty Parameters
@@ -657,12 +659,12 @@ std::unique_ptr<FormalParameterNode> Parser::formal_parameters()
     }
 
     // FPSections
-    formal_params->add_parameter_section(fp_section());
+    formal_params->emplace_back(fp_section());
 
     while (this->if_next(TokenType::semicolon))
     {
         scanner_.next();
-        formal_params->add_parameter_section(fp_section());
+        formal_params->emplace_back(fp_section());
     }
 
     this->expect(TokenType::rparen);

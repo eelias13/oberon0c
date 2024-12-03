@@ -80,7 +80,6 @@ set(PARSER_SOURCES
         parser/ast/declarations/ArrayTypeNode.cpp parser/ast/declarations/ArrayTypeNode.h
         parser/ast/declarations/FieldListNode.cpp parser/ast/declarations/FieldListNode.h
         parser/ast/declarations/RecordTypeNode.cpp parser/ast/declarations/RecordTypeNode.h
-        parser/ast/declarations/FormalParameterNode.cpp parser/ast/declarations/FormalParameterNode.h
         parser/ast/declarations/ProcedureHeadingNode.cpp parser/ast/declarations/ProcedureHeadingNode.h
         parser/ast/declarations/ProcedureBodyNode.cpp parser/ast/declarations/ProcedureBodyNode.h
         parser/ast/declarations/ProcedureDeclarationNode.cpp parser/ast/declarations/ProcedureDeclarationNode.h
