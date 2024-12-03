@@ -23,17 +23,13 @@
 #include "ast/declarations/DeclarationsNode.h"
 #include "ast/declarations/TypeNode.h"
 #include "ast/declarations/ProcedureDeclarationNode.h"
-#include "ast/declarations/ProcedureBodyNode.h"
 #include "ast/declarations/FieldListNode.h"
 #include "ast/declarations/ArrayTypeNode.h"
 #include "parser/ast/statements/ProcedureCallNode.h"
-#include "ast/declarations/ProcedureHeadingNode.h"
-#include "ast/declarations/ProcedureBodyNode.h"
 #include "ast/declarations/RecordTypeNode.h"
 
 #include "ast/statements/StatementSequenceNode.h"
 #include "ast/statements/StatementNode.h"
-#include "ast/statements/ActualParametersNode.h"
 #include "ast/statements/WhileStatementNode.h"
 #include "ast/statements/AssignmentNode.h"
 #include "ast/statements/IfStatementNode.h"
@@ -68,7 +64,7 @@ private:
     std::unique_ptr<ExpressionNode> expression();
     std::unique_ptr<AssignmentNode> assignment();
 
-    std::unique_ptr<ActualParametersNode> actual_parameters();
+    std::unique_ptr<std::vector<std::unique_ptr<ExpressionNode>>> actual_parameters();
     std::unique_ptr<ProcedureCallNode> procedure_call();
 
     std::unique_ptr<IfStatementNode> if_statement();
@@ -85,10 +81,10 @@ private:
     std::unique_ptr<RecordTypeNode> record_type();
 
     std::unique_ptr<fp_section> fp_section();
-    std::unique_ptr<formal_parameters> formal_parameters();
+    std::unique_ptr<parameters> formal_parameters();
 
-    std::unique_ptr<ProcedureHeadingNode> procedure_heading();
-    std::unique_ptr<ProcedureBodyNode> procedure_body();
+    std::pair<std::unique_ptr<IdentNode>,std::unique_ptr<parameters>> procedure_heading();
+    std::tuple<std::unique_ptr<DeclarationsNode>, std::unique_ptr<IdentNode>, std::unique_ptr<StatementSequenceNode>> procedure_body();
     std::unique_ptr<ProcedureDeclarationNode> procedure_declaration();
     std::unique_ptr<DeclarationsNode> declarations();
 

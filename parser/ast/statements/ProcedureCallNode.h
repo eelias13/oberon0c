@@ -7,10 +7,11 @@
 
 #include "parser/ast/statements/StatementNode.h"
 #include <memory>
+#include <vector>
 
 class IdentNode;
 class SelectorNode;
-class ActualParametersNode;
+class ExpressionNode;
 
 class ProcedureCallNode : public StatementNode {
 
@@ -18,11 +19,11 @@ class ProcedureCallNode : public StatementNode {
         std::unique_ptr<IdentNode> name_;
         std::unique_ptr<SelectorNode> selector_;
 
-        std::unique_ptr<ActualParametersNode> parameters_;
+        std::unique_ptr<std::vector<std::unique_ptr<ExpressionNode>>> parameters_;
 
     public:
 
-        explicit ProcedureCallNode(FilePos pos, std::unique_ptr<IdentNode> name, std::unique_ptr<SelectorNode> selector, std::unique_ptr<ActualParametersNode> parameters = nullptr);
+        explicit ProcedureCallNode(FilePos pos, std::unique_ptr<IdentNode> name, std::unique_ptr<SelectorNode> selector, std::unique_ptr<std::vector<std::unique_ptr<ExpressionNode>>> parameters = nullptr);
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;
 

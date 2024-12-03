@@ -349,12 +349,10 @@ std::unique_ptr<AssignmentNode> Parser::assignment()
 }
 
 // ActualParameters -> "(" (expression ("," expression)*)? ")"
-std::unique_ptr<ActualParametersNode> Parser::actual_parameters()
+std::unique_ptr<std::vector<std::unique_ptr<ExpressionNode>>>  Parser::actual_parameters()
 {
     logger_.info("Actual Parameters");
-    auto token = scanner_.peek();
-
-    auto actual_params = std::make_unique<ActualParametersNode>(token->start());
+    auto actual_params = std::make_unique<std::vector<std::unique_ptr<ExpressionNode>>>();
 
     this->expect(TokenType::lparen);
 
@@ -366,13 +364,13 @@ std::unique_ptr<ActualParametersNode> Parser::actual_parameters()
     }
 
     // Case: (At Least) One Expression
-    actual_params->add_expression(expression());
+    actual_params->emplace_back(expression());
 
     // Multiple Expressions
     while (this->if_next(TokenType::comma))
     {
         scanner_.next();
-        actual_params->add_expression(expression());
+        actual_params->emplace_back(expression());
     }
 
     this->expect(TokenType::rparen);
@@ -642,7 +640,7 @@ std::unique_ptr<fp_section> Parser::fp_section()
 }
 
 // FormalParameters -> "(" (FPSection (";" FPSection)*  )? ")"
-std::unique_ptr<formal_parameters> Parser::formal_parameters()
+std::unique_ptr<parameters> Parser::formal_parameters()
 {
     logger_.info("Formal Parameters");
     auto start = scanner_.peek()->start();
@@ -672,7 +670,7 @@ std::unique_ptr<formal_parameters> Parser::formal_parameters()
 }
 
 // ProcedureHeadingNode -> "PROCEDURE" Ident (FormalParameters)?
-std::unique_ptr<ProcedureHeadingNode> Parser::procedure_heading()
+std::pair<std::unique_ptr<IdentNode>,std::unique_ptr<parameters>> Parser::procedure_heading()
 {
     logger_.info("Procedure Heading");
     auto start = scanner_.peek()->start();
@@ -681,14 +679,14 @@ std::unique_ptr<ProcedureHeadingNode> Parser::procedure_heading()
     // To see whether FormalParameters follow, we check if an "(" follows
     if (this->if_next(TokenType::lparen))
     {
-        return std::make_unique<ProcedureHeadingNode>(start, std::move(id), formal_parameters());
+        return {std::move(id),formal_parameters()};  //std::make_unique<ProcedureHeadingNode>(start, std::move(id), formal_parameters());
     }
 
-    return std::make_unique<ProcedureHeadingNode>(start, std::move(id));
+    return {std::move(id), nullptr};
 }
 
 // ProcedureBodyNode -> declarations ("BEGIN" StatementSequence)? "END" ident
-std::unique_ptr<ProcedureBodyNode> Parser::procedure_body()
+std::tuple<std::unique_ptr<DeclarationsNode>, std::unique_ptr<IdentNode>, std::unique_ptr<StatementSequenceNode>> Parser::procedure_body()
 {
     logger_.info("Procedure Body");
     auto start = scanner_.peek()->start();
@@ -702,7 +700,7 @@ std::unique_ptr<ProcedureBodyNode> Parser::procedure_body()
         statements = statement_sequence();
     }
     this->expect(TokenType::kw_end);
-    return std::make_unique<ProcedureBodyNode>(start, std::move(declars), ident(), std::move(statements));
+    return {std::move(declars),ident(),std::move(statements)};
 }
 
 // ProcedureDeclaration = ProcedureHeadingNode ";" ProcedureBodyNode
@@ -711,9 +709,10 @@ std::unique_ptr<ProcedureDeclarationNode> Parser::procedure_declaration()
     logger_.info("Procedure Declaration");
     auto start = scanner_.peek()->start();
     auto heading = procedure_heading();
+
     this->expect(TokenType::semicolon);
     auto body = procedure_body();
-    return std::make_unique<ProcedureDeclarationNode>(start, std::move(heading), std::move(body));
+    return std::make_unique<ProcedureDeclarationNode>(start, std::move(heading.first), std::move(heading.second), std::move(std::get<0>(body)), std::move(std::get<1>(body)), std::move(std::get<2>(body)));
 }
 
 //  Declarations ->    ("CONST" (ident "=" expression ";")* )?

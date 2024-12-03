@@ -7,11 +7,8 @@
 
 #include <vector>
 #include "parser/ast/Node.h"
-#include "ProcedureBodyNode.h"
 #include "parser/ast/statements/StatementSequenceNode.h"
 #include "parser/ast/statements/StatementNode.h"
-#include "ProcedureHeadingNode.h"
-
 
 class IdentNode;
 class ExpressionNode;

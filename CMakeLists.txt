@@ -69,7 +69,6 @@ set(PARSER_SOURCES
 
         parser/ast/statements/StatementNode.cpp parser/ast/statements/StatementNode.h
         parser/ast/statements/AssignmentNode.cpp parser/ast/statements/AssignmentNode.h
-        parser/ast/statements/ActualParametersNode.cpp parser/ast/statements/ActualParametersNode.h
         parser/ast/statements/ProcedureCallNode.cpp parser/ast/statements/ProcedureCallNode.h
         parser/ast/statements/RepeatStatementNode.cpp parser/ast/statements/RepeatStatementNode.h
         parser/ast/statements/WhileStatementNode.cpp parser/ast/statements/WhileStatementNode.h
@@ -80,8 +79,6 @@ set(PARSER_SOURCES
         parser/ast/declarations/ArrayTypeNode.cpp parser/ast/declarations/ArrayTypeNode.h
         parser/ast/declarations/FieldListNode.cpp parser/ast/declarations/FieldListNode.h
         parser/ast/declarations/RecordTypeNode.cpp parser/ast/declarations/RecordTypeNode.h
-        parser/ast/declarations/ProcedureHeadingNode.cpp parser/ast/declarations/ProcedureHeadingNode.h
-        parser/ast/declarations/ProcedureBodyNode.cpp parser/ast/declarations/ProcedureBodyNode.h
         parser/ast/declarations/ProcedureDeclarationNode.cpp parser/ast/declarations/ProcedureDeclarationNode.h
         parser/ast/declarations/DeclarationsNode.cpp parser/ast/declarations/DeclarationsNode.h
 
