@@ -3,7 +3,6 @@
 //
 
 #include "RecordTypeNode.h"
-#include "parser/ast/declarations/FieldListNode.h"
 #include "parser/ast/base_blocks/IdentNode.h"
 
 void RecordTypeNode::accept(NodeVisitor &visitor)
@@ -22,12 +21,26 @@ void RecordTypeNode::print(ostream &stream) const
         {
             stream << "; ";
         }
-        stream << (*itr);
+
+        // Print single Field List
+        auto curr_field_list = itr->get()->first.get();
+        for(auto field_itr = curr_field_list->begin(); field_itr != curr_field_list->end(); field_itr++){
+
+            if(field_itr > curr_field_list->begin()){
+                stream << ", ";
+            }
+
+            stream << *(*field_itr);
+
+        }
+
+        stream << " : " << *(itr->get()->second);
+
     }
 
     stream << " END ";
 }
 
-RecordTypeNode::RecordTypeNode(FilePos pos, std::unique_ptr<FieldListNode> first_field) : TypeNode(NodeType::record_type, pos) { fields_.emplace_back(std::move(first_field)); }
+RecordTypeNode::RecordTypeNode(FilePos pos, std::unique_ptr<field > first_field) : TypeNode(NodeType::record_type, pos) { fields_.emplace_back(std::move(first_field)); }
 
-void RecordTypeNode::add_field_list(std::unique_ptr<FieldListNode> field_list) {fields_.emplace_back(std::move(field_list));}
+void RecordTypeNode::add_field_list(std::unique_ptr<field> field_list) {fields_.emplace_back(std::move(field_list));}

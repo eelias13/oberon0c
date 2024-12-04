@@ -550,7 +550,7 @@ std::unique_ptr<std::vector<std::unique_ptr<IdentNode>>> Parser::ident_list()
 }
 
 // FieldList -> (IdentList ":" type)?
-std::unique_ptr<FieldListNode> Parser::field_list()
+std::unique_ptr<field> Parser::field_list()
 {
     logger_.info("Field List");
     auto start = scanner_.peek()->start();
@@ -558,13 +558,13 @@ std::unique_ptr<FieldListNode> Parser::field_list()
     // Follows(FieldList) = ; END
     if (this->if_next(TokenType::semicolon) || this->if_next(TokenType::kw_end))
     {
-        return std::make_unique<FieldListNode>(start); // Field List empty, continue parsing in upper layer
+        return nullptr; // Field List empty, continue parsing in upper layer
     }
 
     auto idents = ident_list();
     this->expect(TokenType::colon);
     auto idents_type = type();
-    return std::make_unique<FieldListNode>(start, std::move(idents), std::move(idents_type));
+    return std::make_unique<field>(std::move(idents), std::move(idents_type));
 }
 
 // Type -> Ident | ArrayType | RecordType
