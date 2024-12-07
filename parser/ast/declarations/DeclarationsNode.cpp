@@ -4,10 +4,7 @@
 
 #include "DeclarationsNode.h"
 #include "ProcedureDeclarationNode.h"
-#include "parser/ast/arithmetic/ExpressionNode.h"
-#include "parser/ast/arithmetic/SimpleExpressionNode.h"
-#include "parser/ast/arithmetic/TermNode.h"
-#include "parser/ast/arithmetic/FactorNode.h"
+#include "parser/ast/base_blocks/ExpressionNode.h"
 #include "parser/ast/base_blocks/IdentNode.h"
 
 void DeclarationsNode::accept(NodeVisitor &visitor)

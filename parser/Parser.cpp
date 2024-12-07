@@ -162,7 +162,7 @@ std::unique_ptr<SelectorNode> Parser::selector()
 }
 
 // factor -> ident selector | number | "(" expression ")" | "~" factor
-std::unique_ptr<FactorNode> Parser::factor()
+std::unique_ptr<ExpressionNode> Parser::factor()
 {
     logger_.info("Factor");
     auto start = scanner_.peek()->start();
@@ -171,20 +171,19 @@ std::unique_ptr<FactorNode> Parser::factor()
     {
         auto id = ident();
         auto sel = selector();
-        return std::make_unique<IdentSelectorFactorNode>(start, std::move(id), std::move(sel));
+        return std::make_unique<IdentSelectorExpressionNode>(start, std::move(id), std::move(sel));
     }
     else if (this->if_next(TokenType::lparen))
     {
         scanner_.next();
         auto expr = expression();
         this->expect(TokenType::rparen);
-        return std::make_unique<ExpressionInFactorNode>(start, std::move(expr));
+        return std::make_unique<UnaryExpressionNode>(expr->pos(),std::move(expr),Operator::PAREN);
     }
     else if (this->if_next(TokenType::op_not))
     {
         auto factor_token = scanner_.next();
-        auto fact = factor();
-        return std::make_unique<NegatedFactorNode>(factor_token->start(), std::move(fact));
+        return std::make_unique<UnaryExpressionNode>(factor_token->start(), factor(), Operator::NOT);
     }
     else
     {
@@ -193,94 +192,99 @@ std::unique_ptr<FactorNode> Parser::factor()
 }
 
 // term -> factor (("*" | "DIV" | "MOD" | "&") factor)*
-std::unique_ptr<TermNode> Parser::term()
+std::unique_ptr<ExpressionNode> Parser::term()
 {
     logger_.info("Term");
 
     auto start = scanner_.peek()->start();
-    auto fact = factor();
+    auto prev_lhs = factor();
     auto token_type = scanner_.peek()->type();
 
-    auto term_node = std::make_unique<TermNode>(start, std::move(fact));
+    std::unique_ptr<BinaryExpressionNode> full_expr = nullptr;
+    BinaryExpressionNode* curr_expr = nullptr;
+
+    std::cout << token_type;
 
     while (token_type == TokenType::op_times || token_type == TokenType::op_div ||
            token_type == TokenType::op_mod || token_type == TokenType::op_and)
     {
 
-        term_ops op;
-        switch (token_type)
-        {
-        case TokenType::op_times:
-            op = term_ops::MULT;
-            break;
-        case TokenType::op_div:
-            op = term_ops::DIV;
-            break;
-        case TokenType::op_mod:
-            op = term_ops::MOD;
-            break;
-        case TokenType::op_and:
-            op = term_ops::AND;
-            break;
-        default:
-            panic("unreachable");
-        }
-
+        Operator op = ExpressionNode::token_to_op(token_type);
         scanner_.next();
-        term_node->addFactor(op, factor());
+
+        if(!full_expr){
+            full_expr = std::make_unique<BinaryExpressionNode>(prev_lhs->pos(), std::move(prev_lhs), op, factor());
+            curr_expr = full_expr.get();
+
+        }else {
+            curr_expr = curr_expr->insert_rightmost(op,factor());
+            std::cout << "#" << curr_expr;
+        }
         token_type = scanner_.peek()->type();
     }
 
-    return term_node;
+    if(!full_expr){
+        return prev_lhs;
+    }
+    else{
+        std::cout << *full_expr << std::endl;
+        return full_expr;
+    }
+
 }
 
 // SimpleExpression -> ("+" | "-" | €) term (("+"|"-"|"OR") term)*
-std::unique_ptr<SimpleExpressionNode> Parser::simple_expression()
+std::unique_ptr<ExpressionNode> Parser::simple_expression()
 {
 
     logger_.info("Simple Expression");
 
     auto start = scanner_.peek()->start();
     auto token = scanner_.peek();
-    auto op = simpexpr_op::NONE;
+
+    std::unique_ptr<ExpressionNode> first_term = nullptr;
 
     if (token->type() == TokenType::op_plus || token->type() == TokenType::op_minus)
     {
-        op = (token->type() == TokenType::op_plus) ? simpexpr_op::PLUS : simpexpr_op::OR;
-        scanner_.next();
-    }
-    auto fst_term = term();
+        if(token->type() == TokenType::op_minus){
+            scanner_.next();
+            first_term = std::make_unique<UnaryExpressionNode>(token->start(), term(), Operator::NEG);
+        }
+        else{
+            scanner_.next();
+            first_term = term();
+        }
 
-    auto simp_expr = std::make_unique<SimpleExpressionNode>(start, std::move(fst_term), op);
+    }else{
+        first_term = term();
+    }
+
+    std::unique_ptr<BinaryExpressionNode> full_expr = nullptr;
+    BinaryExpressionNode* curr_expr = nullptr;
 
     token = scanner_.peek();
     while (token->type() == TokenType::op_plus || token->type() == TokenType::op_minus || token->type() == TokenType::op_or)
     {
 
-        simpexpr_op op;
-        switch (token->type())
-        {
-        case TokenType::op_plus:
-            op = simpexpr_op::PLUS;
-            break;
-        case TokenType::op_minus:
-            op = simpexpr_op::MINUS;
-            break;
-        case TokenType::op_or:
-            op = simpexpr_op::OR;
-            break;
-        default:
-            panic("unreachable");
-        }
-
+        Operator op = ExpressionNode::token_to_op(token->type());
         scanner_.next();
-        auto trm = term();
-        simp_expr->addTerm(std::move(trm), op);
 
+        if(!full_expr){
+            full_expr = std::make_unique<BinaryExpressionNode>(first_term->pos(), std::move(first_term), op, term());
+            curr_expr = full_expr.get();
+        }else {
+            curr_expr = curr_expr->insert_rightmost(op,term());
+        }
         token = scanner_.peek();
+
     }
 
-    return simp_expr;
+    if(!full_expr){
+        return first_term;
+    }
+    else{
+        return full_expr;
+    }
 }
 
 // Expression -> SimpleExpression (("="|"#"|"<"|"<="|">"|">=") SimpleExpression)?
@@ -296,39 +300,15 @@ std::unique_ptr<ExpressionNode> Parser::expression()
         token_type == TokenType::op_gt || token_type == TokenType::op_geq)
     {
 
-        expr_operator op;
-        switch (token_type)
-        {
-        case TokenType::op_eq:
-            op = expr_operator::EQ;
-            break;
-        case TokenType::op_neq:
-            op = expr_operator::NEQ;
-            break;
-        case TokenType::op_lt:
-            op = expr_operator::LT;
-            break;
-        case TokenType::op_leq:
-            op = expr_operator::LEQ;
-            break;
-        case TokenType::op_gt:
-            op = expr_operator::GT;
-            break;
-        case TokenType::op_geq:
-            op = expr_operator::GEQ;
-            break;
-        default:
-            panic("unreachable");
-        }
-
+        Operator op = ExpressionNode::token_to_op(token_type);
         scanner_.next();
         auto snd_expr = simple_expression();
 
-        return std::make_unique<ExpressionNode>(start, std::move(fst_expr), op, std::move(snd_expr));
+        return std::make_unique<BinaryExpressionNode>(start, std::move(fst_expr), op, std::move(snd_expr));
     }
     else
     {
-        return std::make_unique<ExpressionNode>(start, std::move(fst_expr));
+        return fst_expr;
     }
 }
 

@@ -15,10 +15,7 @@
 #include "ast/base_blocks/IntNode.h"
 #include "ast/base_blocks/SelectorNode.h"
 
-#include "ast/arithmetic/FactorNode.h"
-#include "ast/arithmetic/TermNode.h"
-#include "ast/arithmetic/SimpleExpressionNode.h"
-#include "ast/arithmetic/ExpressionNode.h"
+#include "parser/ast/base_blocks/ExpressionNode.h"
 
 #include "ast/declarations/DeclarationsNode.h"
 #include "ast/declarations/TypeNode.h"
@@ -56,10 +53,10 @@ private:
     std::unique_ptr<IntNode> integer();
     std::unique_ptr<SelectorNode> selector();
     std::unique_ptr<IntNode> number();
-    std::unique_ptr<FactorNode> factor();
-    std::unique_ptr<TermNode> term();
+    std::unique_ptr<ExpressionNode> factor();
+    std::unique_ptr<ExpressionNode> term();
 
-    std::unique_ptr<SimpleExpressionNode> simple_expression();
+    std::unique_ptr<ExpressionNode> simple_expression();
     std::unique_ptr<ExpressionNode> expression();
     std::unique_ptr<AssignmentNode> assignment();
 

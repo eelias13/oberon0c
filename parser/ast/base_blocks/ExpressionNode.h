@@ -1,0 +1,77 @@
+//
+// Created by M on 21.11.2024.
+//
+
+#ifndef OBERON0C_EXPRESSIONNODE_H
+#define OBERON0C_EXPRESSIONNODE_H
+
+#include "parser/ast/Node.h"
+#include "scanner/Token.h"
+#include <memory>
+
+enum Operator {PLUS, MINUS, OR, MULT, DIV, MOD, AND, NEG, NOT, EQ, NEQ, LT, LEQ, GT, GEQ, NO_OPERATOR, PAREN};   // For pretty printing (and possibly precedence) purposes, we consider Parentheses an operator too
+
+class IdentNode;
+class SelectorNode;
+
+class ExpressionNode : public Node{
+
+    protected:
+        int precedence_ = -1;
+
+    public:
+        explicit ExpressionNode(FilePos pos, NodeType type);
+        virtual void accept(NodeVisitor &visitor) = 0;
+        virtual void print(std::ostream &stream) const = 0;
+        [[nodiscard]] int get_precedence() const;
+
+        static Operator token_to_op(TokenType);
+        static void print_operator(std::ostream& stream, Operator op);
+        static int op_to_precedence(Operator op);
+        friend std::ostream& operator<<(std::ostream &stream, Operator op);
+};
+
+class UnaryExpressionNode : public ExpressionNode{
+
+    private:
+    Operator op_;
+    std::unique_ptr<ExpressionNode> expr_;
+
+    public:
+    UnaryExpressionNode(FilePos pos, std::unique_ptr<ExpressionNode> expr, Operator op);
+    void accept(NodeVisitor &visitor) override;
+    void print(std::ostream &stream) const override;
+
+};
+
+
+class BinaryExpressionNode : public ExpressionNode{
+
+    private:
+    Operator op_;
+    std::unique_ptr<ExpressionNode> lhs_;
+    std::unique_ptr<ExpressionNode> rhs_;
+
+    public:
+    BinaryExpressionNode(FilePos pos, std::unique_ptr<ExpressionNode> lhs, Operator op, std::unique_ptr<ExpressionNode> rhs);
+    BinaryExpressionNode* insert_rightmost(Operator op, std::unique_ptr<ExpressionNode> new_rhs);
+    ExpressionNode* get_rhs();
+    void accept(NodeVisitor &visitor) override;
+    void print(std::ostream &stream) const override;
+
+};
+
+class IdentSelectorExpressionNode : public ExpressionNode{
+    private:
+    std::unique_ptr<IdentNode> ident_;
+    std::unique_ptr<SelectorNode> selector_;
+
+    public:
+    IdentSelectorExpressionNode(FilePos pos, std::unique_ptr<IdentNode> ident, std::unique_ptr<SelectorNode> selector);
+    void accept(NodeVisitor &visitor) override;
+    void print(std::ostream &stream) const override;
+
+};
+
+
+#endif //OBERON0C_EXPRESSIONNODE_H

@@ -62,10 +62,7 @@ set(PARSER_SOURCES
         parser/ast/base_blocks/IdentNode.cpp parser/ast/base_blocks/IdentNode.h
         parser/ast/base_blocks/IntNode.cpp parser/ast/base_blocks/IntNode.h
         parser/ast/base_blocks/SelectorNode.cpp parser/ast/base_blocks/SelectorNode.h
-        parser/ast/arithmetic/FactorNode.cpp parser/ast/arithmetic/FactorNode.h
-        parser/ast/arithmetic/TermNode.cpp parser/ast/arithmetic/TermNode.h
-        parser/ast/arithmetic/SimpleExpressionNode.cpp parser/ast/arithmetic/SimpleExpressionNode.h
-        parser/ast/arithmetic/ExpressionNode.cpp parser/ast/arithmetic/ExpressionNode.h
+        parser/ast/base_blocks/ExpressionNode.cpp parser/ast/base_blocks/ExpressionNode.h
 
         parser/ast/statements/StatementNode.cpp parser/ast/statements/StatementNode.h
         parser/ast/statements/AssignmentNode.cpp parser/ast/statements/AssignmentNode.h

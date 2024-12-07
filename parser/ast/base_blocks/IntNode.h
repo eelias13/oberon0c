@@ -5,16 +5,16 @@
 #ifndef OBERON0C_INTNODE_H
 #define OBERON0C_INTNODE_H
 
-#include "parser/ast/arithmetic/FactorNode.h"
+#include "ExpressionNode.h"
 
-class IntNode : public FactorNode {
+class IntNode : public ExpressionNode {
 
     private:
         long value_;
 
     public:
 
-        IntNode(FilePos pos, long value) : FactorNode(NodeType::integer,pos), value_(value){};
+        IntNode(FilePos pos, long value) : ExpressionNode(pos, NodeType::integer), value_(value){};
 
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;

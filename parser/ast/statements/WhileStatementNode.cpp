@@ -4,10 +4,7 @@
 
 #include "WhileStatementNode.h"
 #include "parser/ast/statements/StatementSequenceNode.h"
-#include "parser/ast/arithmetic/ExpressionNode.h"
-#include "parser/ast/arithmetic/SimpleExpressionNode.h"
-#include "parser/ast/arithmetic/TermNode.h"
-#include "parser/ast/arithmetic/FactorNode.h"
+#include "parser/ast/base_blocks/ExpressionNode.h"
 
 void WhileStatementNode::accept(NodeVisitor &visitor)
 {
