@@ -21,7 +21,7 @@ void ModuleNode::print(ostream &stream) const
 
     if (statements_)
     {
-        stream << *statements_;
+        stream << "BEGIN\n" << *statements_;
     }
 
     stream << "\nEND " << *module_name_end_ << ".";

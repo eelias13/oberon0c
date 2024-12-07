@@ -78,7 +78,7 @@ bool Parser::if_next(TokenType exprect)
 // ident -> letter (letter | digit)*  (already recognized by the scanner in full)
 std::unique_ptr<IdentNode> Parser::ident()
 {
-    logger_.info("Ident");
+    logger_.debug("Ident");
     auto start = scanner_.peek()->start();
 
     auto token = this->expect(TokenType::const_ident);
@@ -94,7 +94,7 @@ std::unique_ptr<IdentNode> Parser::ident()
 // integer -> digit (digit)*  (already recognized by the scanner in full)
 std::unique_ptr<IntNode> Parser::integer()
 {
-    logger_.info("Integer");
+    logger_.debug("Integer");
 
     auto token = this->expect_many({TokenType::int_literal, TokenType::short_literal, TokenType::long_literal});
     if (!token)
@@ -131,7 +131,7 @@ std::unique_ptr<IntNode> Parser::number()
 // selector -> ("." ident | "[" expression "]" )*
 std::unique_ptr<SelectorNode> Parser::selector()
 {
-    logger_.info("Selector");
+    logger_.debug("Selector");
     auto start = scanner_.peek()->start();
     auto selector = std::make_unique<SelectorNode>(start);
 
@@ -164,7 +164,7 @@ std::unique_ptr<SelectorNode> Parser::selector()
 // factor -> ident selector | number | "(" expression ")" | "~" factor
 std::unique_ptr<ExpressionNode> Parser::factor()
 {
-    logger_.info("Factor");
+    logger_.debug("Factor");
     auto start = scanner_.peek()->start();
 
     if (this->if_next(TokenType::const_ident))
@@ -194,7 +194,7 @@ std::unique_ptr<ExpressionNode> Parser::factor()
 // term -> factor (("*" | "DIV" | "MOD" | "&") factor)*
 std::unique_ptr<ExpressionNode> Parser::term()
 {
-    logger_.info("Term");
+    logger_.debug("Term");
 
     auto start = scanner_.peek()->start();
     auto prev_lhs = factor();
@@ -202,8 +202,6 @@ std::unique_ptr<ExpressionNode> Parser::term()
 
     std::unique_ptr<BinaryExpressionNode> full_expr = nullptr;
     BinaryExpressionNode* curr_expr = nullptr;
-
-    std::cout << token_type;
 
     while (token_type == TokenType::op_times || token_type == TokenType::op_div ||
            token_type == TokenType::op_mod || token_type == TokenType::op_and)
@@ -218,7 +216,6 @@ std::unique_ptr<ExpressionNode> Parser::term()
 
         }else {
             curr_expr = curr_expr->insert_rightmost(op,factor());
-            std::cout << "#" << curr_expr;
         }
         token_type = scanner_.peek()->type();
     }
@@ -227,7 +224,6 @@ std::unique_ptr<ExpressionNode> Parser::term()
         return prev_lhs;
     }
     else{
-        std::cout << *full_expr << std::endl;
         return full_expr;
     }
 
@@ -237,7 +233,7 @@ std::unique_ptr<ExpressionNode> Parser::term()
 std::unique_ptr<ExpressionNode> Parser::simple_expression()
 {
 
-    logger_.info("Simple Expression");
+    logger_.debug("Simple Expression");
 
     auto start = scanner_.peek()->start();
     auto token = scanner_.peek();
@@ -290,7 +286,7 @@ std::unique_ptr<ExpressionNode> Parser::simple_expression()
 // Expression -> SimpleExpression (("="|"#"|"<"|"<="|">"|">=") SimpleExpression)?
 std::unique_ptr<ExpressionNode> Parser::expression()
 {
-    logger_.info("Expression");
+    logger_.debug("Expression");
     auto start = scanner_.peek()->start();
     auto fst_expr = simple_expression();
 
@@ -315,7 +311,7 @@ std::unique_ptr<ExpressionNode> Parser::expression()
 // Assignment -> Ident Selector ":=" Expression
 std::unique_ptr<AssignmentNode> Parser::assignment()
 {
-    logger_.info("Assignment");
+    logger_.debug("Assignment");
 
     auto start = scanner_.peek()->start();
     auto id = ident();
@@ -331,7 +327,7 @@ std::unique_ptr<AssignmentNode> Parser::assignment()
 // ActualParameters -> "(" (expression ("," expression)*)? ")"
 std::unique_ptr<std::vector<std::unique_ptr<ExpressionNode>>>  Parser::actual_parameters()
 {
-    logger_.info("Actual Parameters");
+    logger_.debug("Actual Parameters");
     auto actual_params = std::make_unique<std::vector<std::unique_ptr<ExpressionNode>>>();
 
     this->expect(TokenType::lparen);
@@ -360,7 +356,7 @@ std::unique_ptr<std::vector<std::unique_ptr<ExpressionNode>>>  Parser::actual_pa
 // ProcedureCall -> Ident Selector (ActualParameters)?
 std::unique_ptr<ProcedureCallNode> Parser::procedure_call()
 {
-    logger_.info("Procedure Call");
+    logger_.debug("Procedure Call");
 
     auto start = scanner_.peek()->start();
     auto id = ident();
@@ -379,7 +375,7 @@ std::unique_ptr<ProcedureCallNode> Parser::procedure_call()
 // IfStatement -> "IF" expression "THEN" StatementSequence ("ELSIF" expression "THEN" StatementSequence)* ("ELSE" StatementSequence)? "END"
 std::unique_ptr<IfStatementNode> Parser::if_statement()
 {
-    logger_.info("If Statement");
+    logger_.debug("If Statement");
 
     auto start = scanner_.peek()->start();
     this->expect(TokenType::kw_if);
@@ -415,7 +411,7 @@ std::unique_ptr<IfStatementNode> Parser::if_statement()
 // WhileStatement -> "WHILE" expression "DO" StatementSequence "END"
 std::unique_ptr<WhileStatementNode> Parser::while_statement()
 {
-    logger_.info("While Statement");
+    logger_.debug("While Statement");
     auto start = scanner_.peek()->start();
     this->expect(TokenType::kw_while);
     auto cond = expression();
@@ -428,7 +424,7 @@ std::unique_ptr<WhileStatementNode> Parser::while_statement()
 // RepeatStatement -> "REPEAT" StatementSequence "UNTIL" expression
 std::unique_ptr<RepeatStatementNode> Parser::repeat_statement()
 {
-    logger_.info("Repeat Statement");
+    logger_.debug("Repeat Statement");
     auto start = scanner_.peek()->start();
     this->expect(TokenType::kw_repeat);
     auto statements = statement_sequence();
@@ -442,7 +438,7 @@ std::unique_ptr<RepeatStatementNode> Parser::repeat_statement()
 std::unique_ptr<StatementNode> Parser::statement()
 {
 
-    logger_.info("Statement");
+    logger_.debug("Statement");
 
     auto start = scanner_.peek()->start();
 
@@ -499,7 +495,7 @@ std::unique_ptr<StatementNode> Parser::statement()
 // StatementSequence -> Statement (";" statement)*
 std::unique_ptr<StatementSequenceNode> Parser::statement_sequence()
 {
-    logger_.info("Statement Sequence");
+    logger_.debug("Statement Sequence");
     auto start = scanner_.peek()->start();
     auto first = statement();
     auto sequence = std::make_unique<StatementSequenceNode>(start, std::move(first));
@@ -515,7 +511,7 @@ std::unique_ptr<StatementSequenceNode> Parser::statement_sequence()
 // IdentList -> Ident ("," ident)*
 std::unique_ptr<std::vector<std::unique_ptr<IdentNode>>> Parser::ident_list()
 {
-    logger_.info("Ident List");
+    logger_.debug("Ident List");
     auto start = scanner_.peek()->start();
     auto id_list = std::make_unique<std::vector<std::unique_ptr<IdentNode>>>();
     id_list->emplace_back(ident());
@@ -532,7 +528,7 @@ std::unique_ptr<std::vector<std::unique_ptr<IdentNode>>> Parser::ident_list()
 // FieldList -> (IdentList ":" type)?
 std::unique_ptr<field> Parser::field_list()
 {
-    logger_.info("Field List");
+    logger_.debug("Field List");
     auto start = scanner_.peek()->start();
     // Check Follows(FieldList) to decide whether this FieldList is empty or not
     // Follows(FieldList) = ; END
@@ -550,7 +546,7 @@ std::unique_ptr<field> Parser::field_list()
 // Type -> Ident | ArrayType | RecordType
 std::unique_ptr<TypeNode> Parser::type()
 {
-    logger_.info("Type");
+    logger_.debug("Type");
 
     // We decide the according production by the next token
 
@@ -574,7 +570,7 @@ std::unique_ptr<TypeNode> Parser::type()
 // ArrayType -> "ARRAY" expression "OF" type
 std::unique_ptr<ArrayTypeNode> Parser::array_type()
 {
-    logger_.info("Array Type");
+    logger_.debug("Array Type");
     auto start = scanner_.peek()->start();
     this->expect(TokenType::kw_array);
     auto expr = expression();
@@ -586,7 +582,7 @@ std::unique_ptr<ArrayTypeNode> Parser::array_type()
 // RecordType = "RECORD" FieldList (";" FieldList)* "END"
 std::unique_ptr<RecordTypeNode> Parser::record_type()
 {
-    logger_.info("Record Type");
+    logger_.debug("Record Type");
     auto start = scanner_.peek()->start();
     this->expect(TokenType::kw_record);
     auto rec_type = std::make_unique<RecordTypeNode>(start, field_list());
@@ -603,7 +599,7 @@ std::unique_ptr<RecordTypeNode> Parser::record_type()
 // FPSection -> ("VAR")? IdentList ":" type
 std::unique_ptr<fp_section> Parser::fp_section()
 {
-    logger_.info("FPSection");
+    logger_.debug("FPSection");
     auto start = scanner_.peek()->start();
     bool var_included = false;
 
@@ -622,7 +618,7 @@ std::unique_ptr<fp_section> Parser::fp_section()
 // FormalParameters -> "(" (FPSection (";" FPSection)*  )? ")"
 std::unique_ptr<parameters> Parser::formal_parameters()
 {
-    logger_.info("Formal Parameters");
+    logger_.debug("Formal Parameters");
     auto start = scanner_.peek()->start();
 
 
@@ -652,7 +648,7 @@ std::unique_ptr<parameters> Parser::formal_parameters()
 // ProcedureHeadingNode -> "PROCEDURE" Ident (FormalParameters)?
 std::pair<std::unique_ptr<IdentNode>,std::unique_ptr<parameters>> Parser::procedure_heading()
 {
-    logger_.info("Procedure Heading");
+    logger_.debug("Procedure Heading");
     auto start = scanner_.peek()->start();
     this->expect(TokenType::kw_procedure);
     auto id = ident();
@@ -668,7 +664,7 @@ std::pair<std::unique_ptr<IdentNode>,std::unique_ptr<parameters>> Parser::proced
 // ProcedureBodyNode -> declarations ("BEGIN" StatementSequence)? "END" ident
 std::tuple<std::unique_ptr<DeclarationsNode>, std::unique_ptr<IdentNode>, std::unique_ptr<StatementSequenceNode>> Parser::procedure_body()
 {
-    logger_.info("Procedure Body");
+    logger_.debug("Procedure Body");
     auto start = scanner_.peek()->start();
     auto declars = declarations();
 
@@ -686,7 +682,7 @@ std::tuple<std::unique_ptr<DeclarationsNode>, std::unique_ptr<IdentNode>, std::u
 // ProcedureDeclaration = ProcedureHeadingNode ";" ProcedureBodyNode
 std::unique_ptr<ProcedureDeclarationNode> Parser::procedure_declaration()
 {
-    logger_.info("Procedure Declaration");
+    logger_.debug("Procedure Declaration");
     auto start = scanner_.peek()->start();
     auto heading = procedure_heading();
 
@@ -701,7 +697,7 @@ std::unique_ptr<ProcedureDeclarationNode> Parser::procedure_declaration()
 //                     (ProcedureDeclaration ";"            )*
 std::unique_ptr<DeclarationsNode> Parser::declarations()
 {
-    logger_.info("Declarations");
+    logger_.debug("Declarations");
     auto start = scanner_.peek()->start();
 
     auto declarations_node = std::make_unique<DeclarationsNode>(start);
@@ -768,7 +764,7 @@ std::unique_ptr<DeclarationsNode> Parser::declarations()
 // Module -> "Module" ident ";" declarations ("BEGIN" StatementSequence)? "END" ident "."
 std::unique_ptr<ModuleNode> Parser::module()
 {
-    logger_.info("Module");
+    logger_.debug("Module");
     auto start = scanner_.peek()->start();
 
     this->expect(TokenType::kw_module);

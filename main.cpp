@@ -15,27 +15,37 @@ using std::endl;
 using std::string;
 
 int main(const int argc, const char *argv[]) {
-    if (argc != 2) {
-        cerr << "Usage: oberon0c <filename>" << endl;
+    if (argc < 2 || argc > 3) {
+        cerr << "Usage: oberon0c <filename> (no-debug)" << endl;
         exit(1);
     }
     string filename = argv[1];
     Logger logger;
-    logger.setLevel(LogLevel::DEBUG);
+
+    if(argc > 2){
+        if(string(argv[2]) == "no-debug"){
+            logger.setLevel(LogLevel::INFO);
+        }
+        else{
+            cerr << "Invalid argument: " << argv[2] << std::endl << "Usage: oberon0c <filename> ('no-debug')" << std::endl;
+            exit(1);
+        }
+    }
+    else{
+        logger.setLevel(LogLevel::DEBUG);
+    }
+
     Scanner scanner(filename, logger);
 
     Parser parser(scanner,logger);
     auto ast = parser.parse();
 
     if(ast && logger.getErrorCount() == 0){
-        std::cout << *ast << std::endl;
+        std::cout << std::endl << "Compiled Program:" << std::endl << *ast << std::endl;
         std::cout << "Parsing successful" << std::endl;
     }else{
         std::cout << "Errors occurred during parsing" << std::endl;
     }
-
-
-
 
     string status = (logger.getErrorCount() == 0 ? "complete" : "failed");
     logger.info("Compilation " + status + ": " +

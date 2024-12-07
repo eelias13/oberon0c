@@ -18,12 +18,12 @@ void IfStatementNode::print(ostream &stream) const
 
     for (auto itr = else_ifs_.begin(); itr != else_ifs_.end(); itr++)
     {
-        stream << "ELSE IF " << *(itr->first) << " THEN\n" << *(itr->second);
+        stream << "\n\tELSE IF " << *(itr->first) << " THEN\n" << *(itr->second);
     }
 
     if (else_statements_)
     {
-        stream << "ELSE\n" << *else_statements_;
+        stream << "\n\tELSE\n" << *else_statements_;
     }
 
     stream << "\n\tEND";
