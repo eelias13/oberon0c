@@ -14,7 +14,7 @@ void WhileStatementNode::accept(NodeVisitor &visitor)
 void WhileStatementNode::print(ostream &stream) const
 {
 
-    stream << "WHILE " << *condition_ << " DO " << *statements_ << " END";
+    stream << "WHILE " << *condition_ << " DO\n" << *statements_ << "\n\tEND";
 }
 
 WhileStatementNode::WhileStatementNode(FilePos pos, std::unique_ptr<ExpressionNode> condition, std::unique_ptr<StatementSequenceNode> statements) : StatementNode(NodeType::while_statement, pos), condition_(std::move(condition)), statements_(std::move(statements)) {};

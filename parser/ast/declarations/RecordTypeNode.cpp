@@ -38,7 +38,7 @@ void RecordTypeNode::print(ostream &stream) const
 
     }
 
-    stream << " END ";
+    stream << " END\n";
 }
 
 RecordTypeNode::RecordTypeNode(FilePos pos, std::unique_ptr<field > first_field) : TypeNode(NodeType::record_type, pos) { fields_.emplace_back(std::move(first_field)); }

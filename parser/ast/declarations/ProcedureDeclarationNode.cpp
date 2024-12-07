@@ -58,17 +58,17 @@ void ProcedureDeclarationNode::print(ostream &stream) const
 
     }
 
-    stream << "; ";
+    stream << ";\n";
 
     // Print Body
     stream << *declarations_;
 
     if (statements_)
     {
-        stream << " BEGIN " << *statements_;
+        stream << "BEGIN\n" << *statements_;
     }
 
-    stream << " END " << *end_name_;
+    stream << "\nEND " << *end_name_;
 }
 
 ProcedureDeclarationNode::ProcedureDeclarationNode(FilePos pos, std::unique_ptr<IdentNode> begin_name,std::unique_ptr<parameters> params,std::unique_ptr<DeclarationsNode> declarations,std::unique_ptr<IdentNode> end_name,std::unique_ptr<StatementSequenceNode> statements)

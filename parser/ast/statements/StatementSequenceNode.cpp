@@ -17,10 +17,10 @@ void StatementSequenceNode::print(ostream &stream) const
 
         if (itr > statements_.begin())
         {
-            stream << "; ";
+            stream << ";\n";
         }
 
-        stream << *(*itr);
+        stream << "\t" << *(*itr);
     }
 }
 

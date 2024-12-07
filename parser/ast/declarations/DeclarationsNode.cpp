@@ -21,7 +21,7 @@ void DeclarationsNode::print(ostream &stream) const
 
         for (auto itr = const_list_.begin(); itr != const_list_.end(); itr++)
         {
-            stream << *(itr->first) << " = " << *(itr->second) << "; ";
+            stream << *(itr->first) << " = " << *(itr->second) << ";\n\n";
         }
     }
 
@@ -31,7 +31,7 @@ void DeclarationsNode::print(ostream &stream) const
 
         for (auto itr = type_list_.begin(); itr != type_list_.end(); itr++)
         {
-            stream << *(itr->first) << " = " << *(itr->second) << "; ";
+            stream << *(itr->first) << " = " << *(itr->second) << ";\n\n";
         }
     }
 
@@ -49,12 +49,12 @@ void DeclarationsNode::print(ostream &stream) const
                 stream << *(*list_itr);
             }
 
-            stream << " : " << *(itr->second) << "; ";
+            stream << " : " << *(itr->second) << ";\n\n";
         }
     }
 
     for (auto itr = procedure_list.begin(); itr != procedure_list.end(); itr++)
     {
-        stream << *(*itr) << "; ";
+        stream << *(*itr) << ";\n\n";
     }
 }

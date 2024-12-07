@@ -13,7 +13,7 @@ void RepeatStatementNode::accept(NodeVisitor &visitor)
 
 void RepeatStatementNode::print(ostream &stream) const
 {
-    stream << "REPEAT " << *statements_ << " UNTIL " << *condition_;
+    stream << "REPEAT\n" << *statements_ << "\nUNTIL " << *condition_;
 }
 
 RepeatStatementNode::RepeatStatementNode(FilePos pos, std::unique_ptr<ExpressionNode> condition, std::unique_ptr<StatementSequenceNode> statements) : StatementNode(NodeType::repeat_statement, pos), condition_(std::move(condition)), statements_(std::move(statements)) {};
