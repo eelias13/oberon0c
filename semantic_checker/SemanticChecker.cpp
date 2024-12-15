@@ -3,3 +3,7 @@
 //
 
 #include "SemanticChecker.h"
+
+SemanticChecker::SemanticChecker(Logger &logger) : logger_(logger) {
+    scope_table_ = ScopeTable();
+}

@@ -85,6 +85,8 @@ set(PARSER_SOURCES
 set(SEMANTIC_SOURCES
         semantic_checker/SymbolTable.cpp semantic_checker/SymbolTable.h
         semantic_checker/SemanticChecker.cpp semantic_checker/SemanticChecker.h
+        semantic_checker/ScopeTable.cpp
+        semantic_checker/ScopeTable.h
 )
 
 set(ALL_SOURCES global.h ${UTIL_SOURCES} ${SCANNER_SOURCES} ${PARSER_SOURCES} ${SEMANTIC_SOURCES}
