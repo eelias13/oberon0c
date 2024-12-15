@@ -5,10 +5,11 @@
 #include "WhileStatementNode.h"
 #include "parser/ast/statements/StatementSequenceNode.h"
 #include "parser/ast/base_blocks/ExpressionNode.h"
+#include "parser/ast/NodeVisitor.h"
 
 void WhileStatementNode::accept(NodeVisitor &visitor)
 {
-    (void)visitor;
+    visitor.visit(*this);
 }
 
 void WhileStatementNode::print(ostream &stream) const

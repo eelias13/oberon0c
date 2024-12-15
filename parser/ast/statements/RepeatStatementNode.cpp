@@ -5,10 +5,11 @@
 #include "RepeatStatementNode.h"
 #include "parser/ast/base_blocks/ExpressionNode.h"
 #include "StatementSequenceNode.h"
+#include "parser/ast/NodeVisitor.h"
 
 void RepeatStatementNode::accept(NodeVisitor &visitor)
 {
-    (void)visitor;
+    visitor.visit(*this);
 }
 
 void RepeatStatementNode::print(ostream &stream) const

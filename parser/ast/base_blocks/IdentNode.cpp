@@ -3,10 +3,12 @@
 //
 
 #include "IdentNode.h"
+#include "parser/ast/NodeVisitor.h"
+
 
 void IdentNode::accept(NodeVisitor &visitor)
 {
-    (void)visitor;
+    visitor.visit(*this);
 }
 
 void IdentNode::print(ostream &stream) const

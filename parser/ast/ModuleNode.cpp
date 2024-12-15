@@ -9,10 +9,11 @@
 #include "parser/ast/base_blocks/ExpressionNode.h"
 #include "parser/ast/statements/StatementSequenceNode.h"
 #include "parser/ast/statements/StatementNode.h"
+#include "parser/ast/NodeVisitor.h"
 
 void ModuleNode::accept(NodeVisitor &visitor)
 {
-    (void)visitor;
+    visitor.visit(*this);
 }
 
 void ModuleNode::print(ostream &stream) const

@@ -4,10 +4,12 @@
 
 #include "ArrayTypeNode.h"
 #include "parser/ast/base_blocks/ExpressionNode.h"
+#include "parser/ast/NodeVisitor.h"
+
 
 void ArrayTypeNode::accept(NodeVisitor &visitor)
 {
-    (void)visitor;
+    visitor.visit(*this);
 }
 
 void ArrayTypeNode::print(ostream &stream) const

@@ -5,10 +5,12 @@
 #include "SelectorNode.h"
 #include "ExpressionNode.h"
 #include "parser/ast/base_blocks/IdentNode.h"
+#include "parser/ast/NodeVisitor.h"
+
 
 void SelectorNode::accept(NodeVisitor &visitor)
 {
-    (void)visitor;
+    visitor.visit(*this);
 }
 
 void SelectorNode::print(ostream &stream) const

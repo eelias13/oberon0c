@@ -3,10 +3,12 @@
 //
 
 #include "IntNode.h"
+#include "parser/ast/NodeVisitor.h"
+
 
 void IntNode::accept(NodeVisitor &visitor)
 {
-    (void)visitor;
+    visitor.visit(*this);
 }
 
 void IntNode::print(ostream &stream) const

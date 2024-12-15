@@ -4,10 +4,11 @@
 
 #include "RecordTypeNode.h"
 #include "parser/ast/base_blocks/IdentNode.h"
+#include "parser/ast/NodeVisitor.h"
 
 void RecordTypeNode::accept(NodeVisitor &visitor)
 {
-    (void)visitor;
+    visitor.visit(*this);
 }
 
 void RecordTypeNode::print(ostream &stream) const

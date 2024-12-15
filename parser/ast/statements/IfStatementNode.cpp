@@ -5,11 +5,12 @@
 #include "IfStatementNode.h"
 #include "StatementSequenceNode.h"
 #include "parser/ast/base_blocks/ExpressionNode.h"
+#include "parser/ast/NodeVisitor.h"
 
 
 void IfStatementNode::accept(NodeVisitor &visitor)
 {
-    (void)visitor;
+    visitor.visit(*this);
 }
 
 void IfStatementNode::print(ostream &stream) const

@@ -6,11 +6,12 @@
 #include "parser/ast/base_blocks/IdentNode.h"
 #include "parser/ast/base_blocks/SelectorNode.h"
 #include "parser/ast/base_blocks/ExpressionNode.h"
+#include "parser/ast/NodeVisitor.h"
 
 
 void AssignmentNode::accept(NodeVisitor &visitor)
 {
-    (void)visitor;
+    visitor.visit(*this);
 }
 
 void AssignmentNode::print(ostream &stream) const

@@ -6,6 +6,8 @@
 #include "parser/ast/base_blocks/IdentNode.h"
 #include "parser/ast/base_blocks/SelectorNode.h"
 
+#include "parser/ast/NodeVisitor.h"
+
 ExpressionNode::ExpressionNode(FilePos pos, const NodeType type)  : Node(type,pos) {}
 
 int ExpressionNode::get_precedence() const {
@@ -183,7 +185,7 @@ ExpressionNode* BinaryExpressionNode::get_rhs() {
 IdentSelectorExpressionNode::IdentSelectorExpressionNode(FilePos pos, std::unique_ptr<IdentNode> ident,std::unique_ptr<SelectorNode> selector) : ExpressionNode(pos, NodeType::ident_selector_expression), ident_(std::move(ident)), selector_(std::move(selector)){}
 
 void IdentSelectorExpressionNode::accept(NodeVisitor &visitor) {
-
+    visitor.visit(*this);
 }
 
 void IdentSelectorExpressionNode::print(ostream &stream) const {

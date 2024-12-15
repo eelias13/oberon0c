@@ -4,10 +4,11 @@
 
 #include "StatementSequenceNode.h"
 #include "StatementNode.h"
+#include "parser/ast/NodeVisitor.h"
 
 void StatementSequenceNode::accept(NodeVisitor &visitor)
 {
-    (void)visitor;
+    visitor.visit(*this);
 }
 
 void StatementSequenceNode::print(ostream &stream) const
