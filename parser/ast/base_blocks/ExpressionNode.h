@@ -41,6 +41,8 @@ class UnaryExpressionNode : public ExpressionNode{
     UnaryExpressionNode(FilePos pos, std::unique_ptr<ExpressionNode> expr, Operator op);
     void accept(NodeVisitor &visitor) override;
     void print(std::ostream &stream) const override;
+    ExpressionNode* get_expr();
+    Operator get_op();
 
 };
 
@@ -56,6 +58,8 @@ class BinaryExpressionNode : public ExpressionNode{
     BinaryExpressionNode(FilePos pos, std::unique_ptr<ExpressionNode> lhs, Operator op, std::unique_ptr<ExpressionNode> rhs);
     BinaryExpressionNode* insert_rightmost(Operator op, std::unique_ptr<ExpressionNode> new_rhs);
     ExpressionNode* get_rhs();
+    ExpressionNode* get_lhs();
+    Operator get_op();
     void accept(NodeVisitor &visitor) override;
     void print(std::ostream &stream) const override;
 

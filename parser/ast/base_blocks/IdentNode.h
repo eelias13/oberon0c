@@ -18,6 +18,8 @@ class IdentNode : public TypeNode {
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;
 
+        string get_value();
+
 };
 
 

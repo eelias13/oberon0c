@@ -7,15 +7,25 @@
 
 #include "ScopeTable.h"
 #include "util/Logger.h"
+#include "parser/ast/NodeVisitor.h"
 
-class SemanticChecker {
+enum expression_type {INT, BOOLEAN, ERR_TYPE};
+
+class SemanticChecker : NodeVisitor {
 
     private:
         ScopeTable scope_table_;
         Logger& logger_;
 
+
     public:
         explicit SemanticChecker(Logger& logger);
+
+        void visit(ModuleNode&) override;
+
+        expression_type checkType(ExpressionNode&);
+        long evaluate_expression(ExpressionNode&);
+
 };
 
 

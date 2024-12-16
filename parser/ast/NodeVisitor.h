@@ -33,8 +33,12 @@ public:
     virtual ~NodeVisitor() noexcept;
 
     virtual void visit(ExpressionNode&) = 0;
-    virtual void visit(IdentNode&) = 0;
-    virtual void visit(IntNode&) = 0;
+    virtual void visit(BinaryExpressionNode&) = 0;
+    virtual void visit(UnaryExpressionNode&)  = 0;
+    virtual void visit(IdentSelectorExpressionNode&) = 0;
+
+    virtual void visit(IdentNode&) = 0;          // Maybe unneeded
+    virtual void visit(IntNode&) = 0;            // Maybe unneeded
     virtual void visit(SelectorNode&) = 0;
 
     virtual void visit(ArrayTypeNode&) = 0;

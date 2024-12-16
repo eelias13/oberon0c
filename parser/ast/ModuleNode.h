@@ -27,6 +27,10 @@ class ModuleNode : public Node {
     void accept(NodeVisitor &visitor) override;
     void print(std::ostream &stream) const override;
 
+    std::pair<IdentNode*,IdentNode*> get_name();
+    DeclarationsNode* get_declarations();
+    StatementSequenceNode* get_statements();
+
 };
 
 

@@ -159,6 +159,14 @@ void UnaryExpressionNode::print(ostream &stream) const {
 
 }
 
+ExpressionNode *UnaryExpressionNode::get_expr() {
+    return expr_.get();
+}
+
+Operator UnaryExpressionNode::get_op() {
+    return op_;
+}
+
 BinaryExpressionNode::BinaryExpressionNode(FilePos pos, std::unique_ptr<ExpressionNode> lhs, Operator op, std::unique_ptr<ExpressionNode> rhs) : ExpressionNode(pos, NodeType::binary_expression), lhs_(std::move(lhs)), op_(op), rhs_(std::move(rhs)) {
     precedence_ = op_to_precedence(op);
 }
@@ -180,6 +188,13 @@ ExpressionNode* BinaryExpressionNode::get_rhs() {
     return rhs_.get();
 }
 
+ExpressionNode *BinaryExpressionNode::get_lhs() {
+    return lhs_.get();
+}
+
+Operator BinaryExpressionNode::get_op() {
+    return op_;
+}
 
 
 IdentSelectorExpressionNode::IdentSelectorExpressionNode(FilePos pos, std::unique_ptr<IdentNode> ident,std::unique_ptr<SelectorNode> selector) : ExpressionNode(pos, NodeType::ident_selector_expression), ident_(std::move(ident)), selector_(std::move(selector)){}

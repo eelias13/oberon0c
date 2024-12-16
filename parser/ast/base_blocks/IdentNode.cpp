@@ -15,3 +15,7 @@ void IdentNode::print(ostream &stream) const
 {
     stream << name_;
 }
+
+string IdentNode::get_value() {
+    return name_;
+}
