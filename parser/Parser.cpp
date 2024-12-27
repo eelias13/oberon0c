@@ -597,7 +597,7 @@ std::unique_ptr<RecordTypeNode> Parser::record_type()
 }
 
 // FPSection -> ("VAR")? IdentList ":" type
-std::unique_ptr<fp_section> Parser::fp_section()
+std::unique_ptr<fp_section_t> Parser::fp_section()
 {
     logger_.debug("FPSection");
     auto start = scanner_.peek()->start();

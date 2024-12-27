@@ -76,7 +76,7 @@ private:
     std::unique_ptr<ArrayTypeNode> array_type();
     std::unique_ptr<RecordTypeNode> record_type();
 
-    std::unique_ptr<fp_section> fp_section();
+    std::unique_ptr<fp_section_t> fp_section();
     std::unique_ptr<parameters> formal_parameters();
 
     std::pair<std::unique_ptr<IdentNode>,std::unique_ptr<parameters>> procedure_heading();

@@ -13,9 +13,9 @@ class TypeNode;
 class DeclarationsNode;
 class StatementSequenceNode;
 
-typedef std::tuple<bool,std::unique_ptr<std::vector<std::unique_ptr<IdentNode>>>,std::unique_ptr<TypeNode>> fp_section;
+typedef std::tuple<bool,std::unique_ptr<std::vector<std::unique_ptr<IdentNode>>>,std::unique_ptr<TypeNode>> fp_section_t;
 
-typedef std::vector<std::unique_ptr<fp_section>> parameters;
+typedef std::vector<std::unique_ptr<fp_section_t>> parameters;
 
 class ProcedureDeclarationNode : public Node {
 
