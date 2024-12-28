@@ -4,6 +4,8 @@
 
 #include "ScopeTable.h"
 
+#include <utility>
+
 void ScopeTable::beginScope() {
     current_scope++;
     scopes_.emplace_back(std::make_unique<SymbolTable>());
@@ -14,13 +16,17 @@ void ScopeTable::endScope() {
     scopes_.pop_back();
 }
 
-const Node *ScopeTable::lookup(const string& name) {
+IdentInfo* ScopeTable::lookup(const string& name, bool only_current) {
+
+    if(only_current){
+        return scopes_[current_scope]->lookup(name);
+    }
 
     for(int i = current_scope; i >= 0; i--){
 
-        const Node* ptr = scopes_[i]->lookup(name);
-        if(ptr){
-            return ptr;
+        auto el = scopes_[i]->lookup(name);
+        if(el){
+            return el;
         }
 
     }
@@ -29,6 +35,6 @@ const Node *ScopeTable::lookup(const string& name) {
 
 }
 
-void ScopeTable::insert(const string &name, const Node *node) {
-    scopes_[current_scope]->insert(name,node);
+void ScopeTable::insert(const string &name, Kind k, const Node *node, string type) {
+    scopes_[current_scope]->insert(name,k,node,std::move(type));
 }

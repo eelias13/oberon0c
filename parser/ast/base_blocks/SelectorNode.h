@@ -28,6 +28,8 @@ class SelectorNode : public Node {
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;
 
+        std::vector<id_indx_tuple>* get_selector();
+
 };
 
 

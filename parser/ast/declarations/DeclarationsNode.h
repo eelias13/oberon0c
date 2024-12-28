@@ -40,6 +40,10 @@ class DeclarationsNode : public Node {
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;
 
+        std::vector<std::pair<string, ExpressionNode*>> get_constants();
+        std::vector<std::pair<string, TypeNode*>> get_typenames();
+        std::vector<std::pair<std::vector<string>, TypeNode*>> get_variables();
+        std::vector<ProcedureDeclarationNode*> get_procedures();
 
 };
 

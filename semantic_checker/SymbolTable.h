@@ -9,16 +9,24 @@
 #include <unordered_map>
 #include "parser/ast/Node.h"
 
+enum Kind {PROCEDURE, CONSTANT, VARIABLE, TYPENAME, ERROR_KIND};
+
+struct IdentInfo {
+    Kind kind;
+    const Node* node;
+    string type;
+};
+
 class SymbolTable {
 
     private:
-        std::unordered_map<string,const Node*> table_;
+        std::unordered_map<string, IdentInfo> table_;
 
     public:
         explicit SymbolTable() = default;
 
-        void insert(const string& name, const Node* node);
-        const Node* lookup(const std::string &name);
+        void insert(const string& name, Kind k, const Node* node, string type = "");
+        IdentInfo* lookup(const std::string &name);
 
 };
 

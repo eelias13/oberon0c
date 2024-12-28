@@ -206,3 +206,11 @@ void IdentSelectorExpressionNode::accept(NodeVisitor &visitor) {
 void IdentSelectorExpressionNode::print(ostream &stream) const {
     stream << *ident_ << *selector_;
 }
+
+IdentNode *IdentSelectorExpressionNode::get_identifier() {
+    return ident_.get();
+}
+
+SelectorNode *IdentSelectorExpressionNode::get_selector() {
+    return selector_.get();
+}

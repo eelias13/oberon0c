@@ -75,6 +75,9 @@ class IdentSelectorExpressionNode : public ExpressionNode{
     void accept(NodeVisitor &visitor) override;
     void print(std::ostream &stream) const override;
 
+    IdentNode* get_identifier();
+    SelectorNode* get_selector();
+
 };
 
 

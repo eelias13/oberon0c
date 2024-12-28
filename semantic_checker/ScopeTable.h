@@ -22,8 +22,8 @@ class ScopeTable {
 
         void beginScope();
         void endScope();
-        const Node* lookup(const string& name);
-        void insert(const string& name, const Node* node);
+        IdentInfo* lookup(const string& name, bool only_current = false);
+        void insert(const string& name, Kind k, const Node* node, string type = "");
 
 };
 

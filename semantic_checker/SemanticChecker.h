@@ -22,8 +22,10 @@ class SemanticChecker : NodeVisitor {
         explicit SemanticChecker(Logger& logger);
 
         void visit(ModuleNode&) override;
+        void visit(ProcedureDeclarationNode&) override;
+        void visit(DeclarationsNode&) override;
 
-        expression_type checkType(ExpressionNode&);
+        string checkType(ExpressionNode&);
         long evaluate_expression(ExpressionNode&);
 
 };

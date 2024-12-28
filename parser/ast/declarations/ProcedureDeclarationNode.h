@@ -34,6 +34,10 @@ class ProcedureDeclarationNode : public Node {
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;
 
+        std::pair<IdentNode*,IdentNode*> get_names();
+        parameters* get_parameters();
+        DeclarationsNode* get_declarations();
+        StatementSequenceNode* get_statements();
 
 };
 

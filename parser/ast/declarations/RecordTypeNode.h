@@ -27,7 +27,6 @@ class RecordTypeNode : public TypeNode{
 
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;
-
 };
 
 

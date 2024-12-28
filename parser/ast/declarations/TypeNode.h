@@ -16,7 +16,6 @@ class TypeNode : public Node {
     virtual void accept(NodeVisitor &visitor) = 0;
     virtual void print(std::ostream &stream) const = 0;
 
-
 };
 
 #endif //OBERON0C_TYPENODE_H

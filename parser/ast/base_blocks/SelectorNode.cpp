@@ -47,3 +47,11 @@ void SelectorNode::add_index(std::unique_ptr<ExpressionNode> expr)
 SelectorNode::SelectorNode(FilePos pos) : Node(NodeType::selector, pos)
 {
 }
+
+std::vector<id_indx_tuple> *SelectorNode::get_selector() {
+    if(selectors.empty()){
+        return nullptr;
+    }
+
+    return &selectors;
+}
