@@ -42,6 +42,37 @@ void RecordTypeNode::print(ostream &stream) const
     stream << " END\n";
 }
 
-RecordTypeNode::RecordTypeNode(FilePos pos, std::unique_ptr<field > first_field) : TypeNode(NodeType::record_type, pos) { fields_.emplace_back(std::move(first_field)); }
+RecordTypeNode::RecordTypeNode(FilePos pos, std::unique_ptr<field > first_field) : TypeNode(NodeType::record_type, pos) { add_field_list(std::move(first_field)); }
 
-void RecordTypeNode::add_field_list(std::unique_ptr<field> field_list) {fields_.emplace_back(std::move(field_list));}
+void RecordTypeNode::add_field_list(std::unique_ptr<field> field_list) {
+
+    auto identifiers = field_list->first.get();
+    auto type = field_list->second.get();
+
+    for(auto itr = identifiers->begin(); itr != identifiers->end(); itr++){
+
+        field_types_[itr->get()->get_value()] = type;
+
+    }
+
+    fields_.emplace_back(std::move(field_list));
+
+
+}
+
+std::vector<raw_field> RecordTypeNode::get_fields() {
+    std::vector<raw_field> fields;
+
+    for(auto itr = fields_.begin(); itr != fields_.end(); itr++){
+
+        std::vector<string> id_names;
+        for(auto idents = itr->get()->first->begin(); idents != itr->get()->first->end(); idents++){
+            id_names.emplace_back(idents->get()->get_value());
+        }
+
+        fields.emplace_back(id_names,itr->get()->second.get());
+
+    }
+
+    return fields;
+}

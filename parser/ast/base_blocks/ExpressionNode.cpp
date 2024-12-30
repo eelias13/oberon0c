@@ -97,6 +97,7 @@ void ExpressionNode::print_operator(ostream &stream, Operator op) {
         case PAREN:
             return;
         case NO_OPERATOR:
+        default:
             stream << "<ERROR_OP>";
             break;
 
@@ -136,6 +137,7 @@ int ExpressionNode::op_to_precedence(Operator op) {
             return 3;
         // Error Precedence
         case NO_OPERATOR:
+        default:
             return -1;
     }
 };

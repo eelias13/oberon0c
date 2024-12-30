@@ -14,5 +14,13 @@ void ArrayTypeNode::accept(NodeVisitor &visitor)
 
 void ArrayTypeNode::print(ostream &stream) const
 {
-    stream << "ARRAY " << *name_ << " OF " << *type_;
+    stream << "ARRAY " << *dim_ << " OF " << *type_;
+}
+
+ExpressionNode *ArrayTypeNode::get_dimensions() {
+    return dim_.get();
+}
+
+TypeNode *ArrayTypeNode::get_type() {
+    return type_.get();
 }

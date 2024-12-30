@@ -3,10 +3,12 @@
 //
 
 #include "SemanticChecker.h"
+#include <limits>
 
 SemanticChecker::SemanticChecker(Logger &logger) : logger_(logger) {
     scope_table_ = ScopeTable();
 }
+
 
 // Expressions:
 //      --> Use of invalid types must be reported
@@ -34,12 +36,22 @@ string SemanticChecker::checkType(ExpressionNode& expr) {
            op == Operator::LEQ || op == Operator::GEQ ||
            op == Operator::LT  || op == Operator::GT){
 
-            if(checkType(*lhs) != checkType(*rhs)){
+            auto l_type = checkType(*lhs);
+            auto r_type = checkType(*rhs);
+
+            if(trace_type(l_type).starts_with("_RECORD") ||
+               trace_type(r_type).starts_with("_RECORD") ||
+               trace_type(l_type).starts_with("_ARRAY") ||
+               trace_type(r_type).starts_with(("_ARRAY"))){
+                logger_.error(expr.pos(), "Illegal use of comparison operators with array/record types.");
+                return "_ERROR";
+            }
+            if(l_type != r_type){
                 logger_.error(expr.pos(), "LHS and RHS of Boolean expression do not have equal types");
                 return "_ERROR";
             }
 
-            return "_BOOLEAN";
+            return "BOOLEAN";
 
         }
 
@@ -48,32 +60,32 @@ string SemanticChecker::checkType(ExpressionNode& expr) {
                 op == Operator::MULT || op == Operator::DIV   ||
                 op == Operator::MOD){
 
-            if(checkType(*lhs) != INT){
-                logger_.error(expr.pos(), "LHS is not of type INTEGER");
+            if(trace_type(checkType(*lhs)) != "INTEGER"){
+                logger_.error(expr.pos(), "LHS of arithmetic expression is not of type INTEGER");
                 return "_ERROR";
             }
-            if(checkType(*rhs) != INT){
-                logger_.error(expr.pos(), "RHS is not of type INTEGER");
+            if(trace_type(checkType(*rhs)) != "INTEGER"){
+                logger_.error(expr.pos(), "RHS of arithmetic expression is not of type INTEGER");
                 return "_ERROR";
             }
 
-            return "_INTEGER";
+            return "INTEGER";
 
         }
 
         // Boolean Operators
         else if(op == Operator::AND || op == Operator::OR){
 
-            if(checkType(*lhs) != BOOLEAN){
-                logger_.error(expr.pos(), "LHS is not of type BOOLEAN");
+            if(checkType(*lhs) != "BOOLEAN"){
+                logger_.error(expr.pos(), "LHS of Boolean expression is not of type BOOLEAN");
                 return "_ERROR";
             }
-            if(checkType(*rhs) != BOOLEAN){
-                logger_.error(expr.pos(), "RHS is not of type BOOLEAN");
+            if(checkType(*rhs) != "BOOLEAN"){
+                logger_.error(expr.pos(), "RHS of Boolean expression is not of type BOOLEAN");
                 return "_ERROR";
             }
 
-            return "_BOOLEAN";
+            return "BOOLEAN";
 
         }
 
@@ -86,56 +98,26 @@ string SemanticChecker::checkType(ExpressionNode& expr) {
         auto inner = un_expr->get_expr();
 
         if(op == Operator::NEG){
-            if(checkType(*inner) != "_BOOLEAN"){
+            if(checkType(*inner) != "BOOLEAN"){
                 logger_.error(expr.pos(), "Cannot negate an expression that's not of type BOOLEAN");
                 return "_ERROR";
             }
 
-            return "_BOOLEAN";
+            return "BOOLEAN";
         }
         else if(op == Operator::MINUS){
-            if(checkType(*inner) != "_INTEGER"){
+            if(trace_type(checkType(*inner)) != "INTEGER"){
                 logger_.error(expr.pos(), "Expression is not of type INTEGER");
                 return "_ERROR";
             }
-            return "_INTEGER";
+            return "INTEGER";
         }
 
     }
     else if(type == NodeType::ident_selector_expression){
 
         auto id_expr = &dynamic_cast<IdentSelectorExpressionNode&>(expr);
-        auto identifier = id_expr->get_identifier();
-        auto selector = id_expr->get_selector();
-
-        // check if identifier is defined
-        auto identifier_info = scope_table_.lookup(identifier->get_value());
-        if(!identifier_info){
-            logger_.error(expr.pos(), "Undefined Identifier: " + identifier->get_value());
-            return "_ERROR";
-        }
-
-        if(!selector || !selector->get_selector()){
-            return identifier_info->type;
-        }
-
-        // Check the selector chain for validity (visit the selector)
-
-        // Go through the entire selector chain
-        auto elements = selector->get_selector();
-        for(auto itr = elements->begin(); itr != elements->end(); itr++){
-
-            if(std::get<0>(*itr)){
-
-                // Array Index
-
-            }else{
-
-                // Field Record
-
-            }
-
-        }
+        return checkSelectorType(*id_expr);
 
     }
     else{
@@ -147,7 +129,7 @@ string SemanticChecker::checkType(ExpressionNode& expr) {
     return "_ERROR";
 }
 
-// Theoretically, only Expressions that return an INTEGER can be evaluated
+// Checks if expression is constant and if so evaluates it (returns quiet_NaN() in cases where errors occur)
 long SemanticChecker::evaluate_expression(ExpressionNode& expr) {
 
     auto type = expr.getNodeType();
@@ -172,7 +154,7 @@ long SemanticChecker::evaluate_expression(ExpressionNode& expr) {
                 return evaluate_expression(*lhs) + evaluate_expression(*rhs);
             default:
                 logger_.error(expr.pos(), "Could not evaluate expression to an integer");
-                return -1;
+                return std::numeric_limits<long>::quiet_NaN();
         }
     }
     else if(type == NodeType::unary_expression){
@@ -184,13 +166,40 @@ long SemanticChecker::evaluate_expression(ExpressionNode& expr) {
         if(op == Operator::MINUS){
             return -evaluate_expression(*inner);
         }
+        else if(op == Operator::NO_OPERATOR){
+            return evaluate_expression(*inner);
+        }
+
+    }
+    else if(type == NodeType::ident_selector_expression){
+
+        // Can only be evaluated if the expression consists of only a constant identifier
+        auto id_sel_expr = &dynamic_cast<IdentSelectorExpressionNode&>(expr);
+
+        if(id_sel_expr->get_selector()){
+            logger_.error(expr.pos(), "Constant expression contains non-constant elements (array-indexing or record-fields).");
+            return std::numeric_limits<long>::quiet_NaN();
+        }
+
+        auto id_info = scope_table_.lookup(id_sel_expr->get_identifier()->get_value());
+        if(id_info->kind != Kind::CONSTANT){
+            logger_.error(expr.pos(), "Constant expression contains non-constant identifiers.");
+            return std::numeric_limits<long>::quiet_NaN();
+        }
+
+        // Get value of constant
+        if(!id_info->node){
+            logger_.error(expr.pos(), "Could not find value of the constant: '" + id_sel_expr->get_identifier()->get_value() + "'.");
+            return std::numeric_limits<long>::quiet_NaN();
+        }
+
+        auto constant_expr = dynamic_cast<const ExpressionNode*>(id_info->node);
+        return evaluate_expression(const_cast<ExpressionNode &>(*constant_expr));
 
     }
 
-    // Ident Selector Expression?
-
     logger_.error(expr.pos(), "Could not evaluate expression to an integer");
-    return -1;
+    return std::numeric_limits<long>::quiet_NaN();
 
 }
 
@@ -200,6 +209,11 @@ long SemanticChecker::evaluate_expression(ExpressionNode& expr) {
 void SemanticChecker::visit(ModuleNode& module) {
 
     scope_table_.beginScope();
+
+    // Insert pre-defined types "INTEGER" and "BOOLEAN"
+    scope_table_.insert("INTEGER",Kind::TYPENAME, nullptr);
+    scope_table_.insert("BOOLEAN",Kind::TYPENAME, nullptr);
+
     auto names = module.get_name();
 
     if(names.first->get_value() != names.second->get_value()){
@@ -207,6 +221,7 @@ void SemanticChecker::visit(ModuleNode& module) {
     }
 
     // visit module.get_declarations
+    visit(*module.get_declarations());
 
     // visit module.get_statements
 
@@ -235,6 +250,9 @@ void SemanticChecker::visit(ProcedureDeclarationNode & procedure) {
     // Open up new scope
     scope_table_.beginScope();
 
+    // Check declarations
+    visit(*procedure.get_declarations());
+
     // Check the parameters
 
     // Check statements --> visit procedure.get_statements()
@@ -243,7 +261,8 @@ void SemanticChecker::visit(ProcedureDeclarationNode & procedure) {
 }
 
 // Declarations:
-//      --> Every identifier should be stored in the scope table with its corresponding kind
+//      --> Every identifier should be stored in the scope table with its corresponding information
+//      --> Erroneous declarations/definitions should be reported
 void SemanticChecker::visit(DeclarationsNode & declars) {
 
     auto constants = declars.get_constants();
@@ -257,13 +276,16 @@ void SemanticChecker::visit(DeclarationsNode & declars) {
 
         // check for double declarations (only in current scope)
         if(scope_table_.lookup(itr->first,true)){
-            logger_.error(declars.pos(),"Multiple Declarations of identifier: " + itr->first);
+            logger_.error(declars.pos(),"Multiple declarations of identifier: " + itr->first);
         }
 
         // check if expression actually evaluates to a constant
+        if(checkType(*itr->second) != "INTEGER"){
+            logger_.error(itr->second->pos(), "Right hand side of constant does not evaluate to a constant.");
+        }
 
         // insert variable into scope table
-        scope_table_.insert(itr->first, Kind::CONSTANT, &declars);
+        scope_table_.insert(itr->first, Kind::CONSTANT, itr->second, checkType(*itr->second));
 
     }
 
@@ -282,7 +304,7 @@ void SemanticChecker::visit(DeclarationsNode & declars) {
 
 
             // insert variable into symbol table
-            scope_table_.insert(*el,Kind::VARIABLE,&declars);
+            scope_table_.insert(*el,Kind::VARIABLE,itr->second, get_type_string(*itr->second));
 
         }
     }
@@ -299,7 +321,7 @@ void SemanticChecker::visit(DeclarationsNode & declars) {
         // check the type definition
 
         // insert into scope table
-        scope_table_.insert(itr->first, Kind::TYPENAME, itr->second);
+        scope_table_.insert(itr->first, Kind::TYPENAME, itr->second, get_type_string(*itr->second));
 
     }
 
@@ -309,6 +331,147 @@ void SemanticChecker::visit(DeclarationsNode & declars) {
     }
 
 }
+
+
+string SemanticChecker::get_type_string(TypeNode &type) {
+
+    if(type.getNodeType() == NodeType::ident){
+        return dynamic_cast<IdentNode&>(type).get_value();
+    }
+    else if(type.getNodeType() == NodeType::array_type){
+        auto array_node = &dynamic_cast<ArrayTypeNode&>(type);
+        long dim = evaluate_expression(*array_node->get_dimensions());
+        return "_ARRAY_" + to_string(dim) + "_OF_" + get_type_string(*array_node->get_type());
+    }
+    else if(type.getNodeType() == NodeType::record_type){
+        return "_RECORD";
+    }
+
+    std::cerr << "Invalid NodeType passed as TypeNode!" << std::endl;
+    return "";
+
+}
+
+string SemanticChecker::checkSelectorType(IdentSelectorExpressionNode& id_expr) {
+    auto identifier = id_expr.get_identifier();
+    auto selector = id_expr.get_selector();
+
+    // check if identifier is defined
+    auto identifier_info = scope_table_.lookup(identifier->get_value());
+    if(!identifier_info){
+        logger_.error(id_expr.pos(), "Undefined Identifier: " + identifier->get_value());
+        return "_ERROR";
+    }
+
+    if(!selector || !selector->get_selector()){
+        return identifier_info->type;
+    }
+
+    // Check the selector chain for validity (visit the selector)
+    return checkSelectorChain(*identifier, *selector);
+}
+
+// Traces back typers to handle type-aliases like the following:
+// TYPE INTARRAY = ARRAY 20 OF INTEGER
+// TYPE INA      = INTARRAY
+// TYPE ABC      = INA
+string SemanticChecker::trace_type(const string& initial_type) {
+
+    string current_alias = initial_type;
+    IdentInfo* curr_info = scope_table_.lookup(initial_type);
+    while(curr_info){
+        current_alias = curr_info->type;
+        curr_info = scope_table_.lookup(current_alias);
+    }
+
+    return current_alias;
+
+}
+
+// Selector:
+//      --> Validity has to be checked through the entire chain
+//      --> For Array-Indexing:
+//                  * Indexed object must actually have an array-type
+//                  * Index must evaluate to a non-negative integer (and must be constant?)
+//                  * That integer must lie within array dimensions
+//      --> For Field-Selection:
+//                  * Object must actually have a record type
+//                  * Identifier must refer to an actual field of that record type
+string SemanticChecker::checkSelectorChain(IdentNode& ident, SelectorNode& selector) {
+    auto chain = selector.get_selector();
+    IdentInfo* prev_info = scope_table_.lookup(ident.get_value());
+
+    // Traverse entire chain
+    // Note that the validity of the first selector cannot be checked inside this function
+    for(auto itr = chain->begin(); itr != chain->end(); itr++){
+
+        if(std::get<0>(*itr)){
+
+            // Array Index
+
+            // Object must be an array type
+            if(!trace_type(prev_info->type).starts_with("_ARRAY")){
+                logger_.error(selector.pos(), "Tried to index non-array object.");
+                return "_ERROR";
+            }
+
+            // Index must evaluate to a non-negative integer
+            auto expr = std::get<2>(*itr).get();
+            if(checkType(*expr) != "INTEGER"){  // && !isConstant(*expr)
+                logger_.error(selector.pos(), "Array index does not evaluate to a non-negative integer.");
+                return "_ERROR";
+            }
+
+            // Index must be within array bounds
+            // Recall: For an Array the Type is stored as "ARRAY_<DIM>_OF_<TYPE>"
+            //string sliced_arr_str = prev_info->type.
+            int dim = 10;
+
+            if(int x = evaluate_expression(*expr); x >= dim || x < 0){
+                logger_.error(selector.pos(), "Array index out of bounds (" + to_string(x) + " for dimension " + to_string(dim) + ").");
+                return "_ERROR";
+            }
+
+            // Update prev_info
+            string prev_typename; // GET FROM ARRAY STRING!!
+            prev_info = scope_table_.lookup(prev_typename);
+
+            if(!prev_info){
+                logger_.error(selector.pos(), "Unable to get information for type '" + prev_typename + "'");
+                return "_ERROR";
+            }
+
+
+        }else{
+
+            // Record Field
+
+            // Object must actually have a record type
+            if(!trace_type(prev_info->type).starts_with("_RECORD")){
+                logger_.error(selector.pos(), "Tried to access field of a non-record object.");
+                return "_ERROR";
+            }
+
+            // Identifier must refer to an actual field of that record type
+            string record_name = scope_table_.lookup(trace_type(prev_info->type))->name;
+            string field_type = scope_table_.lookup_field(record_name,std::get<1>(*itr)->get_value());
+            if(field_type == "_ERROR"){
+                logger_.error(selector.pos(), "Tried to access invalid field of record type '" + record_name + "' (Field: " + std::get<1>(*itr)->get_value() + ").");
+                return "_ERROR";
+            }
+
+            // Update prev_info
+            prev_info = scope_table_.lookup(field_type);
+
+        }
+
+
+
+    }
+
+    return prev_info->type;
+}
+
 
 
 

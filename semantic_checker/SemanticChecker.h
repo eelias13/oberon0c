@@ -9,8 +9,6 @@
 #include "util/Logger.h"
 #include "parser/ast/NodeVisitor.h"
 
-enum expression_type {INT, BOOLEAN, ERR_TYPE};
-
 class SemanticChecker : NodeVisitor {
 
     private:
@@ -21,9 +19,24 @@ class SemanticChecker : NodeVisitor {
     public:
         explicit SemanticChecker(Logger& logger);
 
+        // Base Blocks
+        //void visit(IdentNode&) override;
+        //void visit(IntNode&) override;
+
+        // Declarations
         void visit(ModuleNode&) override;
         void visit(ProcedureDeclarationNode&) override;
         void visit(DeclarationsNode&) override;
+
+        // Statements
+
+
+        // Typechecking
+        string get_type_string(TypeNode&);
+        string trace_type(const string& initial_type);
+
+        string checkSelectorType(IdentSelectorExpressionNode&);
+        string checkSelectorChain(IdentNode&, SelectorNode&);
 
         string checkType(ExpressionNode&);
         long evaluate_expression(ExpressionNode&);

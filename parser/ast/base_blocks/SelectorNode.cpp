@@ -54,4 +54,5 @@ std::vector<id_indx_tuple> *SelectorNode::get_selector() {
     }
 
     return &selectors;
+
 }

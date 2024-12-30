@@ -8,6 +8,7 @@
 #include <string>
 #include "scanner/Scanner.h"
 #include "parser/Parser.h"
+#include "semantic_checker/SemanticChecker.h"
 
 using std::cerr;
 using std::cout;
@@ -46,6 +47,8 @@ int main(const int argc, const char *argv[]) {
     }else{
         std::cout << "Errors occurred during parsing" << std::endl;
     }
+
+    //SemanticChecker semantics(logger);
 
     string status = (logger.getErrorCount() == 0 ? "complete" : "failed");
     logger.info("Compilation " + status + ": " +
