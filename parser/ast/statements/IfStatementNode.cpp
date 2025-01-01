@@ -40,4 +40,20 @@ void IfStatementNode::add_else(std::unique_ptr<StatementSequenceNode> else_state
     else_statements_ = std::move(else_statements);
 }
 
-IfStatementNode::IfStatementNode(FilePos pos, std::unique_ptr<ExpressionNode> condition, std::unique_ptr<StatementSequenceNode> then_statements) : StatementNode(NodeType::if_statement, pos), condition_(std::move(condition)), then_statements_(std::move(then_statements)) {};
+IfStatementNode::IfStatementNode(FilePos pos, std::unique_ptr<ExpressionNode> condition, std::unique_ptr<StatementSequenceNode> then_statements) : StatementNode(NodeType::if_statement, pos), condition_(std::move(condition)), then_statements_(std::move(then_statements)) {}
+
+ExpressionNode *IfStatementNode::get_condition() {
+    return condition_.get();
+}
+
+StatementSequenceNode *IfStatementNode::get_then() {
+    return then_statements_.get();
+}
+
+std::vector<ElseIfPair> *IfStatementNode::get_else_ifs() {
+    return &else_ifs_;
+}
+
+StatementSequenceNode *IfStatementNode::get_else() {
+    return else_statements_.get();
+};

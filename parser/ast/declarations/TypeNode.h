@@ -13,7 +13,7 @@ class TypeNode : public Node {
     TypeNode(NodeType node_type, FilePos pos) : Node(node_type,pos) {};
     ~TypeNode();
 
-    virtual void accept(NodeVisitor &visitor) = 0;
+    virtual void accept(NodeVisitor &visitor) override;
     virtual void print(std::ostream &stream) const = 0;
 
 };

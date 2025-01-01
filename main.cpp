@@ -36,19 +36,32 @@ int main(const int argc, const char *argv[]) {
         logger.setLevel(LogLevel::DEBUG);
     }
 
+    // Scanning
     Scanner scanner(filename, logger);
 
+    // Parsing
     Parser parser(scanner,logger);
     auto ast = parser.parse();
-
     if(ast && logger.getErrorCount() == 0){
         std::cout << std::endl << "Compiled Program:" << std::endl << *ast << std::endl;
-        std::cout << "Parsing successful" << std::endl;
-    }else{
-        std::cout << "Errors occurred during parsing" << std::endl;
-    }
+        std::cout << "Parsing successful." << std::endl;
 
-    //SemanticChecker semantics(logger);
+        // Semantic Checking
+        SemanticChecker semantics(logger);
+        semantics.validate_program(*ast);
+
+        if(logger.getErrorCount() > 0){
+            std::cout << "Errors occurred during semantic checking." << std::endl;
+        }
+        else{
+
+            // Code Generation
+
+        }
+
+    }else{
+        std::cout << "Errors occurred during parsing." << std::endl;
+    }
 
     string status = (logger.getErrorCount() == 0 ? "complete" : "failed");
     logger.info("Compilation " + status + ": " +

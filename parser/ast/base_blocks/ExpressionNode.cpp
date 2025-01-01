@@ -148,6 +148,7 @@ UnaryExpressionNode::UnaryExpressionNode(FilePos pos, std::unique_ptr<Expression
 }
 
 void UnaryExpressionNode::accept(NodeVisitor &visitor) {
+    visitor.visit(*this);
 }
 
 void UnaryExpressionNode::print(ostream &stream) const {
@@ -174,7 +175,7 @@ BinaryExpressionNode::BinaryExpressionNode(FilePos pos, std::unique_ptr<Expressi
 }
 
 void BinaryExpressionNode::accept(NodeVisitor &visitor) {
-
+    visitor.visit(*this);
 }
 
 void BinaryExpressionNode::print(ostream &stream) const {

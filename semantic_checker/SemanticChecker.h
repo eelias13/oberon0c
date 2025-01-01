@@ -19,17 +19,32 @@ class SemanticChecker : NodeVisitor {
     public:
         explicit SemanticChecker(Logger& logger);
 
-        // Base Blocks
-        //void visit(IdentNode&) override;
-        //void visit(IntNode&) override;
+        // Base Blocks/Empty Definitions
+        void visit(IntNode&) override;
+        void visit(UnaryExpressionNode&) override;
+        void visit(BinaryExpressionNode&) override;
+        void visit(IdentSelectorExpressionNode&) override;
+        void visit(SelectorNode&) override;
 
         // Declarations
         void visit(ModuleNode&) override;
         void visit(ProcedureDeclarationNode&) override;
         void visit(DeclarationsNode&) override;
 
-        // Statements
+        // Type Nodes
+        void visit(TypeNode&) override;
+        void visit(ArrayTypeNode&) override;
+        void visit(IdentNode&) override;
+        void visit(RecordTypeNode&) override;
 
+        // Statements
+        void visit(StatementSequenceNode&) override;
+        void visit(StatementNode&) override;
+        void visit(AssignmentNode&) override;
+        void visit(IfStatementNode&) override;
+        void visit(RepeatStatementNode&) override;
+        void visit(WhileStatementNode&) override;
+        void visit(ProcedureCallNode&) override;
 
         // Typechecking
         string get_type_string(TypeNode&);
@@ -40,6 +55,8 @@ class SemanticChecker : NodeVisitor {
 
         string checkType(ExpressionNode&);
         long evaluate_expression(ExpressionNode&);
+
+        void validate_program(ModuleNode&);
 
 };
 

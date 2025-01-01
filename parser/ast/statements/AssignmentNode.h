@@ -23,6 +23,11 @@ class AssignmentNode : public StatementNode{
 
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;
+
+        IdentNode* get_variable();
+        SelectorNode* get_selector();
+        ExpressionNode* get_expr();
+
 };
 
 

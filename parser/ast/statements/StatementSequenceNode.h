@@ -21,6 +21,8 @@ class StatementSequenceNode : public Node{
         void add_statement(std::unique_ptr<StatementNode> statement);
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;
+
+        std::vector<std::unique_ptr<StatementNode>>* get_statements();
 };
 
 

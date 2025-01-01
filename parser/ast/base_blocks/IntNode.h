@@ -19,6 +19,8 @@ class IntNode : public ExpressionNode {
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;
 
+        [[nodiscard]] long get_value() const{return value_;}
+
 };
 
 

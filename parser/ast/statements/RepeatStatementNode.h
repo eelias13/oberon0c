@@ -22,6 +22,8 @@ class RepeatStatementNode : public StatementNode {
         void print(std::ostream &stream) const override;
         void accept(NodeVisitor &visitor) override;
 
+        ExpressionNode* get_expr();
+        StatementSequenceNode* get_statements();
 };
 
 

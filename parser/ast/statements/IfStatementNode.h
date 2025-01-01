@@ -31,6 +31,10 @@ class IfStatementNode : public StatementNode {
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;
 
+        ExpressionNode* get_condition();
+        StatementSequenceNode* get_then();
+        std::vector<ElseIfPair>* get_else_ifs();
+        StatementSequenceNode* get_else();
 };
 
 

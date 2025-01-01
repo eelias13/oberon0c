@@ -27,4 +27,16 @@ void AssignmentNode::print(ostream &stream) const
 }
 
 AssignmentNode::AssignmentNode(FilePos pos, std::unique_ptr<IdentNode> variable, std::unique_ptr<SelectorNode> selector, std::unique_ptr<ExpressionNode> expr)
-    : StatementNode(NodeType::assignment, pos), variable_(std::move(variable)), selector_(std::move(selector)), expr_(std::move(expr)) {};
+    : StatementNode(NodeType::assignment, pos), variable_(std::move(variable)), selector_(std::move(selector)), expr_(std::move(expr)) {}
+
+IdentNode *AssignmentNode::get_variable() {
+    return variable_.get();
+}
+
+SelectorNode *AssignmentNode::get_selector() {
+    return selector_.get();
+}
+
+ExpressionNode *AssignmentNode::get_expr() {
+    return expr_.get();
+};

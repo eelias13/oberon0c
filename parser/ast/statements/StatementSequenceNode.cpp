@@ -27,4 +27,8 @@ void StatementSequenceNode::print(ostream &stream) const
 
 StatementSequenceNode::StatementSequenceNode(FilePos pos, std::unique_ptr<StatementNode> first_statement) : Node(NodeType::statement_sequence, pos) { statements_.emplace_back(std::move(first_statement)); }
 
-void StatementSequenceNode::add_statement(std::unique_ptr<StatementNode> statement) { statements_.emplace_back(std::move(statement)); };
+void StatementSequenceNode::add_statement(std::unique_ptr<StatementNode> statement) { statements_.emplace_back(std::move(statement)); }
+
+std::vector<std::unique_ptr<StatementNode>> *StatementSequenceNode::get_statements() {
+    return &statements_;
+};

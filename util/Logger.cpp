@@ -31,11 +31,11 @@ void Logger::log(LogLevel level, const string &fileName, int lineNo, int charNo,
             out << ": ";
         }
         switch (level) {
-            case LogLevel::WARNING: out << "\u001b[1m\u001b[95mwarning: \u001b[97m"; break;
-            case LogLevel::ERROR:   out << "\u001b[1m\u001b[91merror: \u001b[97m";   break;
+            case LogLevel::WARNING: out << "\u001bWarning: "; break;
+            case LogLevel::ERROR:   out << "\u001bError: ";   break;
             default: break; // do nothing
         }
-        out << msg << "\u001b[0m" << std::endl;
+        out << msg << std::endl;
     }
 }
 

@@ -32,25 +32,26 @@ public:
     explicit NodeVisitor() = default;
     virtual ~NodeVisitor() noexcept;
 
-    virtual void visit(ExpressionNode&) = 0;
     virtual void visit(BinaryExpressionNode&) = 0;
     virtual void visit(UnaryExpressionNode&)  = 0;
     virtual void visit(IdentSelectorExpressionNode&) = 0;
 
-    virtual void visit(IdentNode&) = 0;          // Maybe unneeded
-    virtual void visit(IntNode&) = 0;            // Maybe unneeded
+    virtual void visit(IdentNode&) = 0;
+    virtual void visit(IntNode&) = 0;
     virtual void visit(SelectorNode&) = 0;
 
+    virtual void visit(TypeNode&) = 0;
     virtual void visit(ArrayTypeNode&) = 0;
     virtual void visit(DeclarationsNode&) = 0;
     virtual void visit(ProcedureDeclarationNode&) = 0;
     virtual void visit(RecordTypeNode&) = 0;
 
+    virtual void visit(StatementNode&) = 0;
     virtual void visit(AssignmentNode&) = 0;
     virtual void visit(IfStatementNode&) = 0;
     virtual void visit(ProcedureCallNode&) = 0;
     virtual void visit(RepeatStatementNode&) = 0;
-    virtual void visit(StatementSequenceNode&) = 0; // Maybe unneeded
+    virtual void visit(StatementSequenceNode&) = 0;
     virtual void visit(WhileStatementNode&) = 0;
 
     virtual void visit(ModuleNode&) = 0;
