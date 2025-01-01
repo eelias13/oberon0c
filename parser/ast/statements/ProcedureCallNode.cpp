@@ -20,7 +20,7 @@ void ProcedureCallNode::print(ostream &stream) const
     if(selector_){
         stream << *selector_;
     }
-    
+
     if (parameters_)
     {
         stream << "(";

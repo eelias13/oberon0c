@@ -95,7 +95,7 @@ string SemanticChecker::checkType(ExpressionNode& expr) {
         auto op = un_expr->get_op();
         auto inner = un_expr->get_expr();
 
-        if(op == Operator::NEG){
+        if(op == Operator::NOT){
             if(checkType(*inner) != "BOOLEAN"){
                 logger_.error(expr.pos(), "Cannot negate an expression that's not of type BOOLEAN.");
                 return "_ERROR";
@@ -103,12 +103,15 @@ string SemanticChecker::checkType(ExpressionNode& expr) {
 
             return "BOOLEAN";
         }
-        else if(op == Operator::MINUS){
+        else if(op == Operator::NEG){
             if(trace_type(checkType(*inner)) != "INTEGER"){
                 logger_.error(expr.pos(), "Expression is not of type INTEGER.");
                 return "_ERROR";
             }
             return "INTEGER";
+        }
+        else if(op == Operator::NO_OPERATOR || op == Operator::PAREN){
+            return checkType(*inner);
         }
 
     }
@@ -164,10 +167,10 @@ long SemanticChecker::evaluate_expression(ExpressionNode& expr) {
         auto op = un_expr->get_op();
         auto inner = un_expr->get_expr();
 
-        if(op == Operator::MINUS){
+        if(op == Operator::NEG){
             return -evaluate_expression(*inner);
         }
-        else if(op == Operator::NO_OPERATOR){
+        else if(op == Operator::NO_OPERATOR || op == Operator::PAREN){
             return evaluate_expression(*inner);
         }
 
@@ -249,14 +252,18 @@ string SemanticChecker::trace_type(const string& initial_type) {
 //      --> Validity has to be checked through the entire chain
 //      --> For Array-Indexing:
 //                  * Indexed object must actually have an array-type
-//                  * Index must evaluate to a non-negative integer (and must be constant?)
-//                  * That integer must lie within array dimensions
+//                  * Index must have the type INTEGER
 //      --> For Field-Selection:
 //                  * Object must actually have a record type
 //                  * Identifier must refer to an actual field of that record type
 string SemanticChecker::checkSelectorChain(IdentNode& ident, SelectorNode& selector) {
-    auto chain = selector.get_selector();
     IdentInfo* prev_info = scope_table_.lookup(ident.get_value());
+
+    if(!selector.get_selector()){
+        return prev_info->type;
+    }
+
+    auto chain = selector.get_selector();
 
     // Traverse entire chain
     // Note that the validity of the first selector cannot be checked inside this function
@@ -274,27 +281,21 @@ string SemanticChecker::checkSelectorChain(IdentNode& ident, SelectorNode& selec
 
             // Index must evaluate to a non-negative integer
             auto expr = std::get<2>(*itr).get();
-            if(checkType(*expr) != "INTEGER"){  // && !isConstant(*expr)
-                logger_.error(selector.pos(), "Array index does not evaluate to a non-negative integer.");
-                return "_ERROR";
-            }
-
-            // Index must be within array bounds
-            // Recall: For an Array the Type is stored as "ARRAY_<DIM>_OF_<TYPE>"
-            //string sliced_arr_str = prev_info->type.
-            int dim = 10;
-
-            if(int x = evaluate_expression(*expr); x >= dim || x < 0){
-                logger_.error(selector.pos(), "Array index out of bounds (" + to_string(x) + " for dimension " + to_string(dim) + ").");
+            if(trace_type(checkType(*expr)) != "INTEGER"){  // && !isConstant(*expr)
+                logger_.error(selector.pos(), "Array index does not evaluate to an integer.");
                 return "_ERROR";
             }
 
             // Update prev_info
-            string prev_typename; // GET FROM ARRAY STRING!!
-            prev_info = scope_table_.lookup(prev_typename);
+            // Recall Array Types have the following string form: "ARRAY_<DIM>_OF_<TYPE>"
+            string arr_string = trace_type(prev_info->type).erase(0,7);  // Cuts off "ARRAY_"
+            arr_string = arr_string.erase(0,arr_string.find('_') + 1);            // Cuts off "<DIM>_
+            arr_string = arr_string.erase(0,arr_string.find('_') + 1);            // Cuts off "OF_"
+
+            prev_info = scope_table_.lookup(arr_string);
 
             if(!prev_info){
-                logger_.error(selector.pos(), "Unable to get information for type '" + prev_typename + "'");
+                logger_.error(selector.pos(), "Unable to get information for type '" + arr_string + "'");
                 return "_ERROR";
             }
 
@@ -321,7 +322,7 @@ string SemanticChecker::checkSelectorChain(IdentNode& ident, SelectorNode& selec
             prev_info = scope_table_.lookup(field_type);
 
             if(!prev_info){
-                logger_.error(selector.pos(), "Unable to get information for type '" + prev_info->type + "'");
+                logger_.error(selector.pos(), "Unable to get information for type '" + field_type + "'");
                 return "_ERROR";
             }
 
@@ -487,7 +488,6 @@ void SemanticChecker::visit(DeclarationsNode & declars) {
 // Remains unimplemented, but is needed for polymorphic function calls
 void SemanticChecker::visit(TypeNode &node) {(void)node;}
 
-
 // Identifier:
 //      --> Must refer to a valid type (Note that this visit method is only called on typenames)
 void SemanticChecker::visit(IdentNode &node) {
@@ -543,8 +543,24 @@ void SemanticChecker::visit(StatementSequenceNode &node) {
     }
 }
 
-// Statement (Left undefined, only there to allow polymorphism of visitor-pattern)
-void SemanticChecker::visit(StatementNode& node){(void) node;}
+// Statement: (Recall that Statement is an abstract class
+void SemanticChecker::visit(StatementNode& node){
+    if(node.getNodeType() == NodeType::assignment){
+        visit(dynamic_cast<AssignmentNode&>(node));
+    }
+    else if(node.getNodeType() == NodeType::if_statement){
+        visit(dynamic_cast<IfStatementNode&>(node));
+    }
+    else if(node.getNodeType() == NodeType::while_statement){
+        visit(dynamic_cast<WhileStatementNode&>(node));
+    }
+    else if(node.getNodeType() == NodeType::repeat_statement){
+        visit(dynamic_cast<RepeatStatementNode&>(node));
+    }
+    else if(node.getNodeType() == NodeType::procedure_call){
+        visit(dynamic_cast<ProcedureCallNode&>(node));
+    }
+}
 
 // Assignment:
 //      --> LHS must be a non-const variable
@@ -571,17 +587,19 @@ void SemanticChecker::visit(AssignmentNode& node) {
     }
 
     // Check Selector / Get Type of Variable
-    string lhs_type = checkSelectorChain(*node.get_variable(), *node.get_selector());
-
-    if(lhs_type == "_ERROR"){
-        return;
+    string lhs_type = lhs_id_info->type;
+    if(node.get_selector()) {
+        lhs_type = checkSelectorChain(*node.get_variable(), *node.get_selector());
+        if (lhs_type == "_ERROR") {
+            return;
+        }
     }
 
     // Check RHS
     auto rhs = node.get_expr();
     string expr_type = checkType(*rhs);
 
-    if(expr_type != lhs_type){
+    if(expr_type != lhs_type && expr_type != "_ERROR"){ // We exclude the error case to avoid too many exceptions
         logger_.error(node.pos(), "Cannot assign something of type '" + expr_type + "' to a variable of type '" + lhs_type + "'.");
         return;
     }
