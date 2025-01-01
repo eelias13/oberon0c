@@ -48,7 +48,12 @@ void Logger::log(const LogLevel level, const string &msg) {
 }
 
 void Logger::error(const FilePos &pos, const string &msg) {
-    log(LogLevel::ERROR, pos.fileName, pos.lineNo, pos.charNo, msg);
+
+    if(pos.fileName.empty()){
+        log(LogLevel::ERROR, PROJECT_NAME, pos.lineNo, pos.charNo, msg);
+    }else{
+        log(LogLevel::ERROR, pos.fileName, pos.lineNo, pos.charNo, msg);
+    }
 }
 
 void Logger::error(const string &fileName, const string &msg) {

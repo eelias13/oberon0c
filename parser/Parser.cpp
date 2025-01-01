@@ -135,6 +135,11 @@ std::unique_ptr<SelectorNode> Parser::selector()
     auto start = scanner_.peek()->start();
     auto selector = std::make_unique<SelectorNode>(start);
 
+    // Return nullptr for empty selectors
+    if(!this->if_next(TokenType::period) && !this->if_next(TokenType::lbrack)){
+        return nullptr;
+    }
+
     while (true)
     {
 

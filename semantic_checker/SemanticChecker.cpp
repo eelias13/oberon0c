@@ -45,7 +45,7 @@ string SemanticChecker::checkType(ExpressionNode& expr) {
                 return "_ERROR";
             }
             if(l_type != r_type){
-                logger_.error(expr.pos(), "LHS and RHS of Boolean expression do not have equal types");
+                logger_.error(expr.pos(), "LHS and RHS of Boolean expression do not have equal types.");
                 return "_ERROR";
             }
 
@@ -59,11 +59,11 @@ string SemanticChecker::checkType(ExpressionNode& expr) {
                 op == Operator::MOD){
 
             if(trace_type(checkType(*lhs)) != "INTEGER"){
-                logger_.error(expr.pos(), "LHS of arithmetic expression is not of type INTEGER");
+                logger_.error(expr.pos(), "LHS of arithmetic expression is not of type INTEGER.");
                 return "_ERROR";
             }
             if(trace_type(checkType(*rhs)) != "INTEGER"){
-                logger_.error(expr.pos(), "RHS of arithmetic expression is not of type INTEGER");
+                logger_.error(expr.pos(), "RHS of arithmetic expression is not of type INTEGER.");
                 return "_ERROR";
             }
 
@@ -75,11 +75,11 @@ string SemanticChecker::checkType(ExpressionNode& expr) {
         else if(op == Operator::AND || op == Operator::OR){
 
             if(checkType(*lhs) != "BOOLEAN"){
-                logger_.error(expr.pos(), "LHS of Boolean expression is not of type BOOLEAN");
+                logger_.error(expr.pos(), "LHS of Boolean expression is not of type BOOLEAN.");
                 return "_ERROR";
             }
             if(checkType(*rhs) != "BOOLEAN"){
-                logger_.error(expr.pos(), "RHS of Boolean expression is not of type BOOLEAN");
+                logger_.error(expr.pos(), "RHS of Boolean expression is not of type BOOLEAN.");
                 return "_ERROR";
             }
 
@@ -97,7 +97,7 @@ string SemanticChecker::checkType(ExpressionNode& expr) {
 
         if(op == Operator::NEG){
             if(checkType(*inner) != "BOOLEAN"){
-                logger_.error(expr.pos(), "Cannot negate an expression that's not of type BOOLEAN");
+                logger_.error(expr.pos(), "Cannot negate an expression that's not of type BOOLEAN.");
                 return "_ERROR";
             }
 
@@ -105,7 +105,7 @@ string SemanticChecker::checkType(ExpressionNode& expr) {
         }
         else if(op == Operator::MINUS){
             if(trace_type(checkType(*inner)) != "INTEGER"){
-                logger_.error(expr.pos(), "Expression is not of type INTEGER");
+                logger_.error(expr.pos(), "Expression is not of type INTEGER.");
                 return "_ERROR";
             }
             return "INTEGER";
@@ -122,11 +122,11 @@ string SemanticChecker::checkType(ExpressionNode& expr) {
         return "INTEGER";
     }
     else{
-        logger_.error(expr.pos(),"Invalid or empty expression");
+        logger_.error(expr.pos(),"Invalid or empty expression.");
         return "_ERROR";
     }
 
-    logger_.error(expr.pos(), "Could not deduce expression type");
+    logger_.error(expr.pos(), "Could not deduce expression type.");
     return "_ERROR";
 }
 
@@ -154,7 +154,7 @@ long SemanticChecker::evaluate_expression(ExpressionNode& expr) {
             case Operator::PLUS:
                 return evaluate_expression(*lhs) + evaluate_expression(*rhs);
             default:
-                logger_.error(expr.pos(), "Could not evaluate expression to an integer");
+                logger_.error(expr.pos(), "Could not evaluate expression to an integer.");
                 return std::numeric_limits<long>::quiet_NaN();
         }
     }
@@ -177,7 +177,7 @@ long SemanticChecker::evaluate_expression(ExpressionNode& expr) {
         // Can only be evaluated if the expression consists of only a constant identifier
         auto id_sel_expr = &dynamic_cast<IdentSelectorExpressionNode&>(expr);
 
-        if(id_sel_expr->get_selector()){
+        if(id_sel_expr->get_selector() && !id_sel_expr->get_selector()->get_selector()){
             logger_.error(expr.pos(), "Constant expression contains non-constant elements (array-indexing or record-fields).");
             return std::numeric_limits<long>::quiet_NaN();
         }
@@ -203,7 +203,7 @@ long SemanticChecker::evaluate_expression(ExpressionNode& expr) {
         return integer_node->get_value();
     }
 
-    logger_.error(expr.pos(), "Could not evaluate expression to an integer");
+    logger_.error(expr.pos(), "Could not evaluate expression to an integer.");
     return std::numeric_limits<long>::quiet_NaN();
 
 }
@@ -360,8 +360,8 @@ void SemanticChecker::visit(ModuleNode& module) {
     scope_table_.beginScope();
 
     // Insert pre-defined types "INTEGER" and "BOOLEAN"
-    scope_table_.insert("INTEGER",Kind::TYPENAME, nullptr);
-    scope_table_.insert("BOOLEAN",Kind::TYPENAME, nullptr);
+    scope_table_.insert("INTEGER",Kind::TYPENAME, nullptr, "INTEGER");
+    scope_table_.insert("BOOLEAN",Kind::TYPENAME, nullptr, "BOOLEAN");
 
     auto names = module.get_name();
 
