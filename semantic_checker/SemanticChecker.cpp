@@ -3,7 +3,6 @@
 //
 
 #include "SemanticChecker.h"
-#include <limits>
 
 SemanticChecker::SemanticChecker(Logger &logger) : logger_(logger) {
     scope_table_ = ScopeTable();
