@@ -27,6 +27,10 @@ class ProcedureCallNode : public StatementNode {
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;
 
+        IdentNode* get_name();
+        SelectorNode* get_selector();
+
+        std::vector<std::unique_ptr<ExpressionNode>>* get_parameters();
 
 };
 

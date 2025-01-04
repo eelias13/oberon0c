@@ -219,7 +219,7 @@ string SemanticChecker::checkSelectorType(IdentSelectorExpressionNode& id_expr) 
     // check if identifier is defined
     auto identifier_info = scope_table_.lookup(identifier->get_value());
     if(!identifier_info){
-        logger_.error(id_expr.pos(), "Undefined Identifier: " + identifier->get_value());
+        logger_.error(id_expr.pos(), "Unknown Identifier: " + identifier->get_value());
         return "_ERROR";
     }
 
@@ -311,7 +311,7 @@ string SemanticChecker::checkSelectorChain(IdentNode& ident, SelectorNode& selec
             }
 
             // Identifier must refer to an actual field of that record type
-            string record_name = scope_table_.lookup(trace_type(prev_info->type))->name;
+            string record_name = scope_table_.lookup(prev_info->type)->name;
             string field_type = scope_table_.lookup_field(record_name,std::get<1>(*itr)->get_value());
             if(field_type == "_ERROR"){
                 logger_.error(selector.pos(), "Tried to access invalid field of record type '" + record_name + "' (Field: " + std::get<1>(*itr)->get_value() + ").");
@@ -400,10 +400,38 @@ void SemanticChecker::visit(ProcedureDeclarationNode & procedure) {
     // Open up new scope
     scope_table_.beginScope();
 
+    // Check the parameters
+    auto params = procedure.get_parameters();
+
+    if(params){
+        for(auto itr = params->begin(); itr != params->end(); itr++){
+
+            bool is_var = std::get<0>(**itr);
+
+            // Check Type definition
+            TypeNode* type = std::get<2>(**itr).get();
+            if(type->getNodeType() == NodeType::array_type || type->getNodeType() == NodeType::record_type){
+                logger_.warning(type->pos(), "New Type defined in formal parameters of function. Actual Parameter will never be able to fulfill this type (Note: The Oberon0 compiler follows name-equivalence, not structural equivalence).");
+            }
+            visit(*type);
+
+            for(auto var = std::get<1>(**itr)->begin(); var != std::get<1>(**itr)->end(); var++){
+
+                // Check for double definitions
+                if(scope_table_.lookup(var->get()->get_value(), true)){
+                    logger_.error(var->get()->pos(), "Multiple use of the same parameter name.");
+                }
+
+                scope_table_.insert(var->get()->get_value(), Kind::VARIABLE, var->get(), get_type_string(*type));
+
+            }
+
+        }
+
+    }
+
     // Check declarations
     visit(*procedure.get_declarations());
-
-    // Check the parameters
 
     // Check statements
     visit(*procedure.get_statements());
@@ -440,6 +468,28 @@ void SemanticChecker::visit(DeclarationsNode & declars) {
 
     }
 
+    // Typenames
+    //      --> Type definition must be valid
+    for(auto itr = typenames.begin(); itr != typenames.end(); itr++){
+
+        // check for double declarations
+        if(scope_table_.lookup(itr->first, true)){
+            logger_.error(declars.pos(),"Multiple Declarations of identifier: " + itr->first);
+        }
+
+        // check the type definition
+        visit(*itr->second);
+
+        // insert into scope table
+        scope_table_.insert(itr->first, Kind::TYPENAME, itr->second, get_type_string(*itr->second));
+
+        // if the type referred to a record-type, then we also store the record information in the scope table
+        if(itr->second->getNodeType() == NodeType::record_type){
+            scope_table_.insert_record(itr->first, key_value_map(dynamic_cast<RecordTypeNode&>(*itr->second)));
+        }
+
+    }
+
     // Variables:
     //      --> Type must be valid
     for(auto itr = variables.begin(); itr != variables.end(); itr++){
@@ -461,23 +511,6 @@ void SemanticChecker::visit(DeclarationsNode & declars) {
         }
     }
 
-    // Typenames
-    //      --> Type definition must be valid
-    for(auto itr = typenames.begin(); itr != typenames.end(); itr++){
-
-        // check for double declarations
-        if(scope_table_.lookup(itr->first, true)){
-            logger_.error(declars.pos(),"Multiple Declarations of identifier: " + itr->first);
-        }
-
-        // check the type definition
-        visit(*itr->second);
-
-        // insert into scope table
-        scope_table_.insert(itr->first, Kind::TYPENAME, itr->second, get_type_string(*itr->second));
-
-    }
-
     // Procedures
     for(auto itr = procedures.begin(); itr != procedures.end(); itr++){
         visit(*(*itr));
@@ -485,15 +518,25 @@ void SemanticChecker::visit(DeclarationsNode & declars) {
 
 }
 
-// Remains unimplemented, but is needed for polymorphic function calls
-void SemanticChecker::visit(TypeNode &node) {(void)node;}
+// Type: (Recall that Type is an abstract class)
+void SemanticChecker::visit(TypeNode &node) {
+    if(node.getNodeType() == NodeType::ident){
+        visit(dynamic_cast<IdentNode&>(node));
+    }
+    else if(node.getNodeType() == NodeType::array_type){
+        visit(dynamic_cast<ArrayTypeNode&>(node));
+    }
+    else if(node.getNodeType() == NodeType::record_type){
+        visit(dynamic_cast<RecordTypeNode&>(node));
+    }
+}
 
 // Identifier:
 //      --> Must refer to a valid type (Note that this visit method is only called on typenames)
 void SemanticChecker::visit(IdentNode &node) {
     auto info = scope_table_.lookup(node.get_value());
     if(!info){
-        logger_.error(node.pos(), "Use on unknown identifier: '" + node.get_value() + "'." );
+        logger_.error(node.pos(), "Use of unknown identifier: '" + node.get_value() + "'." );
         return;
     }
 
@@ -530,8 +573,47 @@ void SemanticChecker::visit(ArrayTypeNode &node) {
 //      --> All field names must be unique
 //      --> Types of the fields must be valid
 //      --> RecordType is inserted correctly in ScopeTable
-void SemanticChecker::visit(RecordTypeNode &) {
+void SemanticChecker::visit(RecordTypeNode& node) {
 
+    scope_table_.beginScope();
+
+    auto fields = node.get_fields();
+
+    for(auto field_itr = fields.begin(); field_itr != fields.end(); field_itr++){
+
+        // Check for double names
+        for(auto field_name = field_itr->first.begin(); field_name != field_itr->first.end(); field_name++){
+            if(scope_table_.lookup(*field_name, true)){
+                logger_.error(node.pos(), "Multiple definitions of record field '" + *field_name + "'.");
+            }
+
+            // Note: Since this scope is only used to check for double definitions and immediately closed after that,
+            //       It doesn't *really* matter what we put into the scope table for the fields
+            scope_table_.insert(*field_name, Kind::VARIABLE, nullptr);
+
+        }
+
+        // Check for valid type definition
+        visit(*field_itr->second);
+
+    }
+
+    scope_table_.endScope();
+
+}
+
+// Fills a key-value-map-vector which is needed to place record types into the scope table
+std::vector<std::pair<string, string>> SemanticChecker::key_value_map(RecordTypeNode &node) {
+    std::vector<std::pair<string,string>> key_value_map;
+
+    auto fields = node.get_fields();
+    for(auto field_itr = fields.begin(); field_itr != fields.end(); field_itr++){
+        for(auto field_name = field_itr->first.begin(); field_name != field_itr->first.end(); field_name++){
+            key_value_map.emplace_back(*field_name, get_type_string(*field_itr->second));
+        }
+    }
+
+    return key_value_map;
 }
 
 // StatementSequence:
@@ -666,7 +748,81 @@ void SemanticChecker::visit(WhileStatementNode& node) {
 }
 
 // ProcedureCall:
-void SemanticChecker::visit(ProcedureCallNode &) {
+//      --> Identifier must refer to a procedure
+//      --> In Oberon0, the selector cannot exist
+//      --> Number of actual parameters must equal to the number of formal parameters
+//      --> The types of the actual parameters must equal the types of the formal parameters
+void SemanticChecker::visit(ProcedureCallNode& node) {
+
+    // Check Name
+    auto ident = node.get_name();
+    auto ident_info = scope_table_.lookup(ident->get_value());
+
+    if(!ident_info){
+        logger_.error(ident->pos(), "Call of unknown procedure: '" + ident->get_value() + "'.");
+        return;
+    }
+
+    if(ident_info->kind != Kind::PROCEDURE){
+        logger_.error(ident->pos(), "'" + ident->get_value() + "' does not refer to a procedure.");
+        return;
+    }
+
+    // Check Selector
+    auto selector = node.get_selector();
+    if(selector && !selector->get_selector()->empty()){
+        logger_.error(selector->pos(), "Call to array-index or record-field cannot refer to a procedure (In Oberon0).");
+        return;
+    }
+
+    // Get Function declaration
+    auto *procedure_decl = dynamic_cast<const ProcedureDeclarationNode*>(ident_info->node);
+    int formal_parameter_nr = procedure_decl->get_parameter_number();
+    auto actual_parameters = node.get_parameters();
+
+    if(!actual_parameters){
+        if(formal_parameter_nr == 0){
+            return;
+        }
+        else{
+            logger_.error(node.pos(), "No parameters given for call to procedure '" + ident->get_value() + "'");
+            return;
+        }
+    }
+
+    if(actual_parameters->size() != formal_parameter_nr){
+        logger_.error(node.pos(), "Number of actual parameters does not match the definition of '" + ident->get_value() + "' (Expected: " + to_string(formal_parameter_nr) + ", got: " + to_string(actual_parameters->size()) + ")." );
+        return;
+    }
+
+    // Type Checking Actual parameters
+    auto formal_parameters = procedure_decl->get_parameters();
+    auto act_param_itr = actual_parameters->begin();
+
+    if(formal_parameters){
+        for(auto fp_section_itr = formal_parameters->begin(); fp_section_itr != formal_parameters->end(); fp_section_itr++){
+
+            auto curr_type = std::get<2>(**fp_section_itr).get();
+            string curr_type_str = get_type_string(*curr_type);
+
+            for(auto formal_param = std::get<1>(**fp_section_itr)->begin(); formal_param != std::get<1>(**fp_section_itr)->end() ; formal_param++){
+
+                if(curr_type_str.starts_with("_RECORD")){
+                    logger_.error(node.pos(), "Cannot correctly check type of given parameter for procedure '" + ident->get_value() + "' since record types can be compared by name only.");
+                }
+                else{
+                    string act_param_type = checkType(**act_param_itr);
+                    if(act_param_type != curr_type_str){
+                        logger_.error(node.pos(), "Type of actual parameter does not match type of formal parameter (expected '" + curr_type_str + "', got '" + act_param_type + "').");
+                    }
+                }
+
+                act_param_itr++;
+
+            }
+
+        }
+    }
 
 }
 
@@ -681,4 +837,5 @@ void SemanticChecker::visit(SelectorNode &node) {(void)node;}
 void SemanticChecker::validate_program(ModuleNode &node) {
     visit(node);
 }
+
 

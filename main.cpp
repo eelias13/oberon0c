@@ -44,23 +44,24 @@ int main(const int argc, const char *argv[]) {
     auto ast = parser.parse();
     if(ast && logger.getErrorCount() == 0){
         std::cout << std::endl << "Compiled Program:" << std::endl << *ast << std::endl;
-        std::cout << "Parsing successful." << std::endl;
+        logger.info("Parsing successful.");
 
         // Semantic Checking
         SemanticChecker semantics(logger);
         semantics.validate_program(*ast);
 
         if(logger.getErrorCount() > 0){
-            std::cout << "Errors occurred during semantic checking." << std::endl;
+            logger.info("Errors occurred during semantic checking.");
         }
         else{
 
+            logger.info("Semantic checking successful.");
             // Code Generation
 
         }
 
     }else{
-        std::cout << "Errors occurred during parsing." << std::endl;
+        logger.info("Errors occurred during parsing.");
     }
 
     string status = (logger.getErrorCount() == 0 ? "complete" : "failed");

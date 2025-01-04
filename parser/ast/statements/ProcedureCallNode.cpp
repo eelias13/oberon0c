@@ -41,3 +41,15 @@ void ProcedureCallNode::print(ostream &stream) const
 
 ProcedureCallNode::ProcedureCallNode(FilePos pos, std::unique_ptr<IdentNode> name,std::unique_ptr<SelectorNode> selector, std::unique_ptr<std::vector<std::unique_ptr<ExpressionNode>>> parameters) : StatementNode(NodeType::procedure_call, pos), name_(std::move(name)), selector_(std::move(selector)), parameters_(std::move(parameters))  {}
 
+IdentNode *ProcedureCallNode::get_name() {
+    return name_.get();
+}
+
+SelectorNode *ProcedureCallNode::get_selector() {
+    return selector_.get();
+}
+
+std::vector<std::unique_ptr<ExpressionNode>> *ProcedureCallNode::get_parameters() {
+    return parameters_.get();
+}
+

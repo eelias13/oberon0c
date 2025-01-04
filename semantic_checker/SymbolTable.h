@@ -39,7 +39,7 @@ enum Kind
  */
 struct IdentInfo
 {
-    string name; // Sometimes the name of the identifier may be "lost" along the way, e.g. when tracing
+    string name; // Useful since sometimes the name of the identifier may be "lost" along the way, e.g. when tracing
     Kind kind;
     const Node *node;
     string type;

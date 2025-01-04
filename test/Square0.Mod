@@ -10,5 +10,4 @@ END CalcSquare;
 BEGIN
   num := 4;
   CalcSquare(num);
-  OUT.Int(result, 0)
 END Square.

@@ -5,5 +5,4 @@ BEGIN
   a := 5;
   b := 3;
   sum := a + b;
-  OUT.Int(sum, 0)
 END Addition.

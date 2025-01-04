@@ -46,6 +46,9 @@ class SemanticChecker : NodeVisitor {
         void visit(WhileStatementNode&) override;
         void visit(ProcedureCallNode&) override;
 
+        // Record fields
+        std::vector<std::pair<string,string>> key_value_map(RecordTypeNode&);
+
         // Typechecking
         string get_type_string(TypeNode&);
         string trace_type(const string& initial_type);

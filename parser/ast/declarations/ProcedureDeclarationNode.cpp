@@ -72,20 +72,33 @@ void ProcedureDeclarationNode::print(ostream &stream) const
     stream << "\nEND " << *end_name_;
 }
 
-std::pair<IdentNode *, IdentNode *> ProcedureDeclarationNode::get_names() {
+std::pair<IdentNode *, IdentNode *> ProcedureDeclarationNode::get_names() const {
     return {begin_name_.get(),end_name_.get()};
 }
 
-parameters *ProcedureDeclarationNode::get_parameters() {
+parameters *ProcedureDeclarationNode::get_parameters() const {
     return params_.get();
 }
 
-DeclarationsNode *ProcedureDeclarationNode::get_declarations() {
+DeclarationsNode *ProcedureDeclarationNode::get_declarations() const {
     return declarations_.get();
 }
 
-StatementSequenceNode *ProcedureDeclarationNode::get_statements() {
+StatementSequenceNode *ProcedureDeclarationNode::get_statements() const {
     return statements_.get();
+}
+
+int ProcedureDeclarationNode::get_parameter_number() const {
+    if(!params_){
+        return 0;
+    }
+
+    int nr = 0;
+    for(auto itr = params_->begin(); itr != params_->end(); itr++){
+        nr += std::get<1>(**itr)->size();
+    }
+
+    return nr;
 }
 
 ProcedureDeclarationNode::ProcedureDeclarationNode(FilePos pos, std::unique_ptr<IdentNode> begin_name,std::unique_ptr<parameters> params,std::unique_ptr<DeclarationsNode> declarations,std::unique_ptr<IdentNode> end_name,std::unique_ptr<StatementSequenceNode> statements)

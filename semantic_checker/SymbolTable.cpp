@@ -27,7 +27,6 @@ IdentInfo *SymbolTable::lookup(const std::string &name)
 
 void SymbolTable::insert_record(const string &record_name, std::vector<std::pair<string, string>> fields)
 {
-
     std::unordered_map<string, string> field_map;
     for (auto itr = fields.begin(); itr != fields.end(); itr++)
     {
@@ -35,20 +34,19 @@ void SymbolTable::insert_record(const string &record_name, std::vector<std::pair
     }
 
     records_[record_name] = field_map;
+
 }
 
 string SymbolTable::lookup_field(const string &record_name, const string &field_name)
 {
-
     auto record = records_.find(record_name);
     if (record == records_.end())
     {
-        cerr << "Record '" << record_name << "' not found in records list";
         return "_ERROR";
     }
 
     auto field = records_[record_name].find(field_name);
-    if (record == records_.end())
+    if (field == records_[record_name].end())
     {
         return "_ERROR";
     }

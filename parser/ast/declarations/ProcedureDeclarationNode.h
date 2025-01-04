@@ -27,17 +27,17 @@ class ProcedureDeclarationNode : public Node {
         std::unique_ptr<StatementSequenceNode> statements_;
         std::unique_ptr<IdentNode> end_name_;
 
-
     public:
         ProcedureDeclarationNode(FilePos pos, std::unique_ptr<IdentNode> name, std::unique_ptr<parameters> params, std::unique_ptr<DeclarationsNode> declarations, std::unique_ptr<IdentNode> end_name, std::unique_ptr<StatementSequenceNode> statements = nullptr);
 
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;
 
-        std::pair<IdentNode*,IdentNode*> get_names();
-        parameters* get_parameters();
-        DeclarationsNode* get_declarations();
-        StatementSequenceNode* get_statements();
+        std::pair<IdentNode*,IdentNode*> get_names() const;
+        parameters* get_parameters() const;
+        DeclarationsNode* get_declarations() const;
+        StatementSequenceNode* get_statements() const;
+        int get_parameter_number() const;
 
 };
 

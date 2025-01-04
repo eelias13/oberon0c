@@ -9,5 +9,4 @@ BEGIN
     fact := fact * i;
     i := i + 1
   END;
-  OUT.Int(fact, 0)
 END Factorial.
