@@ -8,6 +8,9 @@
 #include "ScopeTable.h"
 #include "util/Logger.h"
 #include "parser/ast/NodeVisitor.h"
+#include <limits>
+#include <cmath>
+
 
 class SemanticChecker : NodeVisitor {
 
