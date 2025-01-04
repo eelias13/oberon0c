@@ -9,6 +9,7 @@
 #include "util/Logger.h"
 #include "parser/ast/NodeVisitor.h"
 #include <limits>
+#include <optional>
 #include <cmath>
 
 
@@ -60,7 +61,7 @@ class SemanticChecker : NodeVisitor {
         string check_selector_chain(IdentNode&, SelectorNode&);
 
         string checkType(ExpressionNode&);
-        long evaluate_expression(ExpressionNode&, bool suppress_errors = false);
+        std::optional<long> evaluate_expression(ExpressionNode&, bool suppress_errors = false);
 
         void validate_program(ModuleNode&);
 

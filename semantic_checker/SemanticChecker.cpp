@@ -132,45 +132,53 @@ string SemanticChecker::checkType(ExpressionNode& expr) {
     return "_ERROR";
 }
 
-// Checks if expression is constant and if so evaluates it (returns quiet_NaN() in cases where errors occur)
-long SemanticChecker::evaluate_expression(ExpressionNode& expr, bool suppress_errors) {
+// Checks if expression is constant and if so evaluates it (returns nullopt in cases where errors occur)
+std::optional<long> SemanticChecker::evaluate_expression(ExpressionNode& expr, bool suppress_errors) {
 
     auto type = expr.getNodeType();
 
     if(type == NodeType::binary_expression){
         auto bin_expr = &dynamic_cast<BinaryExpressionNode&>(expr);
 
-        auto lhs = bin_expr->get_lhs();
-        auto rhs = bin_expr->get_rhs();
+        auto lhs = evaluate_expression(*bin_expr->get_lhs(),suppress_errors);
+        auto rhs = evaluate_expression(*bin_expr->get_rhs(),suppress_errors);
         auto op = bin_expr->get_op();
+
+        if(!lhs || !rhs){
+            return std::nullopt;
+        }
 
         switch (op) {
             case Operator::MINUS:
-                return evaluate_expression(*lhs,suppress_errors) - evaluate_expression(*rhs,suppress_errors);
+                return lhs.value() - rhs.value();
             case Operator::MOD:
-                return (evaluate_expression(*lhs,suppress_errors) % evaluate_expression(*rhs,suppress_errors));
+                return (lhs.value() % rhs.value());
             case Operator::DIV:
-                return evaluate_expression(*lhs,suppress_errors)/ evaluate_expression(*rhs,suppress_errors);
+                return lhs.value()/ rhs.value();
             case Operator::MULT:
-                return evaluate_expression(*lhs,suppress_errors) * evaluate_expression(*rhs,suppress_errors);
+                return lhs.value() * rhs.value();
             case Operator::PLUS:
-                return evaluate_expression(*lhs,suppress_errors) + evaluate_expression(*rhs,suppress_errors);
+                return lhs.value() + rhs.value();
             default:
                 if(!suppress_errors){ logger_.error(expr.pos(), "Could not evaluate expression to an integer.");}
-                return std::numeric_limits<long>::quiet_NaN();
+                return std::nullopt;
         }
     }
     else if(type == NodeType::unary_expression){
 
         auto un_expr = &dynamic_cast<UnaryExpressionNode&>(expr);
         auto op = un_expr->get_op();
-        auto inner = un_expr->get_expr();
+        auto inner = evaluate_expression(*un_expr->get_expr(),suppress_errors);
+
+        if(!inner){
+            return std::nullopt;
+        }
 
         if(op == Operator::NEG){
-            return -evaluate_expression(*inner,suppress_errors);
+            return -inner.value();
         }
         else if(op == Operator::NO_OPERATOR || op == Operator::PAREN){
-            return evaluate_expression(*inner,suppress_errors);
+            return inner.value();
         }
 
     }
@@ -181,24 +189,24 @@ long SemanticChecker::evaluate_expression(ExpressionNode& expr, bool suppress_er
 
         if(id_sel_expr->get_selector() && !id_sel_expr->get_selector()->get_selector()){
             if(!suppress_errors){ logger_.error(expr.pos(), "Constant expression contains non-constant elements (array-indexing or record-fields).");}
-            return std::numeric_limits<long>::quiet_NaN();
+            return std::nullopt;
         }
 
         auto id_info = scope_table_.lookup(id_sel_expr->get_identifier()->get_value());
         if(!id_info){
             if(!suppress_errors){logger_.error(expr.pos(), "Use of unknown identifier: '" + id_sel_expr->get_identifier()->get_value() + "'.");}
-            return std::numeric_limits<long>::quiet_NaN();
+            return std::nullopt;
         }
 
         if(id_info->kind != Kind::CONSTANT){
             if(!suppress_errors){ logger_.error(expr.pos(), "Constant expression contains non-constant identifiers.");}
-            return std::numeric_limits<long>::quiet_NaN();
+            return std::nullopt;
         }
 
         // Get value of constant
         if(!id_info->node){
             if(!suppress_errors){ logger_.error(expr.pos(), "Could not find value of the constant: '" + id_sel_expr->get_identifier()->get_value() + "'.");}
-            return std::numeric_limits<long>::quiet_NaN();
+            return std::nullopt;
         }
 
         auto constant_expr = dynamic_cast<const ExpressionNode*>(id_info->node);
@@ -211,7 +219,7 @@ long SemanticChecker::evaluate_expression(ExpressionNode& expr, bool suppress_er
     }
 
     if(!suppress_errors){ logger_.error(expr.pos(), "Could not evaluate expression to an integer.");}
-    return std::numeric_limits<long>::quiet_NaN();
+    return std::nullopt;
 
 }
 
@@ -296,8 +304,8 @@ string SemanticChecker::check_selector_chain(IdentNode& ident, SelectorNode& sel
             int dim = stoi(arr_string.substr(0,arr_string.find('_')));            // Takes "<DIM>_" String
 
             // If the expression can be evaluated, array bounds need to be checked
-            if(auto x = evaluate_expression(*expr,true); !std::isnan<double>(static_cast<double>(x)) && (x > dim)){
-                logger_.error(selector.pos(), "Array index out of bounds (index " + to_string(x) + " for size " + to_string(dim) + ").");
+            if(auto x = evaluate_expression(*expr,true); x && (x.value() > dim)){
+                logger_.error(selector.pos(), "Array index out of bounds (index " + to_string(x.value()) + " for size " + to_string(dim) + ").");
             }
 
             // Update prev_info
@@ -354,8 +362,13 @@ string SemanticChecker::get_type_string(TypeNode &type) {
     }
     else if(type.getNodeType() == NodeType::array_type){
         auto array_node = &dynamic_cast<ArrayTypeNode&>(type);
-        long dim = evaluate_expression(*array_node->get_dimensions());
-        return "_ARRAY_" + to_string(dim) + "_OF_" + get_type_string(*array_node->get_type());
+        auto dim = evaluate_expression(*array_node->get_dimensions());
+
+        if(!dim){
+            return "_ERROR";
+        }
+
+        return "_ARRAY_" + to_string(dim.value()) + "_OF_" + get_type_string(*array_node->get_type());
     }
     else if(type.getNodeType() == NodeType::record_type){
         return "_RECORD";
@@ -470,7 +483,7 @@ void SemanticChecker::visit(DeclarationsNode & declars) {
         }
 
         // check if expression actually evaluates to a constant
-        if(std::isnan(static_cast<double>(evaluate_expression(*itr->second)))){
+        if(!(evaluate_expression(*itr->second))){
             logger_.error(itr->second->pos(), "Right hand side of constant does not evaluate to a constant.");
         }
 
@@ -563,14 +576,14 @@ void SemanticChecker::visit(IdentNode &node) {
 void SemanticChecker::visit(ArrayTypeNode &node) {
 
     auto dim_expr = node.get_dimensions();
-    long dim = evaluate_expression(*dim_expr);
+    auto dim = evaluate_expression(*dim_expr);
 
     // Check dimensions
-    if(std::isnan(static_cast<double>(dim))){
+    if(!dim){
         logger_.error(dim_expr->pos(), "Specified array dimensions do not evaluate to a constant.");
     }
-    else if(dim <= 0){
-        logger_.error(dim_expr->pos(), "Cannot create array of size " + to_string(dim) + ".");
+    else if(dim.value() <= 0){
+        logger_.error(dim_expr->pos(), "Cannot create array of size " + to_string(dim.value()) + ".");
     }
 
     // Check type
@@ -763,6 +776,7 @@ void SemanticChecker::visit(WhileStatementNode& node) {
 //      --> In Oberon0, the selector cannot exist
 //      --> Number of actual parameters must equal to the number of formal parameters
 //      --> The types of the actual parameters must equal the types of the formal parameters
+//      --> Constants, Literals or Expressions cannot be parsed as "VAR" parameters
 void SemanticChecker::visit(ProcedureCallNode& node) {
 
     // Check Name
@@ -825,6 +839,13 @@ void SemanticChecker::visit(ProcedureCallNode& node) {
                     string act_param_type = checkType(**act_param_itr);
                     if(act_param_type != curr_type_str){
                         logger_.error(node.pos(), "Type of actual parameter does not match type of formal parameter (expected '" + curr_type_str + "', got '" + act_param_type + "').");
+                    }
+                }
+
+                // Constants/Literals cannot be passed as "VAR"
+                if(std::get<0>(**fp_section_itr)){
+                    if(evaluate_expression(**act_param_itr,true)){
+                        logger_.error(node.pos(), "Constant/Literal expression passed as 'VAR' in call to procedure '" + ident->get_value() + "'.");
                     }
                 }
 
