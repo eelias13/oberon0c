@@ -117,7 +117,7 @@ string SemanticChecker::checkType(ExpressionNode& expr) {
     else if(type == NodeType::ident_selector_expression){
 
         auto id_expr = &dynamic_cast<IdentSelectorExpressionNode&>(expr);
-        return checkSelectorType(*id_expr);
+        return check_selector_type(*id_expr);
 
     }
     else if(type == NodeType::integer){
@@ -133,7 +133,7 @@ string SemanticChecker::checkType(ExpressionNode& expr) {
 }
 
 // Checks if expression is constant and if so evaluates it (returns quiet_NaN() in cases where errors occur)
-long SemanticChecker::evaluate_expression(ExpressionNode& expr) {
+long SemanticChecker::evaluate_expression(ExpressionNode& expr, bool suppress_errors) {
 
     auto type = expr.getNodeType();
 
@@ -146,17 +146,17 @@ long SemanticChecker::evaluate_expression(ExpressionNode& expr) {
 
         switch (op) {
             case Operator::MINUS:
-                return evaluate_expression(*lhs) - evaluate_expression(*rhs);
+                return evaluate_expression(*lhs,suppress_errors) - evaluate_expression(*rhs,suppress_errors);
             case Operator::MOD:
-                return (evaluate_expression(*lhs) % evaluate_expression(*rhs));
+                return (evaluate_expression(*lhs,suppress_errors) % evaluate_expression(*rhs,suppress_errors));
             case Operator::DIV:
-                return evaluate_expression(*lhs)/ evaluate_expression(*rhs);
+                return evaluate_expression(*lhs,suppress_errors)/ evaluate_expression(*rhs,suppress_errors);
             case Operator::MULT:
-                return evaluate_expression(*lhs) * evaluate_expression(*rhs);
+                return evaluate_expression(*lhs,suppress_errors) * evaluate_expression(*rhs,suppress_errors);
             case Operator::PLUS:
-                return evaluate_expression(*lhs) + evaluate_expression(*rhs);
+                return evaluate_expression(*lhs,suppress_errors) + evaluate_expression(*rhs,suppress_errors);
             default:
-                logger_.error(expr.pos(), "Could not evaluate expression to an integer.");
+                if(!suppress_errors){ logger_.error(expr.pos(), "Could not evaluate expression to an integer.");}
                 return std::numeric_limits<long>::quiet_NaN();
         }
     }
@@ -167,10 +167,10 @@ long SemanticChecker::evaluate_expression(ExpressionNode& expr) {
         auto inner = un_expr->get_expr();
 
         if(op == Operator::NEG){
-            return -evaluate_expression(*inner);
+            return -evaluate_expression(*inner,suppress_errors);
         }
         else if(op == Operator::NO_OPERATOR || op == Operator::PAREN){
-            return evaluate_expression(*inner);
+            return evaluate_expression(*inner,suppress_errors);
         }
 
     }
@@ -180,24 +180,29 @@ long SemanticChecker::evaluate_expression(ExpressionNode& expr) {
         auto id_sel_expr = &dynamic_cast<IdentSelectorExpressionNode&>(expr);
 
         if(id_sel_expr->get_selector() && !id_sel_expr->get_selector()->get_selector()){
-            logger_.error(expr.pos(), "Constant expression contains non-constant elements (array-indexing or record-fields).");
+            if(!suppress_errors){ logger_.error(expr.pos(), "Constant expression contains non-constant elements (array-indexing or record-fields).");}
             return std::numeric_limits<long>::quiet_NaN();
         }
 
         auto id_info = scope_table_.lookup(id_sel_expr->get_identifier()->get_value());
+        if(!id_info){
+            if(!suppress_errors){logger_.error(expr.pos(), "Use of unknown identifier: '" + id_sel_expr->get_identifier()->get_value() + "'.");}
+            return std::numeric_limits<long>::quiet_NaN();
+        }
+
         if(id_info->kind != Kind::CONSTANT){
-            logger_.error(expr.pos(), "Constant expression contains non-constant identifiers.");
+            if(!suppress_errors){ logger_.error(expr.pos(), "Constant expression contains non-constant identifiers.");}
             return std::numeric_limits<long>::quiet_NaN();
         }
 
         // Get value of constant
         if(!id_info->node){
-            logger_.error(expr.pos(), "Could not find value of the constant: '" + id_sel_expr->get_identifier()->get_value() + "'.");
+            if(!suppress_errors){ logger_.error(expr.pos(), "Could not find value of the constant: '" + id_sel_expr->get_identifier()->get_value() + "'.");}
             return std::numeric_limits<long>::quiet_NaN();
         }
 
         auto constant_expr = dynamic_cast<const ExpressionNode*>(id_info->node);
-        return evaluate_expression(const_cast<ExpressionNode &>(*constant_expr));
+        return evaluate_expression(const_cast<ExpressionNode &>(*constant_expr),suppress_errors);
 
     }
     else if(type == NodeType::integer){
@@ -205,13 +210,13 @@ long SemanticChecker::evaluate_expression(ExpressionNode& expr) {
         return integer_node->get_value();
     }
 
-    logger_.error(expr.pos(), "Could not evaluate expression to an integer.");
+    if(!suppress_errors){ logger_.error(expr.pos(), "Could not evaluate expression to an integer.");}
     return std::numeric_limits<long>::quiet_NaN();
 
 }
 
 // Type inference for an ident-selector expression
-string SemanticChecker::checkSelectorType(IdentSelectorExpressionNode& id_expr) {
+string SemanticChecker::check_selector_type(IdentSelectorExpressionNode& id_expr) {
     auto identifier = id_expr.get_identifier();
     auto selector = id_expr.get_selector();
 
@@ -227,7 +232,7 @@ string SemanticChecker::checkSelectorType(IdentSelectorExpressionNode& id_expr) 
     }
 
     // Check the selector chain for validity (visit the selector)
-    return checkSelectorChain(*identifier, *selector);
+    return check_selector_chain(*identifier, *selector);
 }
 
 // Traces back types to handle type-aliases like the following:
@@ -252,10 +257,11 @@ string SemanticChecker::trace_type(const string& initial_type) {
 //      --> For Array-Indexing:
 //                  * Indexed object must actually have an array-type
 //                  * Index must have the type INTEGER
+//                  * If Expression can be evaluated, Array bounds need to be checked
 //      --> For Field-Selection:
 //                  * Object must actually have a record type
 //                  * Identifier must refer to an actual field of that record type
-string SemanticChecker::checkSelectorChain(IdentNode& ident, SelectorNode& selector) {
+string SemanticChecker::check_selector_chain(IdentNode& ident, SelectorNode& selector) {
     IdentInfo* prev_info = scope_table_.lookup(ident.get_value());
 
     if(!selector.get_selector()){
@@ -280,24 +286,32 @@ string SemanticChecker::checkSelectorChain(IdentNode& ident, SelectorNode& selec
 
             // Index must evaluate to a non-negative integer
             auto expr = std::get<2>(*itr).get();
-            if(trace_type(checkType(*expr)) != "INTEGER"){  // && !isConstant(*expr)
+            if(trace_type(checkType(*expr)) != "INTEGER"){
                 logger_.error(selector.pos(), "Array index does not evaluate to an integer.");
                 return "_ERROR";
             }
 
-            // Update prev_info
             // Recall Array Types have the following string form: "ARRAY_<DIM>_OF_<TYPE>"
-            string arr_string = trace_type(prev_info->type).erase(0,7);  // Cuts off "ARRAY_"
-            arr_string = arr_string.erase(0,arr_string.find('_') + 1);            // Cuts off "<DIM>_
-            arr_string = arr_string.erase(0,arr_string.find('_') + 1);            // Cuts off "OF_"
+            string arr_string = trace_type(prev_info->type).erase(0,7);             // Cuts off "ARRAY_"
+            int dim = stoi(arr_string.substr(0,arr_string.find('_')));            // Takes "<DIM>_" String
 
-            prev_info = scope_table_.lookup(arr_string);
-
-            if(!prev_info){
-                logger_.error(selector.pos(), "Unable to get information for type '" + arr_string + "'");
-                return "_ERROR";
+            // If the expression can be evaluated, array bounds need to be checked
+            if(auto x = evaluate_expression(*expr,true); !std::isnan<double>(static_cast<double>(x)) && (x > dim)){
+                logger_.error(selector.pos(), "Array index out of bounds (index " + to_string(x) + " for size " + to_string(dim) + ").");
             }
 
+            // Update prev_info
+            // Recall Array Types have the following string form: "ARRAY_<DIM>_OF_<TYPE>"
+            string type_string = trace_type(prev_info->type).erase(0,7);  // Cuts off "ARRAY_"
+            type_string = type_string.erase(0,type_string.find('_') + 1);            // Cuts off "<DIM>_
+            type_string = type_string.erase(0,type_string.find('_') + 1);            // Cuts off "OF_"
+
+            prev_info = scope_table_.lookup(type_string);
+
+            if(!prev_info){
+                logger_.error(selector.pos(), "Unable to get information for type '" + type_string + "'");
+                return "_ERROR";
+            }
 
         }else{
 
@@ -390,7 +404,7 @@ void SemanticChecker::visit(ProcedureDeclarationNode & procedure) {
 
     // Check for double declarations
     if(scope_table_.lookup(names.first->get_value(), true)){
-        logger_.error(procedure.pos(), "Multiple declarations for procedure '" + names.first->get_value() + "' found (Note: Oberon0 does not allow overriding functions).");
+        logger_.error(procedure.pos(), "Multiple declarations for procedure '" + names.first->get_value() + "' found (Note: Oberon0 does not allow overloading functions).");
     }
 
     // Save the procedure name (before opening up a new scope!)
@@ -404,8 +418,6 @@ void SemanticChecker::visit(ProcedureDeclarationNode & procedure) {
 
     if(params){
         for(auto itr = params->begin(); itr != params->end(); itr++){
-
-            bool is_var = std::get<0>(**itr);
 
             // Check Type definition
             TypeNode* type = std::get<2>(**itr).get();
@@ -670,7 +682,7 @@ void SemanticChecker::visit(AssignmentNode& node) {
     // Check Selector / Get Type of Variable
     string lhs_type = lhs_id_info->type;
     if(node.get_selector()) {
-        lhs_type = checkSelectorChain(*node.get_variable(), *node.get_selector());
+        lhs_type = check_selector_chain(*node.get_variable(), *node.get_selector());
         if (lhs_type == "_ERROR") {
             return;
         }

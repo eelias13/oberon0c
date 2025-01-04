@@ -6,7 +6,6 @@ CONST Dim = 2 * 10;
 
 (* Array type *)
 TYPE INTARRAY = ARRAY Dim OF INTEGER;
-     STUDENT = RECORD ID, IQ, ECTS : INTEGER END;
 
 (* Array to be sorted. *)
 VAR a: INTARRAY;

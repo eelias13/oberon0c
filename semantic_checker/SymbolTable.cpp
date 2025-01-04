@@ -10,7 +10,6 @@ void SymbolTable::insert(const std::string &name, Kind k, const Node *node, stri
     // Check if already inserted
     if (table_.find(name) != table_.end())
     {
-        cerr << "Tried to insert the same name into symbol table multiple times!";
         return;
     }
 

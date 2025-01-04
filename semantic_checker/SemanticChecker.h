@@ -56,11 +56,11 @@ class SemanticChecker : NodeVisitor {
         string get_type_string(TypeNode&);
         string trace_type(const string& initial_type);
 
-        string checkSelectorType(IdentSelectorExpressionNode&);
-        string checkSelectorChain(IdentNode&, SelectorNode&);
+        string check_selector_type(IdentSelectorExpressionNode&);
+        string check_selector_chain(IdentNode&, SelectorNode&);
 
         string checkType(ExpressionNode&);
-        long evaluate_expression(ExpressionNode&);
+        long evaluate_expression(ExpressionNode&, bool suppress_errors = false);
 
         void validate_program(ModuleNode&);
 
