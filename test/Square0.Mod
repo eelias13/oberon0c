@@ -9,5 +9,5 @@ END CalcSquare;
 
 BEGIN
   num := 4;
-  CalcSquare(num);
+  CalcSquare(num)
 END Square.

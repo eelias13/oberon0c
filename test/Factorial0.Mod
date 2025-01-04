@@ -8,5 +8,5 @@ BEGIN
   WHILE i <= n DO
     fact := fact * i;
     i := i + 1
-  END;
+  END
 END Factorial.

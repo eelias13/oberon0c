@@ -4,5 +4,5 @@ VAR
 BEGIN
   a := 5;
   b := 3;
-  sum := a + b;
+  sum := a + b
 END Addition.
