@@ -8,27 +8,28 @@
 
 #include <vector>
 #include <memory>
+#include <assert.h>
 #include "SymbolTable.h"
 #include "parser/ast/Node.h"
 
-class ScopeTable {
+class ScopeTable
+{
 
-    private:
-        std::vector<std::unique_ptr<SymbolTable>> scopes_;
-        int current_scope = -1;
+private:
+    std::vector<std::unique_ptr<SymbolTable>> scopes_;
+    int current_scope = -1;
 
-    public:
-        ScopeTable() = default;
+public:
+    ScopeTable() = default;
 
-        void beginScope();
-        void endScope();
+    void beginScope();
+    void endScope();
 
-        IdentInfo* lookup(const string& name, bool only_current = false);
-        string lookup_field(const string& record_name, const string& field_name);
+    IdentInfo *lookup(const string &name, bool only_current = false);
+    string lookup_field(const string &record_name, const string &field_name);
 
-        void insert(const string& name, Kind k, const Node* node, string type = "");
-        void insert_record(const string& record_name,  std::vector<std::pair<string,string>> fields);
+    void insert(const string &name, Kind k, const Node *node, string type = "");
+    void insert_record(const string &record_name, std::vector<std::pair<string, string>> fields);
 };
 
-
-#endif //OBERON0C_SCOPETABLE_H
+#endif // OBERON0C_SCOPETABLE_H
