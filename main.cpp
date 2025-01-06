@@ -17,23 +17,23 @@ using std::string;
 
 int main(const int argc, const char *argv[]) {
     if (argc < 2 || argc > 3) {
-        cerr << "Usage: oberon0c <filename> (no-debug)" << endl;
+        cerr << "Usage: oberon0c <filename> (--debug)" << endl;
         exit(1);
     }
     string filename = argv[1];
     Logger logger;
 
     if(argc > 2){
-        if(string(argv[2]) == "no-debug"){
-            logger.setLevel(LogLevel::INFO);
+        if(string(argv[2]) == "--debug"){
+            logger.setLevel(LogLevel::DEBUG);
         }
         else{
-            cerr << "Invalid argument: " << argv[2] << std::endl << "Usage: oberon0c <filename> ('no-debug')" << std::endl;
+            cerr << "Invalid argument: " << argv[2] << std::endl << "Usage: oberon0c <filename> (--debug)" << std::endl;
             exit(1);
         }
     }
     else{
-        logger.setLevel(LogLevel::DEBUG);
+        logger.setLevel(LogLevel::INFO);
     }
 
     // Scanning
@@ -43,7 +43,7 @@ int main(const int argc, const char *argv[]) {
     Parser parser(scanner,logger);
     auto ast = parser.parse();
     if(ast && logger.getErrorCount() == 0){
-        std::cout << std::endl << "Compiled Program:" << std::endl << *ast << std::endl;
+        std::cout << "Compiled Program:" << std::endl << *ast << std::endl;
         logger.info("Parsing successful.");
 
         // Semantic Checking
