@@ -8,6 +8,7 @@
 #include "parser/ast/Node.h"
 #include "scanner/Token.h"
 #include <memory>
+#include <optional>
 
 enum Operator {PLUS, MINUS, OR, MULT, DIV, MOD, AND, NEG, NOT, EQ, NEQ, LT, LEQ, GT, GEQ, NO_OPERATOR, PAREN};   // For pretty printing (and possibly precedence) purposes, we consider Parentheses an operator too
 
@@ -18,12 +19,16 @@ class ExpressionNode : public Node{
 
     protected:
         int precedence_ = -1;
+        std::optional<long> value_ = std::nullopt;
 
     public:
         explicit ExpressionNode(FilePos pos, NodeType type);
         virtual void accept(NodeVisitor &visitor) = 0;
         virtual void print(std::ostream &stream) const = 0;
         [[nodiscard]] int get_precedence() const;
+
+        void set_value(long value);
+        std::optional<long>get_value();
 
         static Operator token_to_op(TokenType);
         static void print_operator(std::ostream& stream, Operator op);

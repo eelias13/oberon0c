@@ -41,7 +41,7 @@ IdentInfo *ScopeTable::lookup(const string &name, bool only_current)
     return nullptr;
 }
 
-void ScopeTable::insert(const string &name, Kind k, const Node *node, string type)
+void ScopeTable::insert(const string &name, Kind k, Node *node, string type)
 {
     assert(current_scope >= 0);
     scopes_[static_cast<size_t>(current_scope)]->insert(name, k, node, std::move(type));

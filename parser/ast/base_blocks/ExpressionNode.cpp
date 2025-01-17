@@ -140,6 +140,14 @@ int ExpressionNode::op_to_precedence(Operator op) {
         default:
             return -1;
     }
+}
+
+void ExpressionNode::set_value(long value) {
+    value_ = std::optional<long>(value);
+}
+
+std::optional<long> ExpressionNode::get_value() {
+    return value_;
 };
 
 

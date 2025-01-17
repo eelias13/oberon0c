@@ -41,7 +41,7 @@ struct IdentInfo
 {
     string name; // Useful since sometimes the name of the identifier may be "lost" along the way, e.g. when tracing
     Kind kind;
-    const Node *node;
+    Node *node;
     string type;
 };
 
@@ -55,7 +55,7 @@ private:
 public:
     explicit SymbolTable() = default;
 
-    void insert(const string &name, Kind k, const Node *node, string type = "");
+    void insert(const string &name, Kind k, Node *node, string type = "");
     void insert_record(const string &record_name, std::vector<std::pair<string, string>> fields);
 
     IdentInfo *lookup(const std::string &name);

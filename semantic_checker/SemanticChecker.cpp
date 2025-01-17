@@ -154,6 +154,10 @@ std::optional<long> SemanticChecker::evaluate_expression(ExpressionNode& expr, b
             case Operator::MOD:
                 return (lhs.value() % rhs.value());
             case Operator::DIV:
+                if(rhs.value() == 0){
+                    logger_.error(expr.pos(), "Division by zero.");
+                    return std::nullopt;
+                }
                 return lhs.value()/ rhs.value();
             case Operator::MULT:
                 return lhs.value() * rhs.value();
@@ -304,8 +308,13 @@ string SemanticChecker::check_selector_chain(IdentNode& ident, SelectorNode& sel
             int dim = stoi(arr_string.substr(0,arr_string.find('_')));            // Takes "<DIM>_" String
 
             // If the expression can be evaluated, array bounds need to be checked
-            if(auto x = evaluate_expression(*expr,true); x && (x.value() > dim)){
-                logger_.error(selector.pos(), "Array index out of bounds (index " + to_string(x.value()) + " for size " + to_string(dim) + ").");
+            auto evaluated_dim = evaluate_expression(*expr,true);
+            if(evaluated_dim){
+                expr->set_value(evaluated_dim.value());
+                if(evaluated_dim.value() > dim){
+                    logger_.error(selector.pos(), "Array index out of bounds (index " + to_string(evaluated_dim.value()) + " for size " + to_string(dim) + ").");
+
+                }
             }
 
             // Update prev_info
@@ -351,6 +360,10 @@ string SemanticChecker::check_selector_chain(IdentNode& ident, SelectorNode& sel
 
     }
 
+    if(prev_info->kind == Kind::TYPENAME){
+        return prev_info->name;
+    }
+
     return prev_info->type;
 }
 
@@ -362,13 +375,14 @@ string SemanticChecker::get_type_string(TypeNode &type) {
     }
     else if(type.getNodeType() == NodeType::array_type){
         auto array_node = &dynamic_cast<ArrayTypeNode&>(type);
-        auto dim = evaluate_expression(*array_node->get_dimensions());
+        auto dim = evaluate_expression(*array_node->get_dim_node());
 
         if(!dim){
             return "_ERROR";
         }
 
-        return "_ARRAY_" + to_string(dim.value()) + "_OF_" + get_type_string(*array_node->get_type());
+        array_node->set_dim(dim.value());
+        return "_ARRAY_" + to_string(dim.value()) + "_OF_" + get_type_string(*array_node->get_type_node());
     }
     else if(type.getNodeType() == NodeType::record_type){
         return "_RECORD";
@@ -483,8 +497,11 @@ void SemanticChecker::visit(DeclarationsNode & declars) {
         }
 
         // check if expression actually evaluates to a constant
-        if(!(evaluate_expression(*itr->second))){
+        auto evaluated_value = evaluate_expression(*itr->second);
+        if(!evaluated_value){
             logger_.error(itr->second->pos(), "Right hand side of constant does not evaluate to a constant.");
+        }else{
+            itr->second->set_value(evaluated_value.value());
         }
 
         // insert variable into scope table
@@ -575,19 +592,21 @@ void SemanticChecker::visit(IdentNode &node) {
 //      --> Specified type must exist (and be a type)
 void SemanticChecker::visit(ArrayTypeNode &node) {
 
-    auto dim_expr = node.get_dimensions();
+    auto dim_expr = node.get_dim_node();
     auto dim = evaluate_expression(*dim_expr);
 
     // Check dimensions
-    if(!dim){
+    if(!dim.has_value()){
         logger_.error(dim_expr->pos(), "Specified array dimensions do not evaluate to a constant.");
     }
     else if(dim.value() <= 0){
         logger_.error(dim_expr->pos(), "Cannot create array of size " + to_string(dim.value()) + ".");
+    }else{
+        node.set_dim(dim.value());
     }
 
     // Check type
-    auto type = node.get_type();
+    auto type = node.get_type_node();
     visit(*type);
 
 }
@@ -801,7 +820,7 @@ void SemanticChecker::visit(ProcedureCallNode& node) {
     }
 
     // Get Function declaration
-    auto *procedure_decl = dynamic_cast<const ProcedureDeclarationNode*>(ident_info->node);
+    auto *procedure_decl = dynamic_cast<ProcedureDeclarationNode*>(ident_info->node);
     int formal_parameter_nr = procedure_decl->get_parameter_number();
     auto actual_parameters = node.get_parameters();
 

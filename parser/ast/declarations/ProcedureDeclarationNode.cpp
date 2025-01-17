@@ -88,9 +88,13 @@ StatementSequenceNode *ProcedureDeclarationNode::get_statements() const {
     return statements_.get();
 }
 
-int ProcedureDeclarationNode::get_parameter_number() const {
+int ProcedureDeclarationNode::get_parameter_number() {
     if(!params_){
         return 0;
+    }
+
+    if(parameter_number.has_value()){
+        return parameter_number.value();
     }
 
     int nr = 0;
@@ -98,6 +102,7 @@ int ProcedureDeclarationNode::get_parameter_number() const {
         nr += std::get<1>(**itr)->size();
     }
 
+    parameter_number = std::optional<int>(nr);
     return nr;
 }
 

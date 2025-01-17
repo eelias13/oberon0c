@@ -4,7 +4,7 @@
 
 #include "SymbolTable.h"
 
-void SymbolTable::insert(const std::string &name, Kind k, const Node *node, string type)
+void SymbolTable::insert(const std::string &name, Kind k, Node *node, string type)
 {
 
     // Check if already inserted

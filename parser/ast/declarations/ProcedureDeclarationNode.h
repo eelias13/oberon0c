@@ -7,6 +7,7 @@
 
 #include "parser/ast/Node.h"
 #include <vector>
+#include <optional>
 
 class IdentNode;
 class TypeNode;
@@ -27,6 +28,8 @@ class ProcedureDeclarationNode : public Node {
         std::unique_ptr<StatementSequenceNode> statements_;
         std::unique_ptr<IdentNode> end_name_;
 
+        std::optional<int> parameter_number;
+
     public:
         ProcedureDeclarationNode(FilePos pos, std::unique_ptr<IdentNode> name, std::unique_ptr<parameters> params, std::unique_ptr<DeclarationsNode> declarations, std::unique_ptr<IdentNode> end_name, std::unique_ptr<StatementSequenceNode> statements = nullptr);
 
@@ -37,7 +40,7 @@ class ProcedureDeclarationNode : public Node {
         parameters* get_parameters() const;
         DeclarationsNode* get_declarations() const;
         StatementSequenceNode* get_statements() const;
-        int get_parameter_number() const;
+        int get_parameter_number();
 
 };
 

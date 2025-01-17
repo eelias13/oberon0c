@@ -23,7 +23,7 @@ END f;
 PROCEDURE q(VAR i: INTEGER);
 BEGIN
     i := a;
-    a[5000000000] := 2
+    a[500000] := 2
 END f;
 
 PROCEDURE g(VAR s, q: STUDENT);

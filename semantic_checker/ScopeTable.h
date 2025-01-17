@@ -28,7 +28,7 @@ public:
     IdentInfo *lookup(const string &name, bool only_current = false);
     string lookup_field(const string &record_name, const string &field_name);
 
-    void insert(const string &name, Kind k, const Node *node, string type = "");
+    void insert(const string &name, Kind k, Node *node, string type = "");
     void insert_record(const string &record_name, std::vector<std::pair<string, string>> fields);
 };
 
