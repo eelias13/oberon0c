@@ -1,0 +1,47 @@
+//
+// Created by M on 19.01.2025.
+//
+
+#ifndef OBERON0C_CODEGENERATOR_H
+#define OBERON0C_CODEGENERATOR_H
+
+#include "parser/ast/NodeVisitor.h"
+#include <llvm/Bitcode/BitcodeWriter.h>
+#include <llvm/IR/DataLayout.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Verifier.h>
+#include <llvm/IR/LegacyPassManager.h>
+#include <llvm/MC/TargetRegistry.h>
+#include <llvm/Target/TargetMachine.h>
+#include <llvm/Target/TargetOptions.h>
+#include <llvm/Support/FileSystem.h>
+#include <llvm/TargetParser/Host.h>
+#include <llvm/Support/TargetSelect.h>
+#include <llvm/Support/raw_ostream.h>
+
+enum class OutputFileType {
+    AssemblyFile, LLVMIRFile, ObjectFile
+};
+
+using namespace llvm;
+
+class CodeGenerator : NodeVisitor {
+
+    private:
+        TargetMachine* target_;
+        Module* module_;
+        OutputFileType output_type_;
+        const string filename_;
+        IRBuilder<>* builder_;
+
+        void init_target_machine();
+        void init_builder();
+
+    public:
+        CodeGenerator(string  filename, OutputFileType output_type);
+
+};
+
+
+#endif //OBERON0C_CODEGENERATOR_H
