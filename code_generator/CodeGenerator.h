@@ -65,7 +65,10 @@ class CodeGenerator : public NodeVisitor {
         void visit(StatementSequenceNode&) override;
         void visit(WhileStatementNode&) override;
 
-        virtual void visit(ModuleNode&) override;
+        void visit(ModuleNode&) override;
+
+        void generate_code(ModuleNode&);
+
 };
 
 

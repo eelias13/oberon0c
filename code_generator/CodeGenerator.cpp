@@ -52,8 +52,6 @@ void CodeGenerator::init_builder() {
     module_ = new Module(filename_, ctx);
     module_->setDataLayout(target_->createDataLayout());
     module_->setTargetTriple(target_->getTargetTriple().getTriple());
-
-
 }
 
 CodeGenerator::CodeGenerator(string filename, OutputFileType output_type) : filename_(std::move(filename)), output_type_(output_type) {
@@ -186,7 +184,19 @@ void CodeGenerator::visit(WhileStatementNode &) {
 
 }
 
-void CodeGenerator::visit(ModuleNode &) {
+void CodeGenerator::visit(ModuleNode & node) {
+
+    // define main
+    auto main = module_->getOrInsertFunction(node.get_name().first->get_value(), builder_->getInt32Ty());
+    auto main_fct = cast<Function>(main.getCallee());
+    auto entry = BasicBlock::Create(builder_->getContext(),"entry",main_fct);
+
+    // global declarations
+    visit(*node.get_declarations());
+
+    // statements
+    visit(*node.get_statements());
+
 
 }
 
@@ -249,6 +259,16 @@ void CodeGenerator::emit() {
     pass.run(*module_);
     output.flush();
 
+}
+
+void CodeGenerator::generate_code(ModuleNode &node) {
+
+    visit(node);
+
+    // verify module
+    verifyModule(*module_,&errs());
+
+    emit();
 }
 
 
