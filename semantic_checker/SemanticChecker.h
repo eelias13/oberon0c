@@ -25,6 +25,7 @@ class SemanticChecker : NodeVisitor {
 
         // Base Blocks/Empty Definitions
         void visit(IntNode&) override;
+        void visit(ExpressionNode&) override;
         void visit(UnaryExpressionNode&) override;
         void visit(BinaryExpressionNode&) override;
         void visit(IdentSelectorExpressionNode&) override;

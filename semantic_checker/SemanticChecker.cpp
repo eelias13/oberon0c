@@ -880,6 +880,7 @@ void SemanticChecker::visit(ProcedureCallNode& node) {
 
 // Left empty, but needed to implement NodeVisitor
 void SemanticChecker::visit(IntNode &node) {(void)node;}
+void SemanticChecker::visit(ExpressionNode& node) {(void)node;}
 void SemanticChecker::visit(UnaryExpressionNode &node) {(void)node;}
 void SemanticChecker::visit(BinaryExpressionNode &node) {(void)node;}
 void SemanticChecker::visit(IdentSelectorExpressionNode &node) {(void)node;}
@@ -888,5 +889,6 @@ void SemanticChecker::visit(SelectorNode &node) {(void)node;}
 void SemanticChecker::validate_program(ModuleNode &node) {
     visit(node);
 }
+
 
 

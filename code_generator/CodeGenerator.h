@@ -26,7 +26,7 @@ enum class OutputFileType {
 
 using namespace llvm;
 
-class CodeGenerator : NodeVisitor {
+class CodeGenerator : public NodeVisitor {
 
     private:
         TargetMachine* target_;
@@ -37,10 +37,35 @@ class CodeGenerator : NodeVisitor {
 
         void init_target_machine();
         void init_builder();
+        void emit();
 
     public:
         CodeGenerator(string  filename, OutputFileType output_type);
 
+        void visit(ExpressionNode&) override;
+        void visit(BinaryExpressionNode&) override;
+        void visit(UnaryExpressionNode&)  override;
+        void visit(IdentSelectorExpressionNode&) override;
+
+        void visit(IdentNode&) override;
+        void visit(IntNode&) override;
+        void visit(SelectorNode&) override;
+
+        void visit(TypeNode&) override;
+        void visit(ArrayTypeNode&) override;
+        void visit(DeclarationsNode&) override;
+        void visit(ProcedureDeclarationNode&) override;
+        void visit(RecordTypeNode&) override;
+
+        void visit(StatementNode&) override;
+        void visit(AssignmentNode&) override;
+        void visit(IfStatementNode&) override;
+        void visit(ProcedureCallNode&) override;
+        void visit(RepeatStatementNode&) override;
+        void visit(StatementSequenceNode&) override;
+        void visit(WhileStatementNode&) override;
+
+        virtual void visit(ModuleNode&) override;
 };
 
 

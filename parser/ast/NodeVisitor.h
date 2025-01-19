@@ -32,6 +32,7 @@ public:
     explicit NodeVisitor() = default;
     virtual ~NodeVisitor() noexcept;
 
+    virtual void visit(ExpressionNode&) = 0;
     virtual void visit(BinaryExpressionNode&) = 0;
     virtual void visit(UnaryExpressionNode&)  = 0;
     virtual void visit(IdentSelectorExpressionNode&) = 0;
