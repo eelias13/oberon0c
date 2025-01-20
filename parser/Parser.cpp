@@ -183,12 +183,12 @@ std::unique_ptr<ExpressionNode> Parser::factor()
         scanner_.next();
         auto expr = expression();
         this->expect(TokenType::rparen);
-        return std::make_unique<UnaryExpressionNode>(expr->pos(),std::move(expr),Operator::PAREN);
+        return std::make_unique<UnaryExpressionNode>(expr->pos(), std::move(expr), SourceOperator::PAREN);
     }
     else if (this->if_next(TokenType::op_not))
     {
         auto factor_token = scanner_.next();
-        return std::make_unique<UnaryExpressionNode>(factor_token->start(), factor(), Operator::NOT);
+        return std::make_unique<UnaryExpressionNode>(factor_token->start(), factor(), SourceOperator::NOT);
     }
     else
     {
@@ -212,7 +212,7 @@ std::unique_ptr<ExpressionNode> Parser::term()
            token_type == TokenType::op_mod || token_type == TokenType::op_and)
     {
 
-        Operator op = ExpressionNode::token_to_op(token_type);
+        SourceOperator op = ExpressionNode::token_to_op(token_type);
         scanner_.next();
 
         if(!full_expr){
@@ -249,7 +249,7 @@ std::unique_ptr<ExpressionNode> Parser::simple_expression()
     {
         if(token->type() == TokenType::op_minus){
             scanner_.next();
-            first_term = std::make_unique<UnaryExpressionNode>(token->start(), term(), Operator::NEG);
+            first_term = std::make_unique<UnaryExpressionNode>(token->start(), term(), SourceOperator::NEG);
         }
         else{
             scanner_.next();
@@ -267,7 +267,7 @@ std::unique_ptr<ExpressionNode> Parser::simple_expression()
     while (token->type() == TokenType::op_plus || token->type() == TokenType::op_minus || token->type() == TokenType::op_or)
     {
 
-        Operator op = ExpressionNode::token_to_op(token->type());
+        SourceOperator op = ExpressionNode::token_to_op(token->type());
         scanner_.next();
 
         if(!full_expr){
@@ -301,7 +301,7 @@ std::unique_ptr<ExpressionNode> Parser::expression()
         token_type == TokenType::op_gt || token_type == TokenType::op_geq)
     {
 
-        Operator op = ExpressionNode::token_to_op(token_type);
+        SourceOperator op = ExpressionNode::token_to_op(token_type);
         scanner_.next();
         auto snd_expr = simple_expression();
 

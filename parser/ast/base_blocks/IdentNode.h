@@ -11,6 +11,8 @@ class IdentNode : public TypeNode {
 
     private:
         const string name_;
+        string formal_type_;
+        TypeNode* type_node_;
 
     public:
         IdentNode(FilePos pos, const string name) : TypeNode(NodeType::ident,pos),name_(name) {};
@@ -19,6 +21,9 @@ class IdentNode : public TypeNode {
         void print(std::ostream &stream) const override;
 
         string get_value();
+        void set_types(string formal, TypeNode*node);
+        string get_formal_type();
+        TypeNode* get_type_node();
 
 };
 

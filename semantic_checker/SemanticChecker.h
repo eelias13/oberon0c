@@ -19,6 +19,10 @@ class SemanticChecker : NodeVisitor {
         ScopeTable scope_table_;
         Logger& logger_;
 
+        inline static const Type error_type = {ERROR_TYPE, ""};
+        inline static const Type boolean_type = {BOOLEAN, "BOOLEAN"};
+        inline static const Type integer_type = {INTEGER, "INTEGER"};
+
 
     public:
         explicit SemanticChecker(Logger& logger);
@@ -52,16 +56,16 @@ class SemanticChecker : NodeVisitor {
         void visit(ProcedureCallNode&) override;
 
         // Record fields
-        std::vector<std::pair<string,string>> key_value_map(RecordTypeNode&);
+        std::vector<std::pair<string,Type>> key_value_map(RecordTypeNode&);
 
         // Typechecking
-        string get_type_string(TypeNode&);
-        string trace_type(const string& initial_type);
+        Type get_type(TypeNode&, const string&);
+        Type trace_type(Type initial_type);
 
-        string check_selector_type(IdentSelectorExpressionNode&);
-        string check_selector_chain(IdentNode&, SelectorNode&);
+        Type check_selector_type(IdentSelectorExpressionNode&);
+        Type check_selector_chain(IdentNode&, SelectorNode&);
 
-        string checkType(ExpressionNode&);
+        Type checkType(ExpressionNode&);
         std::optional<long> evaluate_expression(ExpressionNode&, bool suppress_errors = false);
 
         void validate_program(ModuleNode&);

@@ -20,6 +20,27 @@ enum Kind
     ERROR_KIND
 };
 
+enum GeneralType
+{
+    INTEGER,
+    BOOLEAN,
+    ERROR_TYPE,
+    RECORD,
+    ARRAY,
+    ALIAS
+};
+
+struct Type{
+    GeneralType general;
+    string name;
+    int array_dim = -1;
+    std::shared_ptr<Type> element_type;
+    bool operator!=(Type other);
+    bool operator==(Type other);
+};
+
+
+
 /*
  *   --> Kind = What is this identifier used as (Procedure, Constant, Variable, Name of a type)
  *   --> Node in AST
@@ -42,7 +63,7 @@ struct IdentInfo
     string name; // Useful since sometimes the name of the identifier may be "lost" along the way, e.g. when tracing
     Kind kind;
     Node *node;
-    string type;
+    Type type;
 };
 
 class SymbolTable
@@ -50,16 +71,18 @@ class SymbolTable
 
 private:
     std::unordered_map<string, IdentInfo> table_;
-    std::unordered_map<string, std::unordered_map<string, string>> records_;
+    std::unordered_map<string, std::unordered_map<string, Type>> records_;
 
 public:
     explicit SymbolTable() = default;
 
-    void insert(const string &name, Kind k, Node *node, string type = "");
-    void insert_record(const string &record_name, std::vector<std::pair<string, string>> fields);
+    void insert(const string &name, Kind k, Node *node, GeneralType general_type, string type = "");
+    void insert(const string &name, Kind k, Node *node, Type type);
+    void insert_array_type(const string &name, Node* node,Type* element_type, int dimension);
+    void insert_record(const string &record_name, std::vector<std::pair<string, Type>> fields);
 
     IdentInfo *lookup(const std::string &name);
-    string lookup_field(const string &record_name, const string &field_name);
+    Type* lookup_field(const string &record_name, const string &field_name);
 };
 
 #endif // OBERON0C_SYMBOLTABLE_H

@@ -17,7 +17,7 @@ SemanticChecker::SemanticChecker(Logger &logger) : logger_(logger) {
 //      --> Comparison Operators must have the same type and  return BOOLEANs
 //      --> Boolean Operators must have BOOLEAN values and return BOOLEANs
 // Type is returned as a string with special types denotes by an underscore (as Oberon0 does not allow underscores as the start of identifiers)
-string SemanticChecker::checkType(ExpressionNode& expr) {
+Type SemanticChecker::checkType(ExpressionNode& expr) {
 
     auto type = expr.getNodeType();
 
@@ -29,60 +29,60 @@ string SemanticChecker::checkType(ExpressionNode& expr) {
         auto op = bin_expr->get_op();
 
         // Comparison Operators
-        if(op == Operator::EQ  || op == Operator::NEQ ||
-           op == Operator::LEQ || op == Operator::GEQ ||
-           op == Operator::LT  || op == Operator::GT){
+        if(op == SourceOperator::EQ || op == SourceOperator::NEQ ||
+           op == SourceOperator::LEQ || op == SourceOperator::GEQ ||
+           op == SourceOperator::LT || op == SourceOperator::GT){
 
             auto l_type = checkType(*lhs);
             auto r_type = checkType(*rhs);
 
-            if(trace_type(l_type).starts_with("_RECORD") ||
-               trace_type(r_type).starts_with("_RECORD") ||
-               trace_type(l_type).starts_with("_ARRAY") ||
-               trace_type(r_type).starts_with(("_ARRAY"))){
+            if(trace_type(l_type).general == RECORD ||
+               trace_type(r_type).general == RECORD ||
+               trace_type(l_type).general == ARRAY ||
+               trace_type(r_type).general == ARRAY){
                 logger_.error(expr.pos(), "Illegal use of comparison operators with array/record types.");
-                return "_ERROR";
+                return error_type;
             }
-            if(l_type != r_type){
+            if(l_type.general != r_type.general || l_type.name != r_type.name){
                 logger_.error(expr.pos(), "LHS and RHS of Boolean expression do not have equal types.");
-                return "_ERROR";
+                return error_type;
             }
 
-            return "BOOLEAN";
+            return boolean_type;
 
         }
 
         // Arithmetic Operators
-        else if(op == Operator::PLUS || op == Operator::MINUS ||
-                op == Operator::MULT || op == Operator::DIV   ||
-                op == Operator::MOD){
+        else if(op == SourceOperator::PLUS || op == SourceOperator::MINUS ||
+                op == SourceOperator::MULT || op == SourceOperator::DIV ||
+                op == SourceOperator::MOD){
 
-            if(trace_type(checkType(*lhs)) != "INTEGER"){
+            if(trace_type(checkType(*lhs)).general != INTEGER){
                 logger_.error(expr.pos(), "LHS of arithmetic expression is not of type INTEGER.");
-                return "_ERROR";
+                return error_type;
             }
-            if(trace_type(checkType(*rhs)) != "INTEGER"){
+            if(trace_type(checkType(*rhs)).general != INTEGER){
                 logger_.error(expr.pos(), "RHS of arithmetic expression is not of type INTEGER.");
-                return "_ERROR";
+                return error_type;
             }
 
-            return "INTEGER";
+            return integer_type;
 
         }
 
         // Boolean Operators
-        else if(op == Operator::AND || op == Operator::OR){
+        else if(op == SourceOperator::AND || op == SourceOperator::OR){
 
-            if(checkType(*lhs) != "BOOLEAN"){
+            if(checkType(*lhs).general != BOOLEAN){
                 logger_.error(expr.pos(), "LHS of Boolean expression is not of type BOOLEAN.");
-                return "_ERROR";
+                return error_type;
             }
-            if(checkType(*rhs) != "BOOLEAN"){
+            if(checkType(*rhs).general != BOOLEAN){
                 logger_.error(expr.pos(), "RHS of Boolean expression is not of type BOOLEAN.");
-                return "_ERROR";
+                return error_type;
             }
 
-            return "BOOLEAN";
+            return boolean_type;
 
         }
 
@@ -94,22 +94,22 @@ string SemanticChecker::checkType(ExpressionNode& expr) {
         auto op = un_expr->get_op();
         auto inner = un_expr->get_expr();
 
-        if(op == Operator::NOT){
-            if(checkType(*inner) != "BOOLEAN"){
+        if(op == SourceOperator::NOT){
+            if(checkType(*inner).general != BOOLEAN){
                 logger_.error(expr.pos(), "Cannot negate an expression that's not of type BOOLEAN.");
-                return "_ERROR";
+                return error_type;
             }
 
-            return "BOOLEAN";
+            return boolean_type;
         }
-        else if(op == Operator::NEG){
-            if(trace_type(checkType(*inner)) != "INTEGER"){
+        else if(op == SourceOperator::NEG){
+            if(trace_type(checkType(*inner)).general != INTEGER){
                 logger_.error(expr.pos(), "Expression is not of type INTEGER.");
-                return "_ERROR";
+                return error_type;
             }
-            return "INTEGER";
+            return integer_type;
         }
-        else if(op == Operator::NO_OPERATOR || op == Operator::PAREN){
+        else if(op == SourceOperator::NO_OPERATOR || op == SourceOperator::PAREN){
             return checkType(*inner);
         }
 
@@ -121,15 +121,15 @@ string SemanticChecker::checkType(ExpressionNode& expr) {
 
     }
     else if(type == NodeType::integer){
-        return "INTEGER";
+        return integer_type;
     }
     else{
         logger_.error(expr.pos(),"Invalid or empty expression.");
-        return "_ERROR";
+        return error_type;
     }
 
     logger_.error(expr.pos(), "Could not deduce expression type.");
-    return "_ERROR";
+    return error_type;
 }
 
 // Checks if expression is constant and if so evaluates it (returns nullopt in cases where errors occur)
@@ -149,19 +149,19 @@ std::optional<long> SemanticChecker::evaluate_expression(ExpressionNode& expr, b
         }
 
         switch (op) {
-            case Operator::MINUS:
+            case SourceOperator::MINUS:
                 return lhs.value() - rhs.value();
-            case Operator::MOD:
+            case SourceOperator::MOD:
                 return (lhs.value() % rhs.value());
-            case Operator::DIV:
+            case SourceOperator::DIV:
                 if(rhs.value() == 0){
                     logger_.error(expr.pos(), "Division by zero.");
                     return std::nullopt;
                 }
                 return lhs.value()/ rhs.value();
-            case Operator::MULT:
+            case SourceOperator::MULT:
                 return lhs.value() * rhs.value();
-            case Operator::PLUS:
+            case SourceOperator::PLUS:
                 return lhs.value() + rhs.value();
             default:
                 if(!suppress_errors){ logger_.error(expr.pos(), "Could not evaluate expression to an integer.");}
@@ -178,10 +178,10 @@ std::optional<long> SemanticChecker::evaluate_expression(ExpressionNode& expr, b
             return std::nullopt;
         }
 
-        if(op == Operator::NEG){
+        if(op == SourceOperator::NEG){
             return -inner.value();
         }
-        else if(op == Operator::NO_OPERATOR || op == Operator::PAREN){
+        else if(op == SourceOperator::NO_OPERATOR || op == SourceOperator::PAREN){
             return inner.value();
         }
 
@@ -228,7 +228,7 @@ std::optional<long> SemanticChecker::evaluate_expression(ExpressionNode& expr, b
 }
 
 // Type inference for an ident-selector expression
-string SemanticChecker::check_selector_type(IdentSelectorExpressionNode& id_expr) {
+Type SemanticChecker::check_selector_type(IdentSelectorExpressionNode& id_expr) {
     auto identifier = id_expr.get_identifier();
     auto selector = id_expr.get_selector();
 
@@ -236,7 +236,7 @@ string SemanticChecker::check_selector_type(IdentSelectorExpressionNode& id_expr
     auto identifier_info = scope_table_.lookup(identifier->get_value());
     if(!identifier_info){
         logger_.error(id_expr.pos(), "Unknown Identifier: " + identifier->get_value());
-        return "_ERROR";
+        return error_type;
     }
 
     if(!selector || !selector->get_selector()){
@@ -251,16 +251,20 @@ string SemanticChecker::check_selector_type(IdentSelectorExpressionNode& id_expr
 // TYPE INTARRAY = ARRAY 20 OF INTEGER
 // TYPE INA      = INTARRAY
 // TYPE ABC      = INA
-string SemanticChecker::trace_type(const string& initial_type) {
+Type SemanticChecker::trace_type(Type initial_type) {
 
-    string current_alias = initial_type;
-    IdentInfo* curr_info = scope_table_.lookup(initial_type);
-    while(curr_info && (current_alias != curr_info->type)){
-        current_alias = curr_info->type;
-        curr_info = scope_table_.lookup(current_alias);
+    if(initial_type.general != ALIAS){
+        return initial_type;
     }
 
-    return current_alias;
+    Type current_type = initial_type;
+    IdentInfo* curr_info;
+
+    while((curr_info = scope_table_.lookup(initial_type.name)) && (current_type.general == ALIAS)){
+        current_type = curr_info->type;
+    }
+
+    return current_type;
 
 }
 
@@ -273,7 +277,7 @@ string SemanticChecker::trace_type(const string& initial_type) {
 //      --> For Field-Selection:
 //                  * Object must actually have a record type
 //                  * Identifier must refer to an actual field of that record type
-string SemanticChecker::check_selector_chain(IdentNode& ident, SelectorNode& selector) {
+Type SemanticChecker::check_selector_chain(IdentNode& ident, SelectorNode& selector) {
     IdentInfo* prev_info = scope_table_.lookup(ident.get_value());
 
     if(!selector.get_selector()){
@@ -291,21 +295,20 @@ string SemanticChecker::check_selector_chain(IdentNode& ident, SelectorNode& sel
             // Array Index
 
             // Object must be an array type
-            if(!trace_type(prev_info->type).starts_with("_ARRAY")){
+            if(trace_type(prev_info->type).general != ARRAY){
                 logger_.error(selector.pos(), "Tried to index non-array object.");
-                return "_ERROR";
+                return error_type;
             }
 
             // Index must evaluate to a non-negative integer
             auto expr = std::get<2>(*itr).get();
-            if(trace_type(checkType(*expr)) != "INTEGER"){
+            if(trace_type(checkType(*expr)).general != INTEGER){
                 logger_.error(selector.pos(), "Array index does not evaluate to an integer.");
-                return "_ERROR";
+                return error_type;
             }
 
-            // Recall Array Types have the following string form: "ARRAY_<DIM>_OF_<TYPE>"
-            string arr_string = trace_type(prev_info->type).erase(0,7);             // Cuts off "ARRAY_"
-            int dim = stoi(arr_string.substr(0,arr_string.find('_')));            // Takes "<DIM>_" String
+            Type arr_type = trace_type(prev_info->type);
+            int dim = arr_type.array_dim;
 
             // If the expression can be evaluated, array bounds need to be checked
             auto evaluated_dim = evaluate_expression(*expr,true);
@@ -318,16 +321,17 @@ string SemanticChecker::check_selector_chain(IdentNode& ident, SelectorNode& sel
             }
 
             // Update prev_info
-            // Recall Array Types have the following string form: "ARRAY_<DIM>_OF_<TYPE>"
-            string type_string = trace_type(prev_info->type).erase(0,7);  // Cuts off "ARRAY_"
-            type_string = type_string.erase(0,type_string.find('_') + 1);            // Cuts off "<DIM>_
-            type_string = type_string.erase(0,type_string.find('_') + 1);            // Cuts off "OF_"
+            Type elem_type = *arr_type.element_type;
 
-            prev_info = scope_table_.lookup(type_string);
+            if(elem_type.general == INTEGER){
+                prev_info = scope_table_.lookup("INTEGER");
+            }else if(elem_type.general == ALIAS) {
+                prev_info = scope_table_.lookup(elem_type.name);
+            }
 
             if(!prev_info){
-                logger_.error(selector.pos(), "Unable to get information for type '" + type_string + "'");
-                return "_ERROR";
+                logger_.error(selector.pos(), "Unable to get information for type '" + elem_type.name + "'");
+                return error_type;
             }
 
         }else{
@@ -335,61 +339,72 @@ string SemanticChecker::check_selector_chain(IdentNode& ident, SelectorNode& sel
             // Record Field
 
             // Object must actually have a record type
-            if(!trace_type(prev_info->type).starts_with("_RECORD")){
+            if(trace_type(prev_info->type).general != RECORD){
                 logger_.error(selector.pos(), "Tried to access field of a non-record object.");
-                return "_ERROR";
+                return error_type;
             }
 
             // Identifier must refer to an actual field of that record type
-            string record_name = scope_table_.lookup(prev_info->type)->name;
-            string field_type = scope_table_.lookup_field(record_name,std::get<1>(*itr)->get_value());
-            if(field_type == "_ERROR"){
+            string record_name = scope_table_.lookup(prev_info->type.name)->name;
+            Type* field_type = scope_table_.lookup_field(record_name,std::get<1>(*itr)->get_value());
+            if(!field_type || field_type->general == ERROR_TYPE){
                 logger_.error(selector.pos(), "Tried to access invalid field of record type '" + record_name + "' (Field: " + std::get<1>(*itr)->get_value() + ").");
-                return "_ERROR";
+                return error_type;
             }
 
             // Update prev_info
-            prev_info = scope_table_.lookup(field_type);
+            prev_info = scope_table_.lookup(field_type->name);
 
             if(!prev_info){
-                logger_.error(selector.pos(), "Unable to get information for type '" + field_type + "'");
-                return "_ERROR";
+                logger_.error(selector.pos(), "Unable to get information for type '" + field_type->name + "'");
+                return error_type;
             }
 
         }
 
     }
 
-    if(prev_info->kind == Kind::TYPENAME){
-        return prev_info->name;
-    }
 
     return prev_info->type;
 }
 
-// Returns a string describing the type of given TypeNode ("_ARRAY_<DIM>_OF_<TYPE_" for arrays, "_RECORD" for records)
-string SemanticChecker::get_type_string(TypeNode &type) {
+// Converts TypeNode to Type
+Type SemanticChecker::get_type(TypeNode &type, const string& alias = "") {
 
     if(type.getNodeType() == NodeType::ident){
-        return dynamic_cast<IdentNode&>(type).get_value();
+
+        string ident_name = dynamic_cast<IdentNode&>(type).get_value();
+
+        if(ident_name == "INTEGER"){
+            return integer_type;
+        }else if(ident_name == "BOOLEAN"){
+            return boolean_type;
+        }else{
+            return {ALIAS, ident_name};
+        }
+
     }
     else if(type.getNodeType() == NodeType::array_type){
         auto array_node = &dynamic_cast<ArrayTypeNode&>(type);
         auto dim = evaluate_expression(*array_node->get_dim_node());
 
         if(!dim){
-            return "_ERROR";
+            return error_type;
         }
 
         array_node->set_dim(dim.value());
-        return "_ARRAY_" + to_string(dim.value()) + "_OF_" + get_type_string(*array_node->get_type_node());
+
+        auto elem_type = get_type(*array_node->get_type_node());
+
+
+        return {ARRAY,alias.empty() ? "ARRAY" : alias,dim.value(), std::make_shared<Type>(elem_type)};
     }
     else if(type.getNodeType() == NodeType::record_type){
-        return "_RECORD";
+        return {RECORD,alias.empty() ? "RECORD" : alias};
     }
 
     std::cerr << "Invalid NodeType passed as TypeNode!" << std::endl;
-    return "";
+    return error_type;
 
 }
 
@@ -401,8 +416,8 @@ void SemanticChecker::visit(ModuleNode& module) {
     scope_table_.beginScope();
 
     // Insert pre-defined types "INTEGER" and "BOOLEAN"
-    scope_table_.insert("INTEGER",Kind::TYPENAME, nullptr, "INTEGER");
-    scope_table_.insert("BOOLEAN",Kind::TYPENAME, nullptr, "BOOLEAN");
+    scope_table_.insert("INTEGER",Kind::TYPENAME, nullptr, integer_type);
+    scope_table_.insert("BOOLEAN",Kind::TYPENAME, nullptr, boolean_type);
 
     auto names = module.get_name();
 
@@ -435,7 +450,7 @@ void SemanticChecker::visit(ProcedureDeclarationNode & procedure) {
     }
 
     // Save the procedure name (before opening up a new scope!)
-    scope_table_.insert(names.first->get_value(), Kind::PROCEDURE, &procedure);
+    scope_table_.insert(names.first->get_value(), Kind::PROCEDURE, &procedure,ERROR_TYPE);
 
     // Open up new scope
     scope_table_.beginScope();
@@ -460,7 +475,8 @@ void SemanticChecker::visit(ProcedureDeclarationNode & procedure) {
                     logger_.error(var->get()->pos(), "Multiple use of the same parameter name.");
                 }
 
-                scope_table_.insert(var->get()->get_value(), Kind::VARIABLE, var->get(), get_type_string(*type));
+                auto var_type = get_type(*type);
+                scope_table_.insert(var->get()->get_value(), Kind::VARIABLE, var->get(), var_type);
 
             }
 
@@ -505,7 +521,8 @@ void SemanticChecker::visit(DeclarationsNode & declars) {
         }
 
         // insert variable into scope table
-        scope_table_.insert(itr->first, Kind::CONSTANT, itr->second, checkType(*itr->second));
+        auto const_type = checkType(*itr->second);
+        scope_table_.insert(itr->first, Kind::CONSTANT, itr->second, const_type.general,const_type.name);
 
     }
 
@@ -522,7 +539,7 @@ void SemanticChecker::visit(DeclarationsNode & declars) {
         visit(*itr->second);
 
         // insert into scope table
-        scope_table_.insert(itr->first, Kind::TYPENAME, itr->second, get_type_string(*itr->second));
+        scope_table_.insert(itr->first, Kind::TYPENAME, itr->second, get_type(*itr->second,itr->first));
 
         // if the type referred to a record-type, then we also store the record information in the scope table
         if(itr->second->getNodeType() == NodeType::record_type){
@@ -547,7 +564,7 @@ void SemanticChecker::visit(DeclarationsNode & declars) {
 
 
             // insert variable into symbol table
-            scope_table_.insert(*el,Kind::VARIABLE,itr->second, get_type_string(*itr->second));
+            scope_table_.insert(*el,Kind::VARIABLE,itr->second, get_type(*itr->second));
 
         }
     }
@@ -632,7 +649,7 @@ void SemanticChecker::visit(RecordTypeNode& node) {
 
             // Note: Since this scope is only used to check for double definitions and immediately closed after that,
             //       It doesn't *really* matter what we put into the scope table for the fields
-            scope_table_.insert(*field_name, Kind::VARIABLE, nullptr);
+            scope_table_.insert(*field_name, Kind::VARIABLE, nullptr,error_type);
 
         }
 
@@ -646,13 +663,13 @@ void SemanticChecker::visit(RecordTypeNode& node) {
 }
 
 // Fills a key-value-map-vector which is needed to place record types into the scope table
-std::vector<std::pair<string, string>> SemanticChecker::key_value_map(RecordTypeNode &node) {
-    std::vector<std::pair<string,string>> key_value_map;
+std::vector<std::pair<string, Type>> SemanticChecker::key_value_map(RecordTypeNode &node) {
+    std::vector<std::pair<string,Type>> key_value_map;
 
     auto fields = node.get_fields();
     for(auto field_itr = fields.begin(); field_itr != fields.end(); field_itr++){
         for(auto field_name = field_itr->first.begin(); field_name != field_itr->first.end(); field_name++){
-            key_value_map.emplace_back(*field_name, get_type_string(*field_itr->second));
+            key_value_map.emplace_back(*field_name, get_type(*field_itr->second));
         }
     }
 
@@ -712,20 +729,22 @@ void SemanticChecker::visit(AssignmentNode& node) {
     }
 
     // Check Selector / Get Type of Variable
-    string lhs_type = lhs_id_info->type;
+    auto lhs_type = lhs_id_info->type;
     if(node.get_selector()) {
         lhs_type = check_selector_chain(*node.get_variable(), *node.get_selector());
-        if (lhs_type == "_ERROR") {
+        if (lhs_type.general == ERROR_TYPE) {
             return;
         }
+
     }
+
 
     // Check RHS
     auto rhs = node.get_expr();
-    string expr_type = checkType(*rhs);
+    auto expr_type = checkType(*rhs);
 
-    if(expr_type != lhs_type && expr_type != "_ERROR"){ // We exclude the error case to avoid too many exceptions
-        logger_.error(node.pos(), "Cannot assign something of type '" + expr_type + "' to a variable of type '" + lhs_type + "'.");
+    if((expr_type != lhs_type) && expr_type.general != ERROR_TYPE){ // We exclude the error case to avoid too many exceptions
+        logger_.error(node.pos(), "Cannot assign something of type '" + expr_type.name + "' to a variable of type '" + lhs_type.name + "'.");
         return;
     }
 
@@ -740,7 +759,7 @@ void SemanticChecker::visit(IfStatementNode &node) {
 
     // Initial If-Then
     auto condition = node.get_condition();
-    if(checkType(*condition) != "BOOLEAN"){
+    if(checkType(*condition).general != BOOLEAN){
         logger_.error(condition->pos(), "Condition of If-Statement does not evaluate to a BOOLEAN.");
     }
     visit(*node.get_then());
@@ -749,7 +768,7 @@ void SemanticChecker::visit(IfStatementNode &node) {
     auto else_ifs = node.get_else_ifs();
     for(auto itr = else_ifs->begin(); itr != else_ifs->end(); itr++){
 
-        if(checkType(*itr->first) != "BOOLEAN"){
+        if(checkType(*itr->first).general != BOOLEAN){
             logger_.error(itr->first->pos(), "Condition of Else-If-Statement does not evaluate to a BOOLEAN.");
         }
         visit(*itr->second);
@@ -769,7 +788,7 @@ void SemanticChecker::visit(IfStatementNode &node) {
 void SemanticChecker::visit(RepeatStatementNode &node) {
 
     auto condition = node.get_expr();
-    if(checkType(*condition) != "BOOLEAN"){
+    if(checkType(*condition).general != BOOLEAN) {
         logger_.error(node.pos(), "Condition of Repeat-Statement does not evaluate to the type BOOLEAN.");
     }
 
@@ -782,7 +801,7 @@ void SemanticChecker::visit(RepeatStatementNode &node) {
 //      --> Statements must be valid
 void SemanticChecker::visit(WhileStatementNode& node) {
     auto condition = node.get_expr();
-    if(checkType(*condition) != "BOOLEAN"){
+    if(checkType(*condition).general != BOOLEAN){
         logger_.error(node.pos(), "Condition of While-Loop does not evaluate to the type BOOLEAN.");
     }
 
@@ -846,18 +865,17 @@ void SemanticChecker::visit(ProcedureCallNode& node) {
     if(formal_parameters){
         for(auto fp_section_itr = formal_parameters->begin(); fp_section_itr != formal_parameters->end(); fp_section_itr++){
 
-            auto curr_type = std::get<2>(**fp_section_itr).get();
-            string curr_type_str = get_type_string(*curr_type);
+            auto curr_type = get_type(*std::get<2>(**fp_section_itr).get());
 
             for(auto formal_param = std::get<1>(**fp_section_itr)->begin(); formal_param != std::get<1>(**fp_section_itr)->end() ; formal_param++){
 
-                if(curr_type_str.starts_with("_RECORD")){
+                if(curr_type.general == RECORD){
                     logger_.error(node.pos(), "Cannot correctly check type of given parameter for procedure '" + ident->get_value() + "' since record types can be compared by name only.");
                 }
                 else{
-                    string act_param_type = checkType(**act_param_itr);
-                    if(act_param_type != curr_type_str){
-                        logger_.error(node.pos(), "Type of actual parameter does not match type of formal parameter (expected '" + curr_type_str + "', got '" + act_param_type + "').");
+                    Type act_param_type = checkType(**act_param_itr);
+                    if(act_param_type != curr_type){
+                        logger_.error(node.pos(), "Type of actual parameter does not match type of formal parameter (expected '" + curr_type.name + "', got '" + act_param_type.name + "').");
                     }
                 }
 

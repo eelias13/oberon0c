@@ -3,8 +3,9 @@
 //
 
 #include "CodeGenerator.h"
-
+#include "../util/panic.h"
 #include <utility>
+
 
 void CodeGenerator::init_target_machine()
 {
@@ -86,61 +87,63 @@ void CodeGenerator::visit(ExpressionNode &node)
 void CodeGenerator::visit(BinaryExpressionNode &expr)
 {
 
-    Operator op = expr.get_op();
+    auto op = expr.get_op();
 
     expr.get_lhs()->accept(*this);
-    llvm::Value *lhsValue = values_.pop_back();
+    llvm::Value *lhsValue = values_.back();
+    values_.pop_back();
 
     // add Short-Circuit Evaluation
 
     expr.get_rhs()->accept(*this);
-    llvm::Value *rhsValue = values_.pop_back();
+    llvm::Value *rhsValue = values_.back();
+    values_.pop_back();
 
     switch (op)
     {
 
     // math operation
-    case Operator::PLUS:
+    case SourceOperator::PLUS:
         values_.push_back(builder_->CreateAdd(lhsValue, rhsValue, "add"));
         break;
-    case Operator::MINUS:
+    case SourceOperator::MINUS:
         values_.push_back(builder_->CreateSub(lhsValue, rhsValue, "sub"));
         break;
-    case Operator::MULT:
+    case SourceOperator::MULT:
         values_.push_back(builder_->CreateMul(lhsValue, rhsValue, "mul"));
         break;
-    case Operator::DIV:
+    case SourceOperator::DIV:
         values_.push_back(builder_->CreateSDiv(lhsValue, rhsValue, "div"));
         break;
 
-    case Operator::MOD:
+    case SourceOperator::MOD:
         values_.push_back(builder_->CreateSRem(lhsValue, rhsValue, "mod"));
         break;
     // logical operation
-    case Operator::OR:
+    case SourceOperator::OR:
         values_.push_back(builder_->CreateOr(lhsValue, rhsValue, "or"));
         break;
 
-    case Operator::AND:
+    case SourceOperator::AND:
         values_.push_back(builder_->CreateAnd(lhsValue, rhsValue, "and"));
         break;
     // comp operation
-    case Operator::EQ:
+    case SourceOperator::EQ:
         values_.push_back(builder_->CreateICmpEQ(lhsValue, rhsValue, "eq"));
         break;
-    case Operator::NEQ:
+    case SourceOperator::NEQ:
         values_.push_back(builder_->CreateICmpNE(lhsValue, rhsValue, "neq"));
         break;
-    case Operator::LT:
+    case SourceOperator::LT:
         values_.push_back(builder_->CreateICmpSLT(lhsValue, rhsValue, "lt"));
         break;
-    case Operator::LEQ:
+    case SourceOperator::LEQ:
         values_.push_back(builder_->CreateICmpSLE(lhsValue, rhsValue, "leq"));
         break;
-    case Operator::GT:
+    case SourceOperator::GT:
         values_.push_back(builder_->CreateICmpSGT(lhsValue, rhsValue, "gt"));
         break;
-    case Operator::GEQ:
+    case SourceOperator::GEQ:
         values_.push_back(builder_->CreateICmpSGE(lhsValue, rhsValue, "geq"));
         break;
 
@@ -153,17 +156,18 @@ void CodeGenerator::visit(UnaryExpressionNode &expr)
 
 {
     expr.get_expr()->accept(*this);
-    llvm::Value *exprValue = values_.pop_back();
+    llvm::Value *exprValue = values_.back();
+    values_.pop_back();
 
-    Operator op = expr.get_op();
+    SourceOperator op = expr.get_op();
 
     switch (op)
     {
-    case Operator::NEG:
+    case SourceOperator::NEG:
         values_.push_back(builder_->CreateNeg(exprValue, "neg"));
         break;
 
-    case Operator::NOT:
+    case SourceOperator::NOT:
         values_.push_back(builder_->CreateNot(exprValue, "not"));
         break;
 
@@ -184,7 +188,7 @@ void CodeGenerator::visit(IdentNode &node)
 
     if (var == variables_.end())
     {
-        panic("variable is not defined")
+        panic("variable is not defined");
     }
     values_.push_back(var->second);
 }
@@ -193,7 +197,7 @@ void CodeGenerator::visit(IntNode &val)
 {
     long int_val = val.get_value();
     llvm::Type *longType = llvm::Type::getInt64Ty(ctx_);
-    llvm::ConstantInt *longValue = llvm::ConstantInt::get(longType, int_val);
+    auto *longValue = llvm::ConstantInt::get(longType, int_val);
     values_.push_back(longValue);
 }
 

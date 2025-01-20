@@ -14,42 +14,42 @@ int ExpressionNode::get_precedence() const {
     return precedence_;
 }
 
-Operator ExpressionNode::token_to_op(TokenType t) {
+SourceOperator ExpressionNode::token_to_op(TokenType t) {
     switch(t){
         case TokenType::op_plus:
-            return Operator::PLUS;
+            return SourceOperator::PLUS;
         case TokenType::op_minus:
-            return Operator::MINUS;
+            return SourceOperator::MINUS;
         case TokenType::op_or:
-            return Operator::OR;
+            return SourceOperator::OR;
         case TokenType::op_times:
-            return Operator::MULT;
+            return SourceOperator::MULT;
         case TokenType::op_div:
-            return  Operator::DIV;
+            return  SourceOperator::DIV;
         case TokenType::op_mod:
-            return Operator::MOD;
+            return SourceOperator::MOD;
         case TokenType::op_and:
-            return Operator::AND;
+            return SourceOperator::AND;
         case TokenType::op_not:
-            return Operator::NOT;
+            return SourceOperator::NOT;
         case TokenType::op_eq:
-            return Operator::EQ;
+            return SourceOperator::EQ;
         case TokenType::op_lt:
-            return Operator::LT;
+            return SourceOperator::LT;
         case TokenType::op_leq:
-            return Operator::LEQ;
+            return SourceOperator::LEQ;
         case TokenType::op_gt:
-            return Operator::GT;
+            return SourceOperator::GT;
         case TokenType::op_geq:
-            return Operator::GEQ;
+            return SourceOperator::GEQ;
         case TokenType::op_neq:
-            return Operator::NEQ;
+            return SourceOperator::NEQ;
         default:
-            return Operator::NO_OPERATOR;
+            return SourceOperator::NO_OPERATOR;
     }
 }
 
-void ExpressionNode::print_operator(ostream &stream, Operator op) {
+void ExpressionNode::print_operator(ostream &stream, SourceOperator op) {
     switch (op) {
         case PLUS:
             stream << "+";
@@ -104,12 +104,12 @@ void ExpressionNode::print_operator(ostream &stream, Operator op) {
     }
 }
 
-std::ostream &operator<<(ostream &stream, const Operator op) {
+std::ostream &operator<<(ostream &stream, const SourceOperator op) {
     ExpressionNode::print_operator(stream,op);
     return stream;
 }
 
-int ExpressionNode::op_to_precedence(Operator op) {
+int ExpressionNode::op_to_precedence(SourceOperator op) {
     switch (op) {
         // Lowest Precedence --> Top-level boolean operators like =,#,<,...
         case EQ:
@@ -148,10 +148,23 @@ void ExpressionNode::set_value(long value) {
 
 std::optional<long> ExpressionNode::get_value() {
     return value_;
+}
+
+void ExpressionNode::set_types(string formal, TypeNode *node) {
+    formal_type = std::move(formal);
+    type_node = node;
+}
+
+string ExpressionNode::get_formal_type() {
+    return formal_type;
+}
+
+TypeNode *ExpressionNode::get_type_node() {
+    return type_node;
 };
 
 
-UnaryExpressionNode::UnaryExpressionNode(FilePos pos, std::unique_ptr<ExpressionNode> expr, Operator op) : ExpressionNode(pos,NodeType::unary_expression), expr_(std::move(expr)), op_(op){
+UnaryExpressionNode::UnaryExpressionNode(FilePos pos, std::unique_ptr<ExpressionNode> expr, SourceOperator op) : ExpressionNode(pos, NodeType::unary_expression), expr_(std::move(expr)), op_(op){
     precedence_ = op_to_precedence(op); // Should normally be equal to 2
 }
 
@@ -161,7 +174,7 @@ void UnaryExpressionNode::accept(NodeVisitor &visitor) {
 
 void UnaryExpressionNode::print(ostream &stream) const {
 
-    if(op_ == Operator::PAREN){
+    if(op_ == SourceOperator::PAREN){
         stream << "(" << *expr_ << ")";
 
     }else{
@@ -174,11 +187,11 @@ ExpressionNode *UnaryExpressionNode::get_expr() {
     return expr_.get();
 }
 
-Operator UnaryExpressionNode::get_op() {
+SourceOperator UnaryExpressionNode::get_op() {
     return op_;
 }
 
-BinaryExpressionNode::BinaryExpressionNode(FilePos pos, std::unique_ptr<ExpressionNode> lhs, Operator op, std::unique_ptr<ExpressionNode> rhs) : ExpressionNode(pos, NodeType::binary_expression), lhs_(std::move(lhs)), op_(op), rhs_(std::move(rhs)) {
+BinaryExpressionNode::BinaryExpressionNode(FilePos pos, std::unique_ptr<ExpressionNode> lhs, SourceOperator op, std::unique_ptr<ExpressionNode> rhs) : ExpressionNode(pos, NodeType::binary_expression), lhs_(std::move(lhs)), op_(op), rhs_(std::move(rhs)) {
     precedence_ = op_to_precedence(op);
 }
 
@@ -190,7 +203,7 @@ void BinaryExpressionNode::print(ostream &stream) const {
     stream << *lhs_ << " " << op_ << " " << *rhs_;
 }
 
-BinaryExpressionNode* BinaryExpressionNode::insert_rightmost(Operator op, std::unique_ptr<ExpressionNode> new_rhs) {
+BinaryExpressionNode* BinaryExpressionNode::insert_rightmost(SourceOperator op, std::unique_ptr<ExpressionNode> new_rhs) {
     rhs_ = std::make_unique<BinaryExpressionNode>(rhs_->pos(), std::move(rhs_), op, std::move(new_rhs));
     return dynamic_cast<BinaryExpressionNode*>(rhs_.get());
 }
@@ -203,7 +216,7 @@ ExpressionNode *BinaryExpressionNode::get_lhs() {
     return lhs_.get();
 }
 
-Operator BinaryExpressionNode::get_op() {
+SourceOperator BinaryExpressionNode::get_op() {
     return op_;
 }
 

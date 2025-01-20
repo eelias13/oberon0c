@@ -7,10 +7,11 @@
 
 #include "parser/ast/Node.h"
 #include "scanner/Token.h"
+#include "parser/ast/declarations/TypeNode.h"
 #include <memory>
 #include <optional>
 
-enum Operator {PLUS, MINUS, OR, MULT, DIV, MOD, AND, NEG, NOT, EQ, NEQ, LT, LEQ, GT, GEQ, NO_OPERATOR, PAREN};   // For pretty printing (and possibly precedence) purposes, we consider Parentheses an operator too
+enum SourceOperator {PLUS, MINUS, OR, MULT, DIV, MOD, AND, NEG, NOT, EQ, NEQ, LT, LEQ, GT, GEQ, NO_OPERATOR, PAREN};   // For pretty printing (and possibly precedence) purposes, we consider Parentheses an operator too
 
 class IdentNode;
 class SelectorNode;
@@ -20,6 +21,8 @@ class ExpressionNode : public Node{
     protected:
         int precedence_ = -1;
         std::optional<long> value_ = std::nullopt;
+        string formal_type;
+        TypeNode* type_node;
 
     public:
         explicit ExpressionNode(FilePos pos, NodeType type);
@@ -30,24 +33,28 @@ class ExpressionNode : public Node{
         void set_value(long value);
         std::optional<long>get_value();
 
-        static Operator token_to_op(TokenType);
-        static void print_operator(std::ostream& stream, Operator op);
-        static int op_to_precedence(Operator op);
-        friend std::ostream& operator<<(std::ostream &stream, Operator op);
+        void set_types(string formal, TypeNode* node);
+        string get_formal_type();
+        TypeNode* get_type_node();
+
+        static SourceOperator token_to_op(TokenType);
+        static void print_operator(std::ostream& stream, SourceOperator op);
+        static int op_to_precedence(SourceOperator op);
+        friend std::ostream& operator<<(std::ostream &stream, SourceOperator op);
 };
 
 class UnaryExpressionNode : public ExpressionNode{
 
     private:
-    Operator op_;
+    SourceOperator op_;
     std::unique_ptr<ExpressionNode> expr_;
 
     public:
-    UnaryExpressionNode(FilePos pos, std::unique_ptr<ExpressionNode> expr, Operator op);
+    UnaryExpressionNode(FilePos pos, std::unique_ptr<ExpressionNode> expr, SourceOperator op);
     void accept(NodeVisitor &visitor) override;
     void print(std::ostream &stream) const override;
     ExpressionNode* get_expr();
-    Operator get_op();
+    SourceOperator get_op();
 
 };
 
@@ -55,16 +62,16 @@ class UnaryExpressionNode : public ExpressionNode{
 class BinaryExpressionNode : public ExpressionNode{
 
     private:
-    Operator op_;
+    SourceOperator op_;
     std::unique_ptr<ExpressionNode> lhs_;
     std::unique_ptr<ExpressionNode> rhs_;
 
     public:
-    BinaryExpressionNode(FilePos pos, std::unique_ptr<ExpressionNode> lhs, Operator op, std::unique_ptr<ExpressionNode> rhs);
-    BinaryExpressionNode* insert_rightmost(Operator op, std::unique_ptr<ExpressionNode> new_rhs);
+    BinaryExpressionNode(FilePos pos, std::unique_ptr<ExpressionNode> lhs, SourceOperator op, std::unique_ptr<ExpressionNode> rhs);
+    BinaryExpressionNode* insert_rightmost(SourceOperator op, std::unique_ptr<ExpressionNode> new_rhs);
     ExpressionNode* get_rhs();
     ExpressionNode* get_lhs();
-    Operator get_op();
+    SourceOperator get_op();
     void accept(NodeVisitor &visitor) override;
     void print(std::ostream &stream) const override;
 
