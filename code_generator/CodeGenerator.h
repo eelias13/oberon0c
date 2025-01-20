@@ -19,57 +19,65 @@
 #include <llvm/TargetParser/Host.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/raw_ostream.h>
+#include <vector>
+#include <unordered_map>
 
-enum class OutputFileType {
-    AssemblyFile, LLVMIRFile, ObjectFile
+enum class OutputFileType
+{
+    AssemblyFile,
+    LLVMIRFile,
+    ObjectFile
 };
 
 using namespace llvm;
 
-class CodeGenerator : public NodeVisitor {
+class CodeGenerator : public NodeVisitor
+{
 
-    private:
-        TargetMachine* target_;
-        Module* module_;
-        OutputFileType output_type_;
-        const string filename_;
-        IRBuilder<>* builder_;
+private:
+    TargetMachine *target_;
+    Module *module_;
+    LLVMContext ctx_;
+    OutputFileType output_type_;
+    const string filename_;
+    IRBuilder<> *builder_;
 
-        void init_target_machine();
-        void init_builder();
-        void emit();
+    std::vector<llvm::Value *> values_;
+    std::unordered_map<string, llvm::Value *> variables_;
 
-    public:
-        CodeGenerator(string  filename, OutputFileType output_type);
+    void init_target_machine();
+    void init_builder();
+    void emit();
 
-        void visit(ExpressionNode&) override;
-        void visit(BinaryExpressionNode&) override;
-        void visit(UnaryExpressionNode&)  override;
-        void visit(IdentSelectorExpressionNode&) override;
+public:
+    CodeGenerator(string filename, OutputFileType output_type);
 
-        void visit(IdentNode&) override;
-        void visit(IntNode&) override;
-        void visit(SelectorNode&) override;
+    void visit(ExpressionNode &) override;
+    void visit(BinaryExpressionNode &) override;
+    void visit(UnaryExpressionNode &) override;
+    void visit(IdentSelectorExpressionNode &) override;
 
-        void visit(TypeNode&) override;
-        void visit(ArrayTypeNode&) override;
-        void visit(DeclarationsNode&) override;
-        void visit(ProcedureDeclarationNode&) override;
-        void visit(RecordTypeNode&) override;
+    void visit(IdentNode &) override;
+    void visit(IntNode &) override;
+    void visit(SelectorNode &) override;
 
-        void visit(StatementNode&) override;
-        void visit(AssignmentNode&) override;
-        void visit(IfStatementNode&) override;
-        void visit(ProcedureCallNode&) override;
-        void visit(RepeatStatementNode&) override;
-        void visit(StatementSequenceNode&) override;
-        void visit(WhileStatementNode&) override;
+    void visit(TypeNode &) override;
+    void visit(ArrayTypeNode &) override;
+    void visit(DeclarationsNode &) override;
+    void visit(ProcedureDeclarationNode &) override;
+    void visit(RecordTypeNode &) override;
 
-        void visit(ModuleNode&) override;
+    void visit(StatementNode &) override;
+    void visit(AssignmentNode &) override;
+    void visit(IfStatementNode &) override;
+    void visit(ProcedureCallNode &) override;
+    void visit(RepeatStatementNode &) override;
+    void visit(StatementSequenceNode &) override;
+    void visit(WhileStatementNode &) override;
 
-        void generate_code(ModuleNode&);
+    void visit(ModuleNode &) override;
 
+    void generate_code(ModuleNode &);
 };
 
-
-#endif //OBERON0C_CODEGENERATOR_H
+#endif // OBERON0C_CODEGENERATOR_H
