@@ -26,6 +26,7 @@ public:
     void endScope();
 
     IdentInfo *lookup(const string &name, bool only_current = false);
+    std::optional<std::map<string,Type>> lookup_record(const string &record_name);
     Type* lookup_field(const string &record_name, const string &field_name);
 
     void insert(const string &name, Kind k, Node *node, GeneralType general_type, string type = "");

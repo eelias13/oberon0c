@@ -63,6 +63,19 @@ Type* ScopeTable::lookup_field(const string &record_name, const string &field_na
     return nullptr;
 }
 
+std::optional<std::map<string, Type>> ScopeTable::lookup_record(const string &record_name) {
+    for (int i = current_scope; i >= 0; i--)
+    {
+        auto rec = scopes_[static_cast<size_t>(i)]->lookup_record(record_name);
+        if (rec)
+        {
+            return rec;
+        }
+    }
+
+    return std::nullopt;
+}
+
 void ScopeTable::insert_record(const string &record_name, std::vector<std::pair<string, Type>> fields)
 {
     assert(current_scope >= 0);

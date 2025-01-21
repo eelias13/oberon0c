@@ -570,6 +570,20 @@ void SemanticChecker::visit(DeclarationsNode & declars) {
         // if the type referred to a record-type, then we also store the record information in the scope table
         if(itr->second->getNodeType() == NodeType::record_type){
             scope_table_.insert_record(itr->first->get_value(), key_value_map(dynamic_cast<RecordTypeNode&>(*itr->second)));
+
+            // Insert Traced Record Types into RecordTypeNode
+            auto field_map_opt = scope_table_.lookup_record(itr->first->get_value());
+            if(field_map_opt){
+                auto field_map = field_map_opt.value();
+
+                // Trace Types
+                for(auto fitr = field_map.begin(); fitr != field_map.end(); fitr++){
+                    fitr->second = trace_type(fitr->second);
+                }
+
+                dynamic_cast<RecordTypeNode&>(*itr->second).insert_field_types(field_map);
+            }
+
         }
 
     }

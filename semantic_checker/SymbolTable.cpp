@@ -44,7 +44,7 @@ IdentInfo *SymbolTable::lookup(const std::string &name)
 
 void SymbolTable::insert_record(const string &record_name, std::vector<std::pair<string, Type>> fields)
 {
-    std::unordered_map<string, Type> field_map;
+    std::map<string, Type> field_map;
     for (auto itr = fields.begin(); itr != fields.end(); itr++)
     {
         field_map[itr->first] = itr->second;
@@ -71,6 +71,15 @@ Type* SymbolTable::lookup_field(const string &record_name, const string &field_n
     return &field->second;
 }
 
+std::optional<std::map<string, Type>> SymbolTable::lookup_record(const string &record_name) {
+    auto record = records_.find(record_name);
+    if(record == records_.end()){
+        return std::nullopt;
+    }
+
+    return records_[record_name];
+}
+
 
 bool Type::operator!=(Type other) {
     return !(*this == std::move(other));
@@ -88,6 +97,7 @@ bool Type::operator==(Type other) {
             return(other.general == ALIAS && this->name == other.name);
         case RECORD:
         case ERROR_TYPE:
+        default:
             return false;
     }
 }

@@ -9,6 +9,8 @@
 #include <vector>
 #include <utility>
 #include <unordered_map>
+#include <map>
+#include <optional>
 #include "parser/ast/Node.h"
 
 enum Kind
@@ -71,7 +73,7 @@ class SymbolTable
 
 private:
     std::unordered_map<string, IdentInfo> table_;
-    std::unordered_map<string, std::unordered_map<string, Type>> records_;
+    std::unordered_map<string, std::map<string, Type>> records_;
 
 public:
     explicit SymbolTable() = default;
@@ -83,6 +85,7 @@ public:
 
     IdentInfo *lookup(const std::string &name);
     Type* lookup_field(const string &record_name, const string &field_name);
+    std::optional<std::map<string,Type>> lookup_record(const string& record_name);
 };
 
 #endif // OBERON0C_SYMBOLTABLE_H

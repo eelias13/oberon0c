@@ -7,7 +7,9 @@
 
 #include <vector>
 #include <unordered_map>
+#include <map>
 #include "parser/ast/declarations/TypeNode.h"
+#include "semantic_checker/SymbolTable.h"
 
 class IdentNode;
 
@@ -21,7 +23,8 @@ class RecordTypeNode : public TypeNode{
 
     private:
         std::vector<std::unique_ptr<field>> fields_;
-        std::unordered_map<string,TypeNode*> field_types_;
+        std::unordered_map<string,TypeNode*> field_typenodes_;
+        std::map<string,Type> field_types_actual_;
 
     public:
 
@@ -33,7 +36,9 @@ class RecordTypeNode : public TypeNode{
         void print(std::ostream &stream) const override;
 
         std::vector<raw_field> get_fields();
+        std::map<string,Type>* get_field_types();
 
+        void insert_field_types(std::map<string,Type>& field_types);
 };
 
 

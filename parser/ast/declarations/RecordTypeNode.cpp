@@ -51,7 +51,7 @@ void RecordTypeNode::add_field_list(std::unique_ptr<field> field_list) {
 
     for(auto itr = identifiers->begin(); itr != identifiers->end(); itr++){
 
-        field_types_[itr->get()->get_value()] = type;
+        field_typenodes_[itr->get()->get_value()] = type;
 
     }
 
@@ -75,4 +75,12 @@ std::vector<raw_field> RecordTypeNode::get_fields() {
     }
 
     return fields;
+}
+
+void RecordTypeNode::insert_field_types(std::map<string, Type>& field_types) {
+    field_types_actual_ = field_types;
+}
+
+std::map<string, Type> *RecordTypeNode::get_field_types() {
+    return &field_types_actual_;
 }
