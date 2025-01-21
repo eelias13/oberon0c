@@ -18,12 +18,20 @@ void SymbolTable::insert(const std::string &name, Kind k, Node *node, GeneralTyp
     table_[name] = IdentInfo(name, k, node, {general_type,std::move(type)});
 }
 
+void SymbolTable::insert(const string &name, Kind k, Node *node, const Type& type) {
+    if(table_.find(name) != table_.end()){
+        return;
+    }
+
+    table_[name] = IdentInfo(name,k, node,{type.general,type.name,type.array_dim,type.element_type});
+}
+
 void SymbolTable::insert_array_type(const string &name, Node *node, Type *element_type, int dimension) {
     if(table_.find(name) != table_.end()){
         return;
     }
 
-    table_[name] = IdentInfo(name, Kind::TYPENAME, node, {ARRAY,"",dimension,std::make_shared<Type>(*element_type)});
+    table_[name] = IdentInfo(name, Kind::TYPENAME, node, {ARRAY,name,dimension,std::make_shared<Type>(*element_type)});
 }
 
 IdentInfo *SymbolTable::lookup(const std::string &name)
@@ -61,14 +69,6 @@ Type* SymbolTable::lookup_field(const string &record_name, const string &field_n
     }
 
     return &field->second;
-}
-
-void SymbolTable::insert(const string &name, Kind k, Node *node, Type type) {
-    if(table_.find(name) != table_.end()){
-        return;
-    }
-
-    table_[name] = IdentInfo(name,k, node,{type.general,type.name,type.array_dim,type.element_type});
 }
 
 

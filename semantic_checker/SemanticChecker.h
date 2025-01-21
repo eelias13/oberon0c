@@ -19,9 +19,11 @@ class SemanticChecker : NodeVisitor {
         ScopeTable scope_table_;
         Logger& logger_;
 
+        inline static const string int_string = "INTEGER";
+        inline static const string bool_string = "BOOLEAN";
         inline static const Type error_type = {ERROR_TYPE, ""};
-        inline static const Type boolean_type = {BOOLEAN, "BOOLEAN"};
-        inline static const Type integer_type = {INTEGER, "INTEGER"};
+        inline static const Type boolean_type = {BOOLEAN, bool_string};
+        inline static const Type integer_type = {INTEGER, int_string};
 
 
     public:

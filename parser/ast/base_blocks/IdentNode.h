@@ -6,12 +6,14 @@
 #define OBERON0C_IDENTNODE_H
 
 #include "parser/ast/declarations/TypeNode.h"
+#include "semantic_checker/ScopeTable.h"
 
 class IdentNode : public TypeNode {
 
     private:
         const string name_;
-        string formal_type_;
+        Type formal_type_;
+        Type actual_type_;
         TypeNode* type_node_;
 
     public:
@@ -21,8 +23,9 @@ class IdentNode : public TypeNode {
         void print(std::ostream &stream) const override;
 
         string get_value();
-        void set_types(string formal, TypeNode*node);
-        string get_formal_type();
+        void set_types(Type formal, Type actual, TypeNode*node);
+        Type get_formal_type();
+        Type get_actual_type();
         TypeNode* get_type_node();
 
 };

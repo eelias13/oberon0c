@@ -66,6 +66,7 @@ Type SemanticChecker::checkType(ExpressionNode& expr) {
                 return error_type;
             }
 
+            expr.set_types(integer_type,integer_type, nullptr);
             return integer_type;
 
         }
@@ -82,6 +83,7 @@ Type SemanticChecker::checkType(ExpressionNode& expr) {
                 return error_type;
             }
 
+            expr.set_types(boolean_type,boolean_type, nullptr);
             return boolean_type;
 
         }
@@ -100,6 +102,7 @@ Type SemanticChecker::checkType(ExpressionNode& expr) {
                 return error_type;
             }
 
+            expr.set_types(boolean_type,boolean_type, nullptr);
             return boolean_type;
         }
         else if(op == SourceOperator::NEG){
@@ -107,20 +110,26 @@ Type SemanticChecker::checkType(ExpressionNode& expr) {
                 logger_.error(expr.pos(), "Expression is not of type INTEGER.");
                 return error_type;
             }
+            expr.set_types(boolean_type,boolean_type, nullptr);
             return integer_type;
         }
         else if(op == SourceOperator::NO_OPERATOR || op == SourceOperator::PAREN){
-            return checkType(*inner);
+            auto inner_type = checkType(*inner);
+            expr.set_types(inner_type, trace_type(inner_type), nullptr);
+            return inner_type;
         }
 
     }
     else if(type == NodeType::ident_selector_expression){
 
         auto id_expr = &dynamic_cast<IdentSelectorExpressionNode&>(expr);
-        return check_selector_type(*id_expr);
+        auto id_selector_type = check_selector_type(*id_expr);
+        expr.set_types(id_selector_type, trace_type(id_selector_type), nullptr);
+        return id_selector_type;
 
     }
     else if(type == NodeType::integer){
+        expr.set_types(integer_type,integer_type, nullptr);
         return integer_type;
     }
     else{
@@ -261,6 +270,12 @@ Type SemanticChecker::trace_type(Type initial_type) {
     IdentInfo* curr_info;
 
     while((curr_info = scope_table_.lookup(initial_type.name)) && (current_type.general == ALIAS)){
+
+        // Easy exit should this function be called with an erroneous type (which happens for semantically incorrect programs)
+        if(curr_info->kind != Kind::TYPENAME){
+            return error_type;
+        }
+
         current_type = curr_info->type;
     }
 
@@ -373,13 +388,13 @@ Type SemanticChecker::get_type(TypeNode &type, const string& alias = "") {
 
     if(type.getNodeType() == NodeType::ident){
 
-        string ident_name = dynamic_cast<IdentNode&>(type).get_value();
+        const string ident_name = dynamic_cast<IdentNode&>(type).get_value();
 
-        if(ident_name == "INTEGER"){
+        if(ident_name == int_string){
             return integer_type;
-        }else if(ident_name == "BOOLEAN"){
+        }else if(ident_name == bool_string){
             return boolean_type;
-        }else{
+        }else {
             return {ALIAS, ident_name};
         }
 
@@ -463,8 +478,16 @@ void SemanticChecker::visit(ProcedureDeclarationNode & procedure) {
 
             // Check Type definition
             TypeNode* type = std::get<2>(**itr).get();
+            Type var_type;
             if(type->getNodeType() == NodeType::array_type || type->getNodeType() == NodeType::record_type){
+                var_type = get_type(*type);
                 logger_.warning(type->pos(), "New Type defined in formal parameters of function. Actual Parameter will never be able to fulfill this type (Note: The Oberon0 compiler follows name-equivalence, not structural equivalence).");
+            }else{
+
+                // Corresponding Type has to be looked up
+                auto type_info = scope_table_.lookup(dynamic_cast<IdentNode*>(type)->get_value());
+                var_type = (type_info)? type_info->type : error_type;
+
             }
             visit(*type);
 
@@ -475,7 +498,7 @@ void SemanticChecker::visit(ProcedureDeclarationNode & procedure) {
                     logger_.error(var->get()->pos(), "Multiple use of the same parameter name.");
                 }
 
-                auto var_type = get_type(*type);
+                var->get()->set_types(var_type, trace_type(var_type),type);
                 scope_table_.insert(var->get()->get_value(), Kind::VARIABLE, var->get(), var_type);
 
             }
@@ -508,8 +531,8 @@ void SemanticChecker::visit(DeclarationsNode & declars) {
     for(auto itr = constants.begin(); itr != constants.end(); itr++){
 
         // check for double declarations (only in current scope)
-        if(scope_table_.lookup(itr->first,true)){
-            logger_.error(declars.pos(),"Multiple declarations of identifier: " + itr->first);
+        if(scope_table_.lookup(itr->first->get_value(),true)){
+            logger_.error(declars.pos(),"Multiple declarations of identifier '" + itr->first->get_value() + "'.");
         }
 
         // check if expression actually evaluates to a constant
@@ -522,7 +545,8 @@ void SemanticChecker::visit(DeclarationsNode & declars) {
 
         // insert variable into scope table
         auto const_type = checkType(*itr->second);
-        scope_table_.insert(itr->first, Kind::CONSTANT, itr->second, const_type.general,const_type.name);
+        itr->first->set_types(const_type, trace_type(const_type), nullptr);
+        scope_table_.insert(itr->first->get_value(), Kind::CONSTANT, itr->second, const_type.general,const_type.name);
 
     }
 
@@ -531,19 +555,21 @@ void SemanticChecker::visit(DeclarationsNode & declars) {
     for(auto itr = typenames.begin(); itr != typenames.end(); itr++){
 
         // check for double declarations
-        if(scope_table_.lookup(itr->first, true)){
-            logger_.error(declars.pos(),"Multiple Declarations of identifier: " + itr->first);
+        if(scope_table_.lookup(itr->first->get_value(), true)){
+            logger_.error(declars.pos(),"Multiple Declarations of identifier '" + itr->first->get_value() + "'.");
         }
 
         // check the type definition
         visit(*itr->second);
 
         // insert into scope table
-        scope_table_.insert(itr->first, Kind::TYPENAME, itr->second, get_type(*itr->second,itr->first));
+        auto type_def = get_type(*itr->second,itr->first->get_value());
+        itr->first->set_types(type_def, trace_type(type_def),itr->second);
+        scope_table_.insert(itr->first->get_value(), Kind::TYPENAME, itr->second, type_def);
 
         // if the type referred to a record-type, then we also store the record information in the scope table
         if(itr->second->getNodeType() == NodeType::record_type){
-            scope_table_.insert_record(itr->first, key_value_map(dynamic_cast<RecordTypeNode&>(*itr->second)));
+            scope_table_.insert_record(itr->first->get_value(), key_value_map(dynamic_cast<RecordTypeNode&>(*itr->second)));
         }
 
     }
@@ -555,16 +581,36 @@ void SemanticChecker::visit(DeclarationsNode & declars) {
         // check for valid types (i.e., visit Type Node)
         visit(*itr->second);
 
+        Type var_type;
+        TypeNode* var_typenode = nullptr;
+
+        // Assign type (if right hand side is a variable, then the corresponding type info has to be looked up
+        // Correctly Assign TypeNode
+        if(itr->second->getNodeType() == NodeType::ident){
+            auto type_info = scope_table_.lookup(dynamic_cast<IdentNode*>(itr->second)->get_value());
+            var_type = (type_info)? type_info->type : error_type;
+
+            if(type_info && type_info->kind == Kind::TYPENAME){
+                auto traced_type_info = scope_table_.lookup(trace_type(var_type).name);
+                var_typenode = (traced_type_info)? dynamic_cast<TypeNode *>(traced_type_info->node) : nullptr;
+            }
+
+        }else{
+            var_type = get_type(*itr->second);
+            var_typenode = itr->second;
+        }
+
         for(auto el = itr->first.begin(); el != itr->first.end(); el++){
 
             // check for double declarations (only in current scope)
-            if(scope_table_.lookup(*el,true)){
-                logger_.error(declars.pos(),"Multiple Declarations of identifier: " + (*el));
+            if(scope_table_.lookup((*el)->get_value(),true)){
+                logger_.error(declars.pos(),"Multiple Declarations of identifier '" + (*el)->get_value() + "'.");
             }
 
 
             // insert variable into symbol table
-            scope_table_.insert(*el,Kind::VARIABLE,itr->second, get_type(*itr->second));
+            (*el)->set_types(var_type, trace_type(var_type), var_typenode);
+            scope_table_.insert((*el)->get_value(),Kind::VARIABLE,itr->second, var_type);
 
         }
     }
@@ -869,7 +915,7 @@ void SemanticChecker::visit(ProcedureCallNode& node) {
 
             for(auto formal_param = std::get<1>(**fp_section_itr)->begin(); formal_param != std::get<1>(**fp_section_itr)->end() ; formal_param++){
 
-                if(curr_type.general == RECORD){
+                if(curr_type.general == RECORD && curr_type.name == "RECORD"){
                     logger_.error(node.pos(), "Cannot correctly check type of given parameter for procedure '" + ident->get_value() + "' since record types can be compared by name only.");
                 }
                 else{
@@ -907,6 +953,3 @@ void SemanticChecker::visit(SelectorNode &node) {(void)node;}
 void SemanticChecker::validate_program(ModuleNode &node) {
     visit(node);
 }
-
-
-

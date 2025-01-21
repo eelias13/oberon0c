@@ -61,37 +61,37 @@ void DeclarationsNode::print(ostream &stream) const
     }
 }
 
-std::vector<std::pair<string, ExpressionNode *>> DeclarationsNode::get_constants() {
+std::vector<std::pair<IdentNode*, ExpressionNode *>> DeclarationsNode::get_constants() {
 
-    std::vector<std::pair<string, ExpressionNode *>> constants;
+    std::vector<std::pair<IdentNode*, ExpressionNode *>> constants;
     for(auto itr = const_list_.begin(); itr != const_list_.end(); itr++){
-        constants.emplace_back(itr->first->get_value(),itr->second.get());
+        constants.emplace_back(itr->first.get(),itr->second.get());
     }
 
     return constants;
 
 }
 
-std::vector<std::pair<string, TypeNode *>> DeclarationsNode::get_typenames() {
+std::vector<std::pair<IdentNode*, TypeNode *>> DeclarationsNode::get_typenames() {
 
-    std::vector<std::pair<string, TypeNode *>> types;
+    std::vector<std::pair<IdentNode*, TypeNode *>> types;
     for(auto itr = type_list_.begin(); itr != type_list_.end(); itr++){
-        types.emplace_back(itr->first->get_value(),itr->second.get());
+        types.emplace_back(itr->first.get(),itr->second.get());
     }
 
     return types;
 
 }
 
-std::vector<std::pair<std::vector<string>, TypeNode *>> DeclarationsNode::get_variables() {
-    std::vector<std::pair<std::vector<string>, TypeNode *>> variables;
+std::vector<std::pair<std::vector<IdentNode*>, TypeNode *>> DeclarationsNode::get_variables() {
+    std::vector<std::pair<std::vector<IdentNode*>, TypeNode *>> variables;
 
     for (auto itr = var_list.begin(); itr != var_list.end(); itr++){
 
         // Unpack variable names
-        std::vector<string> typenames;
+        std::vector<IdentNode*> typenames;
         for(auto id = itr->first->begin(); id != itr->first->end(); id++){
-            typenames.emplace_back(id->get()->get_value());
+            typenames.emplace_back(id->get());
         }
 
         variables.emplace_back(typenames,itr->second.get());

@@ -77,7 +77,7 @@ public:
     explicit SymbolTable() = default;
 
     void insert(const string &name, Kind k, Node *node, GeneralType general_type, string type = "");
-    void insert(const string &name, Kind k, Node *node, Type type);
+    void insert(const string &name, Kind k, Node *node, const Type& type);
     void insert_array_type(const string &name, Node* node,Type* element_type, int dimension);
     void insert_record(const string &record_name, std::vector<std::pair<string, Type>> fields);
 

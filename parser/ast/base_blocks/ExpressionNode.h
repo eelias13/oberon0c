@@ -8,6 +8,7 @@
 #include "parser/ast/Node.h"
 #include "scanner/Token.h"
 #include "parser/ast/declarations/TypeNode.h"
+#include "semantic_checker/ScopeTable.h"
 #include <memory>
 #include <optional>
 
@@ -21,7 +22,8 @@ class ExpressionNode : public Node{
     protected:
         int precedence_ = -1;
         std::optional<long> value_ = std::nullopt;
-        string formal_type;
+        Type formal_type;
+        Type actual_type;
         TypeNode* type_node;
 
     public:
@@ -33,8 +35,9 @@ class ExpressionNode : public Node{
         void set_value(long value);
         std::optional<long>get_value();
 
-        void set_types(string formal, TypeNode* node);
-        string get_formal_type();
+        void set_types(Type formal, Type actual, TypeNode* node);
+        Type get_formal_type();
+        Type get_actual_type();
         TypeNode* get_type_node();
 
         static SourceOperator token_to_op(TokenType);
