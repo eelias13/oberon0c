@@ -16,8 +16,9 @@ class ExpressionNode;
 class ProcedureCallNode : public StatementNode {
 
     private:
-        std::unique_ptr<IdentNode> name_;
+        std::unique_ptr<IdentNode> ident_;
         std::unique_ptr<SelectorNode> selector_;
+        string procedure_name;
 
         std::unique_ptr<std::vector<std::unique_ptr<ExpressionNode>>> parameters_;
 
@@ -27,8 +28,11 @@ class ProcedureCallNode : public StatementNode {
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;
 
-        IdentNode* get_name();
+        IdentNode* get_ident();
         SelectorNode* get_selector();
+
+        void set_name(const string&);
+        string get_name();
 
         std::vector<std::unique_ptr<ExpressionNode>>* get_parameters();
 

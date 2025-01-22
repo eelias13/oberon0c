@@ -878,7 +878,7 @@ void SemanticChecker::visit(WhileStatementNode& node) {
 void SemanticChecker::visit(ProcedureCallNode& node) {
 
     // Check Name
-    auto ident = node.get_name();
+    auto ident = node.get_ident();
     auto ident_info = scope_table_.lookup(ident->get_value());
 
     if(!ident_info){
@@ -897,6 +897,9 @@ void SemanticChecker::visit(ProcedureCallNode& node) {
         logger_.error(selector->pos(), "Call to array-index or record-field cannot refer to a procedure (In Oberon0).");
         return;
     }
+
+    // Save Name in AST
+    node.set_name(ident->get_value());
 
     // Get Function declaration
     auto *procedure_decl = dynamic_cast<ProcedureDeclarationNode*>(ident_info->node);

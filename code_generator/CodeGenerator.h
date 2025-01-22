@@ -42,6 +42,8 @@ private:
     const string filename_;
     IRBuilder<> *builder_;
 
+    std::unordered_map<string,Function*> procedures_;
+
     std::vector<llvm::Value *> values_;
     std::unordered_map<string, llvm::Value *> variables_;
 
