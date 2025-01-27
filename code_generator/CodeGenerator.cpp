@@ -311,8 +311,29 @@ void CodeGenerator::visit(ArrayTypeNode &node)
     auto type = node.get_type_node();
 }
 
-void CodeGenerator::visit(ProcedureDeclarationNode &)
+void CodeGenerator::visit(ProcedureDeclarationNode &node)
 {
+    auto name = node.get_names().first->get_value();
+
+    // Create Signature
+    // TODO Add Types
+    auto signature = FunctionType::get(builder_->getVoidTy(),{}, false);
+
+    // Define Function and add it to FunctionList
+    auto procedure = module_->getOrInsertFunction(name,builder_->getVoidTy());
+    auto function = cast<Function>(procedure.getCallee());
+    procedures_[name] = function;
+
+    // Define BasicBlock
+    auto block = BasicBlock::Create(builder_->getContext(),"entry",function);
+    builder_->SetInsertPoint(block);
+
+    // Add Procedure Declaration and Statements
+    visit(*node.get_declarations());
+    visit(*node.get_statements());
+
+    // Add Return
+    builder_->CreateRetVoid();
 }
 
 void CodeGenerator::visit(RecordTypeNode &node)
@@ -379,8 +400,19 @@ void CodeGenerator::visit(IfStatementNode &)
 {
 }
 
-void CodeGenerator::visit(ProcedureCallNode &)
+void CodeGenerator::visit(ProcedureCallNode &node)
 {
+    // Get ProcedureName
+    auto procedure_name = node.get_name();
+    if(procedures_.find(procedure_name) == procedures_.end()){
+        panic("Code generator could not find procedure '" + procedure_name + "' in procedure_list.");
+    }
+
+    // Get Arguments
+    // TODO
+
+    // Create Call
+    builder_->CreateCall(procedures_[procedure_name]);
 }
 
 void CodeGenerator::visit(RepeatStatementNode &)
@@ -403,16 +435,21 @@ void CodeGenerator::visit(WhileStatementNode &)
 void CodeGenerator::visit(ModuleNode &node)
 {
 
+    // global declarations
+    visit(*node.get_declarations());
+
     // define main
     auto main = module_->getOrInsertFunction(node.get_name().first->get_value(), builder_->getInt32Ty());
     auto main_fct = cast<Function>(main.getCallee());
     auto entry = BasicBlock::Create(builder_->getContext(), "entry", main_fct);
-
-    // global declarations
-    visit(*node.get_declarations());
+    builder_->SetInsertPoint(entry);
 
     // statements
     visit(*node.get_statements());
+
+    // return value
+    builder_->CreateRet(builder_->getInt32(0));
+    verifyFunction(*main_fct,&errs());
 }
 
 void CodeGenerator::emit()

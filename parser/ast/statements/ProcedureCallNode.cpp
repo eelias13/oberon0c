@@ -15,7 +15,7 @@ void ProcedureCallNode::accept(NodeVisitor &visitor)
 
 void ProcedureCallNode::print(ostream &stream) const
 {
-    stream << *name_;
+    stream << *ident_;
 
     if(selector_){
         stream << *selector_;
@@ -39,10 +39,10 @@ void ProcedureCallNode::print(ostream &stream) const
     }
 }
 
-ProcedureCallNode::ProcedureCallNode(FilePos pos, std::unique_ptr<IdentNode> name,std::unique_ptr<SelectorNode> selector, std::unique_ptr<std::vector<std::unique_ptr<ExpressionNode>>> parameters) : StatementNode(NodeType::procedure_call, pos), name_(std::move(name)), selector_(std::move(selector)), parameters_(std::move(parameters))  {}
+ProcedureCallNode::ProcedureCallNode(FilePos pos, std::unique_ptr<IdentNode> name,std::unique_ptr<SelectorNode> selector, std::unique_ptr<std::vector<std::unique_ptr<ExpressionNode>>> parameters) : StatementNode(NodeType::procedure_call, pos), ident_(std::move(name)), selector_(std::move(selector)), parameters_(std::move(parameters))  {}
 
-IdentNode *ProcedureCallNode::get_name() {
-    return name_.get();
+IdentNode *ProcedureCallNode::get_ident() {
+    return ident_.get();
 }
 
 SelectorNode *ProcedureCallNode::get_selector() {
@@ -51,5 +51,13 @@ SelectorNode *ProcedureCallNode::get_selector() {
 
 std::vector<std::unique_ptr<ExpressionNode>> *ProcedureCallNode::get_parameters() {
     return parameters_.get();
+}
+
+void ProcedureCallNode::set_name(const string &name) {
+    procedure_name = name;
+}
+
+string ProcedureCallNode::get_name() {
+    return procedure_name;
 }
 
