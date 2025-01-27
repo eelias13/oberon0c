@@ -77,10 +77,10 @@ std::vector<raw_field> RecordTypeNode::get_fields() {
     return fields;
 }
 
-void RecordTypeNode::insert_field_types(std::map<string, Type>& field_types) {
+void RecordTypeNode::insert_field_types(std::map<string, TypeInfo>& field_types) {
     field_types_actual_ = field_types;
 }
 
-std::map<string, Type> *RecordTypeNode::get_field_types() {
+std::map<string, TypeInfo> *RecordTypeNode::get_field_types() {
     return &field_types_actual_;
 }

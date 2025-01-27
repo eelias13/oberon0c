@@ -150,13 +150,13 @@ std::optional<long> ExpressionNode::get_value() {
     return value_;
 }
 
-void ExpressionNode::set_types(Type formal, Type actual, TypeNode *node) {
+void ExpressionNode::set_types(TypeInfo formal, TypeInfo actual, TypeNode *node) {
     formal_type = std::move(formal);
     actual_type = std::move(actual);
     type_node = node;
 }
 
-Type ExpressionNode::get_formal_type() {
+TypeInfo ExpressionNode::get_formal_type() {
     return formal_type;
 }
 
@@ -164,7 +164,7 @@ TypeNode *ExpressionNode::get_type_node() {
     return type_node;
 }
 
-Type ExpressionNode::get_actual_type() {
+TypeInfo ExpressionNode::get_actual_type() {
     return actual_type;
 };
 

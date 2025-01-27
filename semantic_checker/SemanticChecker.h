@@ -21,9 +21,9 @@ class SemanticChecker : NodeVisitor {
 
         inline static const string int_string = "INTEGER";
         inline static const string bool_string = "BOOLEAN";
-        inline static const Type error_type = {ERROR_TYPE, ""};
-        inline static const Type boolean_type = {BOOLEAN, bool_string};
-        inline static const Type integer_type = {INTEGER, int_string};
+        inline static const TypeInfo error_type = {ERROR_TYPE, ""};
+        inline static const TypeInfo boolean_type = {BOOLEAN, bool_string};
+        inline static const TypeInfo integer_type = {INTEGER, int_string};
 
 
     public:
@@ -58,16 +58,16 @@ class SemanticChecker : NodeVisitor {
         void visit(ProcedureCallNode&) override;
 
         // Record fields
-        std::vector<std::pair<string,Type>> key_value_map(RecordTypeNode&);
+        std::vector<std::pair<string,TypeInfo>> key_value_map(RecordTypeNode&);
 
         // Typechecking
-        Type get_type(TypeNode&, const string&);
-        Type trace_type(Type initial_type);
+        TypeInfo get_type(TypeNode&, const string&);
+        TypeInfo trace_type(TypeInfo initial_type);
 
-        Type check_selector_type(IdentSelectorExpressionNode&);
-        Type check_selector_chain(IdentNode&, SelectorNode&);
+        TypeInfo check_selector_type(IdentSelectorExpressionNode&);
+        TypeInfo check_selector_chain(IdentNode&, SelectorNode&);
 
-        Type checkType(ExpressionNode&);
+        TypeInfo checkType(ExpressionNode&);
         std::optional<long> evaluate_expression(ExpressionNode&, bool suppress_errors = false);
 
         void validate_program(ModuleNode&);

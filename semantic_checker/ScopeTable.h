@@ -26,13 +26,13 @@ public:
     void endScope();
 
     IdentInfo *lookup(const string &name, bool only_current = false);
-    std::optional<std::map<string,Type>> lookup_record(const string &record_name);
-    Type* lookup_field(const string &record_name, const string &field_name);
+    std::optional<std::map<string, TypeInfo>> lookup_record(const string &record_name);
+    TypeInfo *lookup_field(const string &record_name, const string &field_name);
 
     void insert(const string &name, Kind k, Node *node, GeneralType general_type, string type = "");
-    void insert(const string& name, Kind k, Node *node, Type type);
-    void insert_array_type(const string& name, Node *node, Type* element_type, int dimension);
-    void insert_record(const string &record_name, std::vector<std::pair<string, Type>> fields);
+    void insert(const string &name, Kind k, Node *node, TypeInfo type);
+    void insert_array_type(const string &name, Node *node, TypeInfo *element_type, int dimension);
+    void insert_record(const string &record_name, std::vector<std::pair<string, TypeInfo>> fields);
 };
 
 #endif // OBERON0C_SCOPETABLE_H

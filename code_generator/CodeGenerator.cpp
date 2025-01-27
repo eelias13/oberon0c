@@ -6,7 +6,6 @@
 #include "../util/panic.h"
 #include <utility>
 
-
 void CodeGenerator::init_target_machine()
 {
     // initialize LLVM
@@ -80,6 +79,7 @@ void CodeGenerator::visit(ExpressionNode &node)
         visit(dynamic_cast<IntNode &>(node));
         break;
     default:
+        panic("unreachable");
         return;
     }
 }
@@ -176,21 +176,36 @@ void CodeGenerator::visit(UnaryExpressionNode &expr)
     }
 }
 
-void CodeGenerator::visit(IdentSelectorExpressionNode &)
+void CodeGenerator::visit(IdentSelectorExpressionNode &node)
 {
+    node.get_identifier()->accept(*this);
+    llvm::Value *ident = values_.back();
+    values_.pop_back();
+
+    node.get_selector()->accept(*this);
+    llvm::Value *selector = values_.back();
+    values_.pop_back();
 }
 
 void CodeGenerator::visit(IdentNode &node)
 {
 
-    std::string name = node.get_value();
-    auto var = variables_.find(name);
-
-    if (var == variables_.end())
+    if (node.get_more_types_yay().has_value())
     {
-        panic("variable is not defined");
+        auto type_info = node.get_more_types_yay().value();
     }
-    values_.push_back(var->second);
+    else
+    {
+
+        std::string name = node.get_value();
+        auto var = variables_.find(name);
+
+        if (var == variables_.end())
+        {
+            panic("variable is not defined");
+        }
+        values_.push_back(var->second);
+    }
 }
 
 void CodeGenerator::visit(IntNode &val)
@@ -205,6 +220,68 @@ void CodeGenerator::visit(SelectorNode &)
 {
 }
 
+void CodeGenerator::visit(DeclarationsNode &node)
+{
+
+    auto types = node.get_typenames();
+    for (auto it = begin(types); it != end(types); ++it)
+    {
+        auto name = it->first->name_;
+        it->second->accept(*this);
+        auto type = temp_type_;
+
+        // resolve/create llvm type
+        switch (type.tag)
+        {
+        case TypeTag::RECORD:
+            assert(type.llvmType.size() >= 1);
+            llvm::StructType *llvm_type = llvm::StructType::create(ctx_, type.llvmType, name);
+            type.llvmType = {llvm_type};
+            break;
+        case TypeTag::ARRAY:
+            assert(type.llvmType.size() == 1);
+            llvm::ArrayType *llvm_type = llvm::ArrayType::get(type.llvmType, type.value.array);
+            type.llvmType = {llvm_type};
+
+            break;
+        case TypeTag::INTEGER:
+            assert(type.llvmType.size() == 1);
+            llvm::Type *llvm_type = llvm::Type::getInt32Ty(ctx_);
+            type.llvmType = {llvm_type};
+            break;
+        case TypeTag::BOOLEAN:
+            assert(type.llvmType.size() == 1);
+            llvm::Type *llvm_type = llvm::Type::getInt1Ty(ctx_);
+            type.llvmType = {llvm_type};
+            break;
+        default:
+            panic("unreachable");
+            break;
+        }
+    }
+
+    auto constants = node.get_constants();
+    for (auto it = begin(constants); it != end(constants); ++it)
+    {
+
+        auto ident = it->first;
+
+        assert(!ident->get_more_types_yay().has_value());
+        std::string name = ident.get_value();
+
+        auto type = type_table_.lookup(ident->get_actual_type().name);
+        assert(type->llvmType.size() == 1);
+
+        it->second->accept(*this);
+        llvm::Value *value = values_.back();
+
+        llvm::AllocaInst *var = builder_.CreateAlloca(type->llvmType, nullptr, name);
+        builder.CreateStore(value, var);
+
+        variables_.insert(ident, var)
+    }
+}
+
 void CodeGenerator::visit(TypeNode &node)
 {
     switch (node.getNodeType())
@@ -216,27 +293,58 @@ void CodeGenerator::visit(TypeNode &node)
         visit(dynamic_cast<ArrayTypeNode &>(node));
         break;
     case NodeType::record_type:
-        visit(dynamic_cast<UnaryExpressionNode &>(node));
+        visit(dynamic_cast<RecordTypeNode &>(node));
         break;
     default:
+        panic("unreachable");
         return;
     }
 }
 
-void CodeGenerator::visit(ArrayTypeNode &)
+void CodeGenerator::visit(ArrayTypeNode &node)
 {
-}
+    auto dim = node.get_dim();
+    assert(dim.has_value());
+    auto val = dim.value();
+    assert(val > 0);
 
-void CodeGenerator::visit(DeclarationsNode &)
-{
+    auto type = node.get_type_node();
 }
 
 void CodeGenerator::visit(ProcedureDeclarationNode &)
 {
 }
 
-void CodeGenerator::visit(RecordTypeNode &)
+void CodeGenerator::visit(RecordTypeNode &node)
 {
+    auto raw_fields = node.get_fields();
+    auto field_types = *node.get_field_types();
+
+    std::vector<std::pair<std::string, TypeInfoClass *>> info_fields;
+    std::vector<llvm::Type *> llvm_fields;
+
+    for (auto it = begin(raw_fields); it != end(raw_fields); ++it)
+    {
+        auto names = it->first;
+        for (auto it = begin(names); it != end(names); ++it)
+        {
+
+            std::string name = *it;
+
+            assert(field_types.find(name) != field_types.end());
+
+            TypeInfo type_info = field_types[name];
+
+            TypeInfoClass *info_class = type_table_.lookup(type_info.name);
+            assert(info_class->llvmType.size() == 1);
+            llvm_fields.push_back(info_class->llvmType[0]);
+            info_fields.push_back(std::make_pair(name, info_class));
+        }
+    }
+
+    temp_type_.llvmType = llvm_fields;
+    temp_type_.tag = TypeTag::RECORD;
+    temp_type_.value.record = info_fields;
 }
 
 void CodeGenerator::visit(StatementNode &node)

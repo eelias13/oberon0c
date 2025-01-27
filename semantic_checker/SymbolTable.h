@@ -32,16 +32,15 @@ enum GeneralType
     ALIAS
 };
 
-struct Type{
+struct TypeInfo
+{
     GeneralType general;
     string name;
     int array_dim = -1;
-    std::shared_ptr<Type> element_type;
-    bool operator!=(Type other);
-    bool operator==(Type other);
+    std::shared_ptr<TypeInfo> element_type;
+    bool operator!=(TypeInfo other);
+    bool operator==(TypeInfo other);
 };
-
-
 
 /*
  *   --> Kind = What is this identifier used as (Procedure, Constant, Variable, Name of a type)
@@ -65,7 +64,7 @@ struct IdentInfo
     string name; // Useful since sometimes the name of the identifier may be "lost" along the way, e.g. when tracing
     Kind kind;
     Node *node;
-    Type type;
+    TypeInfo type;
 };
 
 class SymbolTable
@@ -73,19 +72,19 @@ class SymbolTable
 
 private:
     std::unordered_map<string, IdentInfo> table_;
-    std::unordered_map<string, std::map<string, Type>> records_;
+    std::unordered_map<string, std::map<string, TypeInfo>> records_;
 
 public:
     explicit SymbolTable() = default;
 
     void insert(const string &name, Kind k, Node *node, GeneralType general_type, string type = "");
-    void insert(const string &name, Kind k, Node *node, const Type& type);
-    void insert_array_type(const string &name, Node* node,Type* element_type, int dimension);
-    void insert_record(const string &record_name, std::vector<std::pair<string, Type>> fields);
+    void insert(const string &name, Kind k, Node *node, const TypeInfo &type);
+    void insert_array_type(const string &name, Node *node, TypeInfo *element_type, int dimension);
+    void insert_record(const string &record_name, std::vector<std::pair<string, TypeInfo>> fields);
 
     IdentInfo *lookup(const std::string &name);
-    Type* lookup_field(const string &record_name, const string &field_name);
-    std::optional<std::map<string,Type>> lookup_record(const string& record_name);
+    TypeInfo *lookup_field(const string &record_name, const string &field_name);
+    std::optional<std::map<string, TypeInfo>> lookup_record(const string &record_name);
 };
 
 #endif // OBERON0C_SYMBOLTABLE_H
