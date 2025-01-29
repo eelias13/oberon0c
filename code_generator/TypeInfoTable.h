@@ -17,22 +17,6 @@ enum TypeTag
     // NO_TAG
 };
 
-
-// struct TypeInfoClass
-// {
-//     TypeTag tag;
-//     std::vector<llvm::Type*> llvmType;
-//     union Value
-//     {
-//         constexpr Value() : record(){};
-//         constexpr ~Value(){};
-//         constexpr Value(Value& v) { if(v.array.first == nullptr && v.array.second == -1){record = v.record;} else{array = v.array;}}
-//         std::pair<TypeInfoClass *, int> array = {nullptr,-1};
-//         std::vector<std::pair<std::string, TypeInfoClass *>> record;
-//     } value;
-// 
-// };
-
 struct TypeInfoClass
 {
     TypeTag tag;

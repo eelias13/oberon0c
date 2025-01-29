@@ -10,11 +10,11 @@ VAR
     g : INTEGER;
     h : INTEGER;
 
-PROCEDURE func(a, b : INTEGER);
+PROCEDURE func(x, y : INTEGER);
 VAR j : INTEGER;
 BEGIN
     j := 0;
-    WHILE j < a + b DO
+    WHILE j < x + y DO
         j := j + 1
     END
 END func;

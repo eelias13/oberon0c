@@ -88,6 +88,8 @@ int main(const int argc, const char *argv[]) {
             CodeGenerator code_gen(filename,output_type);
             code_gen.generate_code(*ast);
 
+            logger.info("Code generation successful.");
+
         }
 
     }else{

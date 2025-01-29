@@ -185,8 +185,17 @@ void CodeGenerator::visit(IdentSelectorExpressionNode &node)
     std::string name = ident->get_value();
     auto p = variables_.lookup(name);
 
-    llvm::Value *var = std::get<0>(p);
-    TypeInfoClass *type = std::get<1>(p);
+    if(!p){
+        panic("Failed lookup for identifier '" + ident->get_value() + "'.");
+    }
+
+    llvm::Value *var = std::get<0>(*p);
+    TypeInfoClass *type = std::get<1>(*p).get();
+
+    if(!node.get_selector() || node.get_selector()->get_selector()->empty()){
+        visit(*ident);
+        return;
+    }
 
     auto selectors = *(node.get_selector()->get_selector());
 
@@ -251,14 +260,23 @@ void CodeGenerator::visit(IdentNode &ident)
     std::string name = ident.get_value();
     auto p = variables_.lookup(name);
 
-    llvm::Value *var = std::get<0>(p);
-    TypeInfoClass *type = std::get<1>(p);
+    if(!p){
+        panic("Failed lookup for identifier '" + ident.get_value() + "'.");
+    }
+
+    llvm::Value *var = std::get<0>(*p);
+    TypeInfoClass *type = std::get<1>(*p).get();
 
     llvm::Value *zero = llvm::ConstantInt::get(llvm::Type::getInt64Ty(ctx_), 0);
 
     assert(type->llvmType.size() == 1);
-    llvm::Value *val = builder_->CreateLoad(type->llvmType[0], var, "load_" + name);
-    value_ = val;
+    if(!var->getType()->isPointerTy()){
+        value_ = var;
+    }else{
+        llvm::Value *val = builder_->CreateLoad(type->llvmType[0], var, "load_" + name);
+        value_ = val;
+    }
+
 }
 
 void CodeGenerator::visit(IntNode &val)
@@ -327,7 +345,7 @@ void CodeGenerator::visit(DeclarationsNode &node)
         llvm::AllocaInst *var = builder_->CreateAlloca(type->llvmType[0], nullptr, name);
         builder_->CreateStore(value, var);
 
-        variables_.insert(ident->get_value(), var, type);
+        variables_.insert(ident->get_value(), var, std::make_shared<TypeInfoClass>(*type));
     }
 
     auto variables = node.get_variables();
@@ -343,20 +361,16 @@ void CodeGenerator::visit(DeclarationsNode &node)
             auto type = type_table_.lookup(ident->get_actual_type().name);
             assert(type->llvmType.size() == 1);
 
-            it->second->accept(*this);
-            llvm::Value *value = value_;
-
             llvm::AllocaInst *var = builder_->CreateAlloca(type->llvmType[0], nullptr, name);
-            builder_->CreateStore(value, var);
+            variables_.insert(ident->get_value(), var, std::make_shared<TypeInfoClass>(*type));
 
-            variables_.insert(ident->get_value(), var, type);
-
-            auto procedures = node.get_procedures();
-            for (auto itr = procedures.begin(); itr != procedures.end(); itr++)
-            {
-                visit(**itr);
-            }
         }
+    }
+
+    auto procedures = node.get_procedures();
+    for (auto itr = procedures.begin(); itr != procedures.end(); itr++)
+    {
+        visit(**itr);
     }
 }
 
@@ -394,6 +408,8 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
     variables_.beginScope();
     type_table_.beginScope();
 
+    auto prev_block = builder_->GetInsertBlock();
+
     auto name = node.get_names().first->get_value();
     auto arguments = node.get_parameters();
 
@@ -405,8 +421,6 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
         bool is_var = std::get<0>(**itr);
         auto idents = std::get<1>(**itr).get();
         auto typenode = std::get<2>(**itr).get();
-
-        // TODO: Insert the parameters into the variables_ table AND add the information if this is a pointer!
 
         // Determine LLVM Type
         if (typenode->getNodeType() == NodeType::array_type || typenode->getNodeType() == NodeType::record_type)
@@ -428,7 +442,7 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
 
         for (auto param = idents->begin(); param != idents->end(); param++)
         {
-            variables_.insert(param->get()->get_value(), nullptr, type_info, is_var);
+            variables_.insert(param->get()->get_value(), nullptr, std::make_shared<TypeInfoClass>(*type_info), is_var);
             llvm_params.push_back(llvm_type);
         }
     }
@@ -440,7 +454,7 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
     auto function = cast<Function>(procedure.getCallee());
     procedures_[name] = function;
 
-    // Set the argument names
+    // Set the argument names and update the variables_ table entries
     auto arg_itr = function->arg_begin();
     for (auto itr = arguments->begin(); itr != arguments->end(); itr++)
     {
@@ -452,6 +466,13 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
             {
                 panic("Number of arguments in source-code function does not equal number of arguments of LLVM-Function-Type");
             }
+
+            auto arg_info = variables_.lookup(param->get()->get_value());
+            if(!arg_info){
+                panic("Failed lookup for identifier '" + param->get()->get_value() + "'.");
+            }
+
+            std::get<0>(*arg_info) = arg_itr;
 
             arg_itr->setName(param->get()->get_value());
             arg_itr++;
@@ -471,6 +492,7 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
 
     // Add Return
     builder_->CreateRetVoid();
+    builder_->SetInsertPoint(prev_block);
 }
 
 void CodeGenerator::visit(RecordTypeNode &node)
