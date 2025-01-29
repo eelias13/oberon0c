@@ -2,7 +2,7 @@ MODULE Square;
 VAR
   num, result: INTEGER;
 
-PROCEDURE CalcSquare(x: INTEGER);
+PROCEDURE CalcSquare(VAR x: INTEGER);
 BEGIN
   result := x * x
 END CalcSquare;

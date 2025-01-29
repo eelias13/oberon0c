@@ -66,6 +66,8 @@ public:
     void visit(BinaryExpressionNode &) override;
     void visit(UnaryExpressionNode &) override;
     void visit(IdentSelectorExpressionNode &) override;
+    void LoadIdentSelector(IdentNode &ident, SelectorNode *selector, bool return_pointer = false);
+    void LoadIdent(IdentNode &, bool return_pointer = false);
 
     void visit(IdentNode &) override;
     void visit(IntNode &) override;
@@ -88,6 +90,7 @@ public:
     void visit(ModuleNode &) override;
 
     void generate_code(ModuleNode &);
+
 };
 
 #endif // OBERON0C_CODEGENERATOR_H

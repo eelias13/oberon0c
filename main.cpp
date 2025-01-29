@@ -82,7 +82,7 @@ int main(const int argc, const char *argv[]) {
         }
         else{
 
-            logger.info("Semantic checking successful.");
+            logger.info("Semantic checking successful. Starting code generation...");
 
             // Code Generation
             CodeGenerator code_gen(filename,output_type);

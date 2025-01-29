@@ -182,22 +182,27 @@ void CodeGenerator::visit(IdentSelectorExpressionNode &node)
 
     auto ident = node.get_identifier();
     assert(!ident->get_type_embedding().has_value());
-    std::string name = ident->get_value();
+    LoadIdentSelector(*ident, node.get_selector());
+}
+
+void CodeGenerator::LoadIdentSelector(IdentNode& ident, SelectorNode* selector, bool return_pointer){
+    std::string name = ident.get_value();
     auto p = variables_.lookup(name);
 
     if(!p){
-        panic("Failed lookup for identifier '" + ident->get_value() + "'.");
+        panic("Failed lookup for identifier '" + ident.get_value() + "'.");
     }
 
     llvm::Value *var = std::get<0>(*p);
     TypeInfoClass *type = std::get<1>(*p).get();
 
-    if(!node.get_selector() || node.get_selector()->get_selector()->empty()){
-        visit(*ident);
+    if(!selector || selector->get_selector()->empty()){
+
+        LoadIdent(ident,return_pointer);
         return;
     }
 
-    auto selectors = *(node.get_selector()->get_selector());
+    auto selectors = *(selector->get_selector());
 
     assert(selectors.size() > 0);
 
@@ -249,13 +254,22 @@ void CodeGenerator::visit(IdentSelectorExpressionNode &node)
     }
 
     assert(type->llvmType.size() == 1);
-    llvm::Value *val = builder_->CreateLoad(type->llvmType[0], var, "load_" + name);
-    value_ = val;
+
+    if(return_pointer){
+        value_ = var;
+    }else{
+        llvm::Value *val = builder_->CreateLoad(type->llvmType[0], var, "load_" + name);
+        value_ = val;
+    }
+
 }
 
 void CodeGenerator::visit(IdentNode &ident)
 {
+    LoadIdent(ident, false);
+}
 
+void CodeGenerator::LoadIdent(IdentNode& ident, bool return_pointer){
     assert(!ident.get_type_embedding().has_value());
     std::string name = ident.get_value();
     auto p = variables_.lookup(name);
@@ -266,17 +280,24 @@ void CodeGenerator::visit(IdentNode &ident)
 
     llvm::Value *var = std::get<0>(*p);
     TypeInfoClass *type = std::get<1>(*p).get();
+    bool is_pointer = std::get<2>(*p);
 
     llvm::Value *zero = llvm::ConstantInt::get(llvm::Type::getInt64Ty(ctx_), 0);
 
     assert(type->llvmType.size() == 1);
-    if(!var->getType()->isPointerTy()){
+    if(!var->getType()->isPointerTy() || return_pointer){
         value_ = var;
     }else{
-        llvm::Value *val = builder_->CreateLoad(type->llvmType[0], var, "load_" + name);
-        value_ = val;
-    }
 
+        if(is_pointer){
+            auto val = builder_->CreateLoad(type->llvmType[0]->getPointerTo(), var, "load_" + name);
+            auto deref = builder_->CreateLoad(type->llvmType[0],val,"deref_" + name);
+            value_ = deref;
+        }else{
+            llvm::Value *val = builder_->CreateLoad(type->llvmType[0], var, "load_" + name);
+            value_ = val;
+        }
+    }
 }
 
 void CodeGenerator::visit(IntNode &val)
@@ -400,7 +421,6 @@ void CodeGenerator::visit(ArrayTypeNode &node)
     assert(val > 0);
 
     auto type = node.get_type_node();
-    visit(*type);
 }
 
 void CodeGenerator::visit(ProcedureDeclarationNode &node)
@@ -552,8 +572,19 @@ void CodeGenerator::visit(StatementNode &node)
     }
 }
 
-void CodeGenerator::visit(AssignmentNode &)
+void CodeGenerator::visit(AssignmentNode &node)
 {
+
+    auto ident = node.get_variable();
+    auto selector = node.get_selector();
+    auto expr = node.get_expr();
+
+    visit(*expr);
+    auto value = value_;
+
+    LoadIdentSelector(*ident,selector, true);
+    builder_->CreateStore(value,value_);
+
 }
 
 void CodeGenerator::visit(IfStatementNode &node)
@@ -679,14 +710,15 @@ void CodeGenerator::visit(ProcedureCallNode &node)
                     panic("Constant expression for VAR argument in call to '" + procedure_name + "'.");
                 }
 
-                // TODO: Call to a general ident-selector-method with an "treat as pointer" boolean
-                // OR:
-                // TODO: Call to a method that finds the variable info and then sets its "is_pointer" value to true    <-- unneeded probably!
+                auto id_expr = dynamic_cast<IdentSelectorExpressionNode*>((*act_itr).get());
+                LoadIdentSelector(*(id_expr->get_identifier()), id_expr->get_selector(), true);
 
             }
+            else{
+                visit(**act_itr);
+            }
 
-            visit(**act_itr);
-            arguments.push_back(value_); // TODO: Maybe: Store "is_pointer" in type table --> change code in assignments/expressions and then remember to falsify/restore the "is_pointer"
+            arguments.push_back(value_);
             act_itr++;
         }
     }
