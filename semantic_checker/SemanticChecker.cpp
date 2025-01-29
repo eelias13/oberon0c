@@ -565,7 +565,7 @@ void SemanticChecker::visit(ProcedureDeclarationNode &procedure)
             if (type->getNodeType() == NodeType::array_type || type->getNodeType() == NodeType::record_type)
             {
                 var_type = get_type(*type);
-                logger_.warning(type->pos(), "New Type defined in formal parameters of function. Actual Parameter will never be able to fulfill this type (Note: The Oberon0 compiler follows name-equivalence, not structural equivalence).");
+                logger_.error(type->pos(), "New Type defined in formal parameters of function. Actual Parameter will never be able to fulfill this type (Note: The Oberon0 compiler follows name-equivalence, not structural equivalence).");
             }
             else
             {

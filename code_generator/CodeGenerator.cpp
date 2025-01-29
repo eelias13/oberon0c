@@ -192,7 +192,7 @@ void CodeGenerator::visit(IdentSelectorExpressionNode &node)
 
     assert(selectors.size() > 0);
 
-    llvm::Value *zero = llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx_), 0);
+    llvm::Value *zero = llvm::ConstantInt::get(llvm::Type::getInt64Ty(ctx_), 0);
 
     for (size_t i = 0; i < selectors.size(); i++)
     {
@@ -219,7 +219,7 @@ void CodeGenerator::visit(IdentSelectorExpressionNode &node)
             }
             assert(field_index != -1 && "Field not found in record");
 
-            llvm::Value *field_index_val = llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx_), field_index);
+            llvm::Value *field_index_val = llvm::ConstantInt::get(llvm::Type::getInt64Ty(ctx_), field_index);
             var = builder_->CreateGEP(type->llvmType[0], var, {zero, field_index_val}, "rec_field_" + field_name);
 
             type = record_fields[field_index].second;
@@ -294,7 +294,6 @@ void CodeGenerator::visit(DeclarationsNode &node)
             break;
         default:
             panic("unreachable");
-            break;
         }
     }
 
@@ -379,6 +378,10 @@ void CodeGenerator::visit(ArrayTypeNode &node)
 
 void CodeGenerator::visit(ProcedureDeclarationNode &node)
 {
+
+    variables_.beginScope();
+    type_table_.beginScope();
+
     auto name = node.get_names().first->get_value();
     auto arguments = node.get_parameters();
 
@@ -394,13 +397,23 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
         // TODO: Insert the parameters into the variables_ table AND add the information if this is a pointer!
 
         // Determine LLVM Type
-        llvm::Type *llvm_type = llvm::IntegerType::getInt64Ty(ctx_);                     // TODO: Get an actual type
+        if(typenode->getNodeType() == NodeType::array_type || typenode->getNodeType() == NodeType::record_type){
+            panic("New type defined in declaration of procedure '" + name + "'.");
+        }
+
+        auto type_info = type_table_.lookup(dynamic_cast<IdentNode*>(typenode)->get_value());
+        if(!type_info){
+            panic("No type information found for '" + dynamic_cast<IdentNode*>(typenode)->get_value() + "'.");
+        }
+
+        llvm::Type *llvm_type = type_info->llvmType.at(0);
         if(is_var){
             llvm_type = llvm_type->getPointerTo();
         }
 
         for(auto param = idents->begin(); param != idents->end(); param++)
         {
+            variables_.insert(param->get()->get_value(), nullptr, type_info,is_var);
             llvm_params.push_back(llvm_type);
         }
     }
@@ -435,6 +448,9 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
     // Add Procedure Declaration and Statements
     visit(*node.get_declarations());
     visit(*node.get_statements());
+
+    variables_.endScope();
+    type_table_.endScope();
 
     // Add Return
     builder_->CreateRetVoid();
@@ -692,6 +708,12 @@ void CodeGenerator::visit(WhileStatementNode &node)
 void CodeGenerator::visit(ModuleNode &node)
 {
 
+    variables_.beginScope();
+    type_table_.beginScope();
+
+    type_table_.insert("INTEGER",TypeInfoClass(INTEGER_TAG,{llvm::Type::getInt64Ty(ctx_)}));
+    type_table_.insert("BOOLEAN",TypeInfoClass(BOOLEAN_TAG,{llvm::Type::getInt1Ty(ctx_)}));
+
     // global declarations
     visit(*node.get_declarations());
 
@@ -704,9 +726,13 @@ void CodeGenerator::visit(ModuleNode &node)
     // statements
     visit(*node.get_statements());
 
+    variables_.endScope();
+    type_table_.endScope();
+
     // return value
     builder_->CreateRet(builder_->getInt32(0));
     verifyFunction(*main_fct, &errs());
+
 }
 
 void CodeGenerator::emit()
