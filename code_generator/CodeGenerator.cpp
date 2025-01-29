@@ -244,9 +244,21 @@ void CodeGenerator::visit(IdentSelectorExpressionNode &node)
     value_ = val;
 }
 
-void CodeGenerator::visit(IdentNode &node)
+void CodeGenerator::visit(IdentNode &ident)
 {
-    //panic("unreachable this should be handled in IdentSelectorExpressionNode");
+
+    assert(!ident.get_type_embedding().has_value());
+    std::string name = ident.get_value();
+    auto p = variables_.lookup(name);
+
+    llvm::Value *var = std::get<0>(p);
+    TypeInfoClass *type = std::get<1>(p);
+
+    llvm::Value *zero = llvm::ConstantInt::get(llvm::Type::getInt64Ty(ctx_), 0);
+
+    assert(type->llvmType.size() == 1);
+    llvm::Value *val = builder_->CreateLoad(type->llvmType[0], var, "load_" + name);
+    value_ = val;
 }
 
 void CodeGenerator::visit(IntNode &val)
@@ -259,7 +271,7 @@ void CodeGenerator::visit(IntNode &val)
 
 void CodeGenerator::visit(SelectorNode &node)
 {
-    //panic("unreachable this should be handled in IdentSelectorExpressionNode");
+    panic("unreachable this should be handled in IdentSelectorExpressionNode");
 }
 
 void CodeGenerator::visit(DeclarationsNode &node)
@@ -397,23 +409,26 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
         // TODO: Insert the parameters into the variables_ table AND add the information if this is a pointer!
 
         // Determine LLVM Type
-        if(typenode->getNodeType() == NodeType::array_type || typenode->getNodeType() == NodeType::record_type){
+        if (typenode->getNodeType() == NodeType::array_type || typenode->getNodeType() == NodeType::record_type)
+        {
             panic("New type defined in declaration of procedure '" + name + "'.");
         }
 
-        auto type_info = type_table_.lookup(dynamic_cast<IdentNode*>(typenode)->get_value());
-        if(!type_info){
-            panic("No type information found for '" + dynamic_cast<IdentNode*>(typenode)->get_value() + "'.");
+        auto type_info = type_table_.lookup(dynamic_cast<IdentNode *>(typenode)->get_value());
+        if (!type_info)
+        {
+            panic("No type information found for '" + dynamic_cast<IdentNode *>(typenode)->get_value() + "'.");
         }
 
         llvm::Type *llvm_type = type_info->llvmType.at(0);
-        if(is_var){
+        if (is_var)
+        {
             llvm_type = llvm_type->getPointerTo();
         }
 
-        for(auto param = idents->begin(); param != idents->end(); param++)
+        for (auto param = idents->begin(); param != idents->end(); param++)
         {
-            variables_.insert(param->get()->get_value(), nullptr, type_info,is_var);
+            variables_.insert(param->get()->get_value(), nullptr, type_info, is_var);
             llvm_params.push_back(llvm_type);
         }
     }
@@ -427,17 +442,19 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
 
     // Set the argument names
     auto arg_itr = function->arg_begin();
-    for(auto itr = arguments->begin(); itr != arguments->end(); itr++){
+    for (auto itr = arguments->begin(); itr != arguments->end(); itr++)
+    {
         auto idents = std::get<1>(**itr).get();
-        for (auto param = idents->begin(); param != idents->end(); param++){
+        for (auto param = idents->begin(); param != idents->end(); param++)
+        {
 
-            if(arg_itr == function->arg_end()){
+            if (arg_itr == function->arg_end())
+            {
                 panic("Number of arguments in source-code function does not equal number of arguments of LLVM-Function-Type");
             }
 
             arg_itr->setName(param->get()->get_value());
             arg_itr++;
-
         }
     }
 
@@ -522,20 +539,21 @@ void CodeGenerator::visit(IfStatementNode &node)
     // Set up initial Blocks
     auto then = BasicBlock::Create(builder_->getContext(), "then", builder_->GetInsertBlock()->getParent());
     // Set up Else-If blocks
-    std::vector<BasicBlock*> cond_branches;
-    std::vector<BasicBlock*> then_branches;
+    std::vector<BasicBlock *> cond_branches;
+    std::vector<BasicBlock *> then_branches;
     auto else_ifs = node.get_else_ifs();
     int branch_counter = 0;
-    for(auto itr = else_ifs->begin(); itr != else_ifs->end(); itr++){
+    for (auto itr = else_ifs->begin(); itr != else_ifs->end(); itr++)
+    {
         string cond_branch_name = to_string(branch_counter) + "_cond";
         string then_branch_name = to_string(branch_counter) + "_then";
-        cond_branches.push_back(BasicBlock::Create(builder_->getContext(), cond_branch_name,builder_->GetInsertBlock()->getParent()));
-        then_branches.push_back(BasicBlock::Create(builder_->getContext(), then_branch_name,builder_->GetInsertBlock()->getParent()));
+        cond_branches.push_back(BasicBlock::Create(builder_->getContext(), cond_branch_name, builder_->GetInsertBlock()->getParent()));
+        then_branches.push_back(BasicBlock::Create(builder_->getContext(), then_branch_name, builder_->GetInsertBlock()->getParent()));
         branch_counter++;
     }
 
     // Set up Else block
-    auto else_block = BasicBlock::Create(builder_->getContext(), "else",builder_->GetInsertBlock()->getParent());
+    auto else_block = BasicBlock::Create(builder_->getContext(), "else", builder_->GetInsertBlock()->getParent());
 
     // Set up post-branch block
     auto post_branch = BasicBlock::Create(builder_->getContext(), "post_branch", builder_->GetInsertBlock()->getParent());
@@ -545,21 +563,28 @@ void CodeGenerator::visit(IfStatementNode &node)
     auto initial_cond = value_;
 
     // Create initial branch
-    if(cond_branches.empty()){
+    if (cond_branches.empty())
+    {
         builder_->CreateCondBr(initial_cond, then, else_block);
-    }else{
+    }
+    else
+    {
         builder_->CreateCondBr(initial_cond, then, cond_branches[0]);
 
         // Populate Condition Branches
-        for(int i = 0; i < cond_branches.size(); i++){
+        for (int i = 0; i < cond_branches.size(); i++)
+        {
 
             builder_->SetInsertPoint(cond_branches[i]);
             visit(*(*else_ifs)[i].first);
             auto cond = value_;
 
-            if(i < cond_branches.size() - 1){
-                builder_->CreateCondBr(cond, then_branches[i],cond_branches[i+1]);
-            }else{
+            if (i < cond_branches.size() - 1)
+            {
+                builder_->CreateCondBr(cond, then_branches[i], cond_branches[i + 1]);
+            }
+            else
+            {
                 builder_->CreateCondBr(cond, then_branches[i], else_block);
             }
 
@@ -572,7 +597,8 @@ void CodeGenerator::visit(IfStatementNode &node)
     builder_->CreateBr(post_branch);
 
     // Populate "Then" Blocks
-    for(int i = 0; i < then_branches.size(); i++){
+    for (int i = 0; i < then_branches.size(); i++)
+    {
         builder_->SetInsertPoint(then_branches[i]);
         visit(*(*else_ifs)[i].second);
         builder_->CreateBr(post_branch);
@@ -604,7 +630,7 @@ void CodeGenerator::visit(ProcedureCallNode &node)
 
     auto formal_parameters = node.get_declaration()->get_parameters();
     auto actual_parameters = node.get_parameters();
-    std::vector<Value*> arguments;
+    std::vector<Value *> arguments;
 
     auto act_itr = actual_parameters->begin();
     for (auto param_outer = formal_parameters->begin(); param_outer != formal_parameters->end(); param_outer++)
@@ -623,8 +649,10 @@ void CodeGenerator::visit(ProcedureCallNode &node)
 
             // Generate argument
 
-            if(is_var){
-                if((**act_itr).getNodeType() != NodeType::ident_selector_expression){
+            if (is_var)
+            {
+                if ((**act_itr).getNodeType() != NodeType::ident_selector_expression)
+                {
                     panic("Constant expression for VAR argument in call to '" + procedure_name + "'.");
                 }
 
@@ -635,7 +663,7 @@ void CodeGenerator::visit(ProcedureCallNode &node)
             }
 
             visit(**act_itr);
-            arguments.push_back(value_);                // TODO: Maybe: Store "is_pointer" in type table --> change code in assignments/expressions and then remember to falsify/restore the "is_pointer"
+            arguments.push_back(value_); // TODO: Maybe: Store "is_pointer" in type table --> change code in assignments/expressions and then remember to falsify/restore the "is_pointer"
             act_itr++;
         }
     }
@@ -711,8 +739,8 @@ void CodeGenerator::visit(ModuleNode &node)
     variables_.beginScope();
     type_table_.beginScope();
 
-    type_table_.insert("INTEGER",TypeInfoClass(INTEGER_TAG,{llvm::Type::getInt64Ty(ctx_)}));
-    type_table_.insert("BOOLEAN",TypeInfoClass(BOOLEAN_TAG,{llvm::Type::getInt1Ty(ctx_)}));
+    type_table_.insert("INTEGER", TypeInfoClass(INTEGER_TAG, {llvm::Type::getInt64Ty(ctx_)}));
+    type_table_.insert("BOOLEAN", TypeInfoClass(BOOLEAN_TAG, {llvm::Type::getInt1Ty(ctx_)}));
 
     // define main
     auto main = module_->getOrInsertFunction(node.get_name().first->get_value(), builder_->getInt32Ty());
@@ -732,7 +760,6 @@ void CodeGenerator::visit(ModuleNode &node)
     // return value
     builder_->CreateRet(builder_->getInt32(0));
     verifyFunction(*main_fct, &errs());
-
 }
 
 void CodeGenerator::emit()
