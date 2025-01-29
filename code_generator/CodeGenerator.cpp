@@ -246,7 +246,7 @@ void CodeGenerator::visit(IdentSelectorExpressionNode &node)
 
 void CodeGenerator::visit(IdentNode &node)
 {
-    panic("unreachable this should be handled in IdentSelectorExpressionNode");
+    //panic("unreachable this should be handled in IdentSelectorExpressionNode");
 }
 
 void CodeGenerator::visit(IntNode &val)
@@ -259,7 +259,7 @@ void CodeGenerator::visit(IntNode &val)
 
 void CodeGenerator::visit(SelectorNode &node)
 {
-    panic("unreachable this should be handled in IdentSelectorExpressionNode");
+    //panic("unreachable this should be handled in IdentSelectorExpressionNode");
 }
 
 void CodeGenerator::visit(DeclarationsNode &node)
@@ -714,14 +714,14 @@ void CodeGenerator::visit(ModuleNode &node)
     type_table_.insert("INTEGER",TypeInfoClass(INTEGER_TAG,{llvm::Type::getInt64Ty(ctx_)}));
     type_table_.insert("BOOLEAN",TypeInfoClass(BOOLEAN_TAG,{llvm::Type::getInt1Ty(ctx_)}));
 
-    // global declarations
-    visit(*node.get_declarations());
-
     // define main
     auto main = module_->getOrInsertFunction(node.get_name().first->get_value(), builder_->getInt32Ty());
     auto main_fct = cast<Function>(main.getCallee());
     auto entry = BasicBlock::Create(builder_->getContext(), "entry", main_fct);
     builder_->SetInsertPoint(entry);
+
+    // global declarations
+    visit(*node.get_declarations());
 
     // statements
     visit(*node.get_statements());
