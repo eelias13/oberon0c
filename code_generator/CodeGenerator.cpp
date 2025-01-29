@@ -90,61 +90,59 @@ void CodeGenerator::visit(BinaryExpressionNode &expr)
     auto op = expr.get_op();
 
     expr.get_lhs()->accept(*this);
-    llvm::Value *lhsValue = values_.back();
-    values_.pop_back();
+    llvm::Value *lhsValue = value_;
 
     // add Short-Circuit Evaluation
 
     expr.get_rhs()->accept(*this);
-    llvm::Value *rhsValue = values_.back();
-    values_.pop_back();
+    llvm::Value *rhsValue = value_;
 
     switch (op)
     {
 
     // math operation
     case SourceOperator::PLUS:
-        values_.push_back(builder_->CreateAdd(lhsValue, rhsValue, "add"));
+        value_ = builder_->CreateAdd(lhsValue, rhsValue, "add");
         break;
     case SourceOperator::MINUS:
-        values_.push_back(builder_->CreateSub(lhsValue, rhsValue, "sub"));
+        value_ = builder_->CreateSub(lhsValue, rhsValue, "sub");
         break;
     case SourceOperator::MULT:
-        values_.push_back(builder_->CreateMul(lhsValue, rhsValue, "mul"));
+        value_ = builder_->CreateMul(lhsValue, rhsValue, "mul");
         break;
     case SourceOperator::DIV:
-        values_.push_back(builder_->CreateSDiv(lhsValue, rhsValue, "div"));
+        value_ = builder_->CreateSDiv(lhsValue, rhsValue, "div");
         break;
 
     case SourceOperator::MOD:
-        values_.push_back(builder_->CreateSRem(lhsValue, rhsValue, "mod"));
+        value_ = builder_->CreateSRem(lhsValue, rhsValue, "mod");
         break;
     // logical operation
     case SourceOperator::OR:
-        values_.push_back(builder_->CreateOr(lhsValue, rhsValue, "or"));
+        value_ = builder_->CreateOr(lhsValue, rhsValue, "or");
         break;
 
     case SourceOperator::AND:
-        values_.push_back(builder_->CreateAnd(lhsValue, rhsValue, "and"));
+        value_ = builder_->CreateAnd(lhsValue, rhsValue, "and");
         break;
     // comp operation
     case SourceOperator::EQ:
-        values_.push_back(builder_->CreateICmpEQ(lhsValue, rhsValue, "eq"));
+        value_ = builder_->CreateICmpEQ(lhsValue, rhsValue, "eq");
         break;
     case SourceOperator::NEQ:
-        values_.push_back(builder_->CreateICmpNE(lhsValue, rhsValue, "neq"));
+        value_ = builder_->CreateICmpNE(lhsValue, rhsValue, "neq");
         break;
     case SourceOperator::LT:
-        values_.push_back(builder_->CreateICmpSLT(lhsValue, rhsValue, "lt"));
+        value_ = builder_->CreateICmpSLT(lhsValue, rhsValue, "lt");
         break;
     case SourceOperator::LEQ:
-        values_.push_back(builder_->CreateICmpSLE(lhsValue, rhsValue, "leq"));
+        value_ = builder_->CreateICmpSLE(lhsValue, rhsValue, "leq");
         break;
     case SourceOperator::GT:
-        values_.push_back(builder_->CreateICmpSGT(lhsValue, rhsValue, "gt"));
+        value_ = builder_->CreateICmpSGT(lhsValue, rhsValue, "gt");
         break;
     case SourceOperator::GEQ:
-        values_.push_back(builder_->CreateICmpSGE(lhsValue, rhsValue, "geq"));
+        value_ = builder_->CreateICmpSGE(lhsValue, rhsValue, "geq");
         break;
 
     default:
@@ -156,19 +154,18 @@ void CodeGenerator::visit(UnaryExpressionNode &expr)
 
 {
     expr.get_expr()->accept(*this);
-    llvm::Value *exprValue = values_.back();
-    values_.pop_back();
+    llvm::Value *exprValue = value_;
 
     SourceOperator op = expr.get_op();
 
     switch (op)
     {
     case SourceOperator::NEG:
-        values_.push_back(builder_->CreateNeg(exprValue, "neg"));
+        value_ = builder_->CreateNeg(exprValue, "neg");
         break;
 
     case SourceOperator::NOT:
-        values_.push_back(builder_->CreateNot(exprValue, "not"));
+        value_ = builder_->CreateNot(exprValue, "not");
         break;
 
     default:
@@ -178,34 +175,73 @@ void CodeGenerator::visit(UnaryExpressionNode &expr)
 
 void CodeGenerator::visit(IdentSelectorExpressionNode &node)
 {
-    node.get_identifier()->accept(*this);
-    llvm::Value *ident = values_.back();
-    values_.pop_back();
 
-    node.get_selector()->accept(*this);
-    llvm::Value *selector = values_.back();
-    values_.pop_back();
+    auto ident = node.get_identifier();
+    assert(!ident.get_type_embedding().has_value());
+    std::string name = ident->get_value();
+    auto p = variables_.lookup(name);
+
+    llvm::AllocaInst *var = p.first;
+    TypeInfoClass *type = p.second;
+
+    auto selectors = node.get_selector()->get_selector();
+
+    assert(selectors.size() > 0);
+
+    llvm::Value *zero = llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx_), 0);
+
+    for (size_t i = 0; i < selectors.size(); i++)
+    {
+        auto &[is_array, ident_ptr, expr_ptr] = selectors[i];
+
+        if (!expr_ptr) // Record field access
+        {
+            assert(type->tag == TypeTag::RECORD);
+            auto &record_fields = type->value.record;
+
+            assert(ident_ptr);
+            std::string field_name = ident_ptr->get_value();
+
+            // Find the field index
+            int field_index = -1;
+            for (size_t j = 0; j < record_fields.size(); j++)
+            {
+                if (record_fields[j].first == field_name)
+                {
+                    field_index = j;
+                    break;
+                }
+            }
+            assert(field_index != -1 && "Field not found in record");
+
+            llvm::Value *field_index_val = llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx_), field_index);
+            var = builder_.CreateGEP(type->llvmType[0], var, {zero, field_index_val}, "rec_field_" + field_name);
+
+            type = record_fields[field_index].second; // Update type
+        }
+        else // Array access
+        {
+            assert(type->tag == TypeTag::ARRAY);
+            assert(!ident_ptr);
+
+            expr_ptr->accept(*this);
+            llvm::Value *index_val = value_;
+
+            assert(type->llvmType.size() == 1);
+            var = builder_.CreateGEP(type->llvmType[0], var, {zero, index_val}, "arr_ptr_" + name);
+
+            type = type->value.array; // Update type
+        }
+    }
+
+    assert(type->llvmType.size() == 1);
+    llvm::Value *val = builder_.CreateLoad(type->llvmType[0], var, "load_" + name);
+    value_ = val;
 }
 
 void CodeGenerator::visit(IdentNode &node)
 {
-
-    if (node.get_more_types_yay().has_value())
-    {
-        auto type_info = node.get_more_types_yay().value();
-    }
-    else
-    {
-
-        std::string name = node.get_value();
-        auto var = variables_.find(name);
-
-        if (var == variables_.end())
-        {
-            panic("variable is not defined");
-        }
-        values_.push_back(var->second);
-    }
+    panic("unreachable this should be handled in IdentSelectorExpressionNode");
 }
 
 void CodeGenerator::visit(IntNode &val)
@@ -213,11 +249,12 @@ void CodeGenerator::visit(IntNode &val)
     long int_val = val.get_value();
     llvm::Type *longType = llvm::Type::getInt64Ty(ctx_);
     auto *longValue = llvm::ConstantInt::get(longType, int_val);
-    values_.push_back(longValue);
+    value_ = longValue;
 }
 
-void CodeGenerator::visit(SelectorNode &)
+void CodeGenerator::visit(SelectorNode &node)
 {
+    panic("unreachable this should be handled in IdentSelectorExpressionNode");
 }
 
 void CodeGenerator::visit(DeclarationsNode &node)
@@ -266,19 +303,40 @@ void CodeGenerator::visit(DeclarationsNode &node)
 
         auto ident = it->first;
 
-        assert(!ident->get_more_types_yay().has_value());
+        assert(!ident->get_type_embedding().has_value());
         std::string name = ident.get_value();
 
         auto type = type_table_.lookup(ident->get_actual_type().name);
         assert(type->llvmType.size() == 1);
 
         it->second->accept(*this);
-        llvm::Value *value = values_.back();
+        llvm::Value *value = value_;
 
-        llvm::AllocaInst *var = builder_.CreateAlloca(type->llvmType, nullptr, name);
+        llvm::AllocaInst *var = builder_.CreateAlloca(type->llvmType[0], nullptr, name);
         builder.CreateStore(value, var);
 
-        variables_.insert(ident, var)
+        variables_.insert(ident->name_, var, type);
+    }
+
+    auto variables = node.get_variables();
+    for (auto it = begin(variables); it != end(variables); ++it)
+    {
+
+        auto ident = it->first;
+
+        assert(!ident->get_type_embedding().has_value());
+        std::string name = ident.get_value();
+
+        auto type = type_table_.lookup(ident->get_actual_type().name);
+        assert(type->llvmType.size() == 1);
+
+        it->second->accept(*this);
+        llvm::Value *value = value_;
+
+        llvm::AllocaInst *var = builder_.CreateAlloca(type->llvmType[0], nullptr, name);
+        builder.CreateStore(value, var);
+
+        variables_.insert(ident->name_, var, type);
     }
 }
 
@@ -317,15 +375,15 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
 
     // Create Signature
     // TODO Add Types
-    auto signature = FunctionType::get(builder_->getVoidTy(),{}, false);
+    auto signature = FunctionType::get(builder_->getVoidTy(), {}, false);
 
     // Define Function and add it to FunctionList
-    auto procedure = module_->getOrInsertFunction(name,builder_->getVoidTy());
+    auto procedure = module_->getOrInsertFunction(name, builder_->getVoidTy());
     auto function = cast<Function>(procedure.getCallee());
     procedures_[name] = function;
 
     // Define BasicBlock
-    auto block = BasicBlock::Create(builder_->getContext(),"entry",function);
+    auto block = BasicBlock::Create(builder_->getContext(), "entry", function);
     builder_->SetInsertPoint(block);
 
     // Add Procedure Declaration and Statements
@@ -404,7 +462,8 @@ void CodeGenerator::visit(ProcedureCallNode &node)
 {
     // Get ProcedureName
     auto procedure_name = node.get_name();
-    if(procedures_.find(procedure_name) == procedures_.end()){
+    if (procedures_.find(procedure_name) == procedures_.end())
+    {
         panic("Code generator could not find procedure '" + procedure_name + "' in procedure_list.");
     }
 
@@ -449,7 +508,7 @@ void CodeGenerator::visit(ModuleNode &node)
 
     // return value
     builder_->CreateRet(builder_->getInt32(0));
-    verifyFunction(*main_fct,&errs());
+    verifyFunction(*main_fct, &errs());
 }
 
 void CodeGenerator::emit()

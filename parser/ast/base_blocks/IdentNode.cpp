@@ -17,13 +17,14 @@ void IdentNode::print(ostream &stream) const
     stream << name_;
 }
 
-void IdentNode::set_more_types_yay(TypeInfo more_types_yay)
+void IdentNode::set_type_embedding(TypeInfo type_embedding)
 {
-    more_types_yay_ = more_types_yay;
+    type_embedding_ = type_embedding;
 }
-std::optional<TypeInfo> IdentNode::get_more_types_yay(){
-    return more_types_yay_; 
-    }
+std::optional<TypeInfo> IdentNode::get_type_embedding()
+{
+    return type_embedding_;
+}
 
 string IdentNode::get_value()
 {
