@@ -1,3 +1,4 @@
+/*
 #include "TypeInfo.h"
 
 TypeInfoTable::TypeInfoTable()
@@ -20,3 +21,4 @@ TypeInfoClass *TypeInfoTable::lookup(std::string name)
     }
     return &types_[name];
 }
+*/

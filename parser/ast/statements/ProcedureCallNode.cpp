@@ -61,3 +61,11 @@ string ProcedureCallNode::get_name() {
     return procedure_name;
 }
 
+void ProcedureCallNode::set_declaration(ProcedureDeclarationNode *declaration) {
+    procedure_declaration_ = declaration;
+}
+
+ProcedureDeclarationNode *ProcedureCallNode::get_declaration() {
+    return procedure_declaration_;
+}
+

@@ -9,6 +9,7 @@
 #include "scanner/Scanner.h"
 #include "parser/Parser.h"
 #include "semantic_checker/SemanticChecker.h"
+#include "code_generator/CodeGenerator.h"
 
 using std::cerr;
 using std::cout;
@@ -16,25 +17,51 @@ using std::endl;
 using std::string;
 
 int main(const int argc, const char *argv[]) {
-    if (argc < 2 || argc > 3) {
-        cerr << "Usage: oberon0c <filename> (--debug)" << endl;
+
+    const auto usage_string = "Usage: oberon0c <filename> [-o|-s|-ll] [--debug]";
+
+    if (argc < 2 || argc > 4) {
+        cerr << usage_string << endl;
         exit(1);
     }
     string filename = argv[1];
     Logger logger;
 
+    OutputFileType output_type;
     if(argc > 2){
-        if(string(argv[2]) == "--debug"){
+        auto flag = string(argv[2]);
+        if(flag == "-o" || flag == "-O"){
+            output_type = OutputFileType::ObjectFile;
+        }
+        else if(flag == "-s" || flag == "-S"){
+            output_type = OutputFileType::AssemblyFile;
+        }
+        else if(flag == "-ll" || flag == "-LL"){
+            output_type = OutputFileType::LLVMIRFile;
+        }
+        else{
+            cerr << "Invalid argument: " << argv[2] << std::endl << usage_string << std::endl;
+            exit(1);
+        }
+    }
+    else{
+        output_type = OutputFileType::LLVMIRFile;
+    }
+
+    if(argc > 3){
+        if(string(argv[3]) == "--debug"){
             logger.setLevel(LogLevel::DEBUG);
         }
         else{
-            cerr << "Invalid argument: " << argv[2] << std::endl << "Usage: oberon0c <filename> (--debug)" << std::endl;
+            cerr << "Invalid argument: " << argv[3] << std::endl << usage_string << std::endl;
             exit(1);
         }
     }
     else{
         logger.setLevel(LogLevel::INFO);
     }
+
+
 
     // Scanning
     Scanner scanner(filename, logger);
@@ -56,7 +83,10 @@ int main(const int argc, const char *argv[]) {
         else{
 
             logger.info("Semantic checking successful.");
+
             // Code Generation
+            CodeGenerator code_gen(filename,output_type);
+            code_gen.generate_code(*ast);
 
         }
 

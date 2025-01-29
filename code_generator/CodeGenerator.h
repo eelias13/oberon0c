@@ -51,11 +51,10 @@ private:
 
     std::vector<llvm::Value *> values_;
     std::unordered_map<string, llvm::AllocaInst *> variables_;
-    TypeInfoTable type_table_;
-    TypeInfoClass temp_type_;
+    //TypeInfoTable type_table_;
+    //TypeInfoClass temp_type_;
 
-    void
-    init_target_machine();
+    void init_target_machine();
     void init_builder();
     void emit();
 

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.29)
+cmake_minimum_required(VERSION 3.28)
 
 set(OBERON0_C "oberon0c")
 project(${OBERON0_C} VERSION 0.0.1)
@@ -89,7 +89,12 @@ set(SEMANTIC_SOURCES
         semantic_checker/ScopeTable.h
 )
 
-set(ALL_SOURCES global.h ${UTIL_SOURCES} ${SCANNER_SOURCES} ${PARSER_SOURCES} ${SEMANTIC_SOURCES}
+set(CODEGEN_SOURCES
+        code_generator/CodeGenerator.cpp
+        code_generator/CodeGenerator.h
+)
+
+set(ALL_SOURCES global.h ${UTIL_SOURCES} ${SCANNER_SOURCES} ${PARSER_SOURCES} ${SEMANTIC_SOURCES} ${CODEGEN_SOURCES}
 )
 
 add_executable(${OBERON0_C} main.cpp ${ALL_SOURCES})

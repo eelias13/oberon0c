@@ -6,6 +6,7 @@
 #define OBERON0C_PROCEDURECALLNODE_H
 
 #include "parser/ast/statements/StatementNode.h"
+#include "parser/ast/declarations/ProcedureDeclarationNode.h"
 #include <memory>
 #include <vector>
 
@@ -19,6 +20,8 @@ class ProcedureCallNode : public StatementNode {
         std::unique_ptr<IdentNode> ident_;
         std::unique_ptr<SelectorNode> selector_;
         string procedure_name;
+
+        ProcedureDeclarationNode* procedure_declaration_ = nullptr;
 
         std::unique_ptr<std::vector<std::unique_ptr<ExpressionNode>>> parameters_;
 
@@ -35,6 +38,9 @@ class ProcedureCallNode : public StatementNode {
         string get_name();
 
         std::vector<std::unique_ptr<ExpressionNode>>* get_parameters();
+
+        void set_declaration(ProcedureDeclarationNode*);
+        ProcedureDeclarationNode* get_declaration();
 
 };
 

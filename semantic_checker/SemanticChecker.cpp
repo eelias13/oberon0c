@@ -1039,6 +1039,7 @@ void SemanticChecker::visit(ProcedureCallNode &node)
     auto *procedure_decl = dynamic_cast<ProcedureDeclarationNode *>(ident_info->node);
     int formal_parameter_nr = procedure_decl->get_parameter_number();
     auto actual_parameters = node.get_parameters();
+    node.set_declaration(procedure_decl);
 
     if (!actual_parameters)
     {

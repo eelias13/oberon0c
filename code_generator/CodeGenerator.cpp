@@ -171,6 +171,11 @@ void CodeGenerator::visit(UnaryExpressionNode &expr)
         values_.push_back(builder_->CreateNot(exprValue, "not"));
         break;
 
+    case SourceOperator::NO_OPERATOR:
+    case SourceOperator::PAREN:
+        values_.push_back(exprValue);
+        break;
+
     default:
         panic("Unsupported unary operator");
     }
@@ -180,11 +185,13 @@ void CodeGenerator::visit(IdentSelectorExpressionNode &node)
 {
     node.get_identifier()->accept(*this);
     llvm::Value *ident = values_.back();
-    values_.pop_back();
+    //values_.pop_back();
 
-    node.get_selector()->accept(*this);
-    llvm::Value *selector = values_.back();
-    values_.pop_back();
+    if(node.get_selector()){
+        node.get_selector()->accept(*this);
+        llvm::Value *selector = values_.back();
+        //values_.pop_back();
+    }
 }
 
 void CodeGenerator::visit(IdentNode &node)
@@ -202,7 +209,9 @@ void CodeGenerator::visit(IdentNode &node)
 
         if (var == variables_.end())
         {
-            panic("variable is not defined");
+            //panic("variable is not defined");
+            values_.push_back(llvm::ConstantInt::get(llvm::Type::getInt64Ty(ctx_), 12));
+            return;
         }
         values_.push_back(var->second);
     }
@@ -222,11 +231,11 @@ void CodeGenerator::visit(SelectorNode &)
 
 void CodeGenerator::visit(DeclarationsNode &node)
 {
-
+    /*
     auto types = node.get_typenames();
     for (auto it = begin(types); it != end(types); ++it)
     {
-        auto name = it->first->name_;
+        auto name = it->first->get_value();
         it->second->accept(*this);
         auto type = temp_type_;
 
@@ -235,24 +244,19 @@ void CodeGenerator::visit(DeclarationsNode &node)
         {
         case TypeTag::RECORD:
             assert(type.llvmType.size() >= 1);
-            llvm::StructType *llvm_type = llvm::StructType::create(ctx_, type.llvmType, name);
-            type.llvmType = {llvm_type};
+            type.llvmType = {llvm::StructType::create(ctx_, type.llvmType, name)};
             break;
         case TypeTag::ARRAY:
             assert(type.llvmType.size() == 1);
-            llvm::ArrayType *llvm_type = llvm::ArrayType::get(type.llvmType, type.value.array);
-            type.llvmType = {llvm_type};
-
+            type.llvmType = {llvm::ArrayType::get(type.llvmType, type.value.array)};
             break;
         case TypeTag::INTEGER:
             assert(type.llvmType.size() == 1);
-            llvm::Type *llvm_type = llvm::Type::getInt32Ty(ctx_);
-            type.llvmType = {llvm_type};
+            type.llvmType = {llvm::Type::getInt32Ty(ctx_)};
             break;
         case TypeTag::BOOLEAN:
             assert(type.llvmType.size() == 1);
-            llvm::Type *llvm_type = llvm::Type::getInt1Ty(ctx_);
-            type.llvmType = {llvm_type};
+            type.llvmType = {llvm::Type::getInt1Ty(ctx_)};
             break;
         default:
             panic("unreachable");
@@ -267,7 +271,7 @@ void CodeGenerator::visit(DeclarationsNode &node)
         auto ident = it->first;
 
         assert(!ident->get_more_types_yay().has_value());
-        std::string name = ident.get_value();
+        std::string name = ident->get_value();
 
         auto type = type_table_.lookup(ident->get_actual_type().name);
         assert(type->llvmType.size() == 1);
@@ -275,11 +279,18 @@ void CodeGenerator::visit(DeclarationsNode &node)
         it->second->accept(*this);
         llvm::Value *value = values_.back();
 
-        llvm::AllocaInst *var = builder_.CreateAlloca(type->llvmType, nullptr, name);
-        builder.CreateStore(value, var);
+        llvm::AllocaInst *var = builder_->CreateAlloca(type->llvmType, nullptr, name);
+        builder_->CreateStore(value, var);
 
-        variables_.insert(ident, var)
+        variables_.insert({ident->get_value(), var}):
     }
+     */
+
+    auto procedures = node.get_procedures();
+    for(auto itr = procedures.begin(); itr != procedures.end(); itr++){
+        visit(**itr);
+    }
+
 }
 
 void CodeGenerator::visit(TypeNode &node)
@@ -314,15 +325,50 @@ void CodeGenerator::visit(ArrayTypeNode &node)
 void CodeGenerator::visit(ProcedureDeclarationNode &node)
 {
     auto name = node.get_names().first->get_value();
+    auto arguments = node.get_parameters();
 
     // Create Signature
-    // TODO Add Types
-    auto signature = FunctionType::get(builder_->getVoidTy(),{}, false);
+    std::vector<Type*> llvm_params;
+    for(auto itr = arguments->begin(); itr != arguments->end(); itr++){
+
+        bool is_var = std::get<0>(**itr);
+        auto idents = std::get<1>(**itr).get();
+        auto typenode = std::get<2>(**itr).get();
+
+        // Determine LLVM Type
+        llvm::Type *llvm_type = llvm::IntegerType::getInt64Ty(ctx_);                     // TODO: Get an actual type
+        if(is_var){
+            llvm_type = llvm_type->getPointerTo();
+        }
+
+        for(auto param = idents->begin(); param != idents->end(); param++){
+            llvm_params.push_back(llvm_type);
+        }
+
+    }
+
+    auto signature = FunctionType::get(builder_->getVoidTy(),llvm_params, false);
 
     // Define Function and add it to FunctionList
-    auto procedure = module_->getOrInsertFunction(name,builder_->getVoidTy());
+    auto procedure = module_->getOrInsertFunction(name,signature);
     auto function = cast<Function>(procedure.getCallee());
     procedures_[name] = function;
+
+    // Set the argument names
+    auto arg_itr = function->arg_begin();
+    for(auto itr = arguments->begin(); itr != arguments->end(); itr++){
+        auto idents = std::get<1>(**itr).get();
+        for(auto param = idents->begin(); param != idents->end(); param++){
+
+            if(arg_itr == function->arg_end()){
+                panic("Number of arguments in source-code function does not equal number of arguments of LLVM-Function-Type");
+            }
+
+            arg_itr->setName(param->get()->get_value());
+            arg_itr++;
+
+        }
+    }
 
     // Define BasicBlock
     auto block = BasicBlock::Create(builder_->getContext(),"entry",function);
@@ -338,6 +384,7 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
 
 void CodeGenerator::visit(RecordTypeNode &node)
 {
+    /*
     auto raw_fields = node.get_fields();
     auto field_types = *node.get_field_types();
 
@@ -366,6 +413,7 @@ void CodeGenerator::visit(RecordTypeNode &node)
     temp_type_.llvmType = llvm_fields;
     temp_type_.tag = TypeTag::RECORD;
     temp_type_.value.record = info_fields;
+    */
 }
 
 void CodeGenerator::visit(StatementNode &node)
@@ -396,8 +444,78 @@ void CodeGenerator::visit(AssignmentNode &)
 {
 }
 
-void CodeGenerator::visit(IfStatementNode &)
+void CodeGenerator::visit(IfStatementNode &node)
 {
+
+    // Set up initial Blocks
+    auto then = BasicBlock::Create(builder_->getContext(), "then", builder_->GetInsertBlock()->getParent());
+    // Set up Else-If blocks
+    std::vector<BasicBlock*> cond_branches;
+    std::vector<BasicBlock*> then_branches;
+    auto else_ifs = node.get_else_ifs();
+    int branch_counter = 0;
+    for(auto itr = else_ifs->begin(); itr != else_ifs->end(); itr++){
+        string cond_branch_name = to_string(branch_counter) + "_cond";
+        string then_branch_name = to_string(branch_counter) + "_then";
+        cond_branches.push_back(BasicBlock::Create(builder_->getContext(), cond_branch_name,builder_->GetInsertBlock()->getParent()));
+        then_branches.push_back(BasicBlock::Create(builder_->getContext(), then_branch_name,builder_->GetInsertBlock()->getParent()));
+        branch_counter++;
+    }
+
+    // Set up Else block
+    auto else_block = BasicBlock::Create(builder_->getContext(), "else",builder_->GetInsertBlock()->getParent());
+
+    // Set up post-branch block
+    auto post_branch = BasicBlock::Create(builder_->getContext(), "post_branch", builder_->GetInsertBlock()->getParent());
+
+    // Evaluate initial condition
+    visit(*node.get_condition());
+    auto initial_cond = values_.back();
+    values_.pop_back();
+
+    // Create initial branch
+    if(cond_branches.empty()){
+        builder_->CreateCondBr(initial_cond, then, else_block);
+    }else{
+        builder_->CreateCondBr(initial_cond, then, cond_branches[0]);
+
+        // Populate Condition Branches
+        for(int i = 0; i < cond_branches.size(); i++){
+
+            builder_->SetInsertPoint(cond_branches[i]);
+            visit(*(*else_ifs)[i].first);
+            auto cond = values_.back();
+            values_.pop_back();
+
+            if(i < cond_branches.size() - 1){
+                builder_->CreateCondBr(cond, then_branches[i],cond_branches[i+1]);
+            }else{
+                builder_->CreateCondBr(cond, then_branches[i], else_block);
+            }
+
+        }
+    }
+
+    // Populate initial then-block
+    builder_->SetInsertPoint(then);
+    visit(*node.get_then());
+    builder_->CreateBr(post_branch);
+
+    // Populate "Then" Blocks
+    for(int i = 0; i < then_branches.size(); i++){
+        builder_->SetInsertPoint(then_branches[i]);
+        visit(*(*else_ifs)[i].second);
+        builder_->CreateBr(post_branch);
+    }
+
+    // Populate "Else" Block
+    builder_->SetInsertPoint(else_block);
+    visit(*node.get_else());
+    builder_->CreateBr(post_branch);
+
+    // Continue post branch
+    builder_->SetInsertPoint(post_branch);
+
 }
 
 void CodeGenerator::visit(ProcedureCallNode &node)
@@ -409,14 +527,63 @@ void CodeGenerator::visit(ProcedureCallNode &node)
     }
 
     // Get Arguments
-    // TODO
+    if(!node.get_declaration()){
+        panic("Declaration node pointer not set for call to procedure '" + procedure_name + "'.");
+    }
+
+    auto formal_parameters = node.get_declaration()->get_parameters();
+    auto actual_parameters = node.get_parameters();
+    std::vector<Value*> arguments;
+
+    auto act_itr = actual_parameters->begin();
+    for(auto param_outer = formal_parameters->begin(); param_outer != formal_parameters->end(); param_outer++){
+
+        bool is_var = std::get<0>(**param_outer);
+        auto ident_list = std::get<1>(**param_outer).get();
+
+        for(auto formal_param = ident_list->begin(); formal_param != ident_list->end(); formal_param++){
+
+            if(act_itr == actual_parameters->end()){
+                panic("Number of actual parameters does not equal number of formal parameters for call to procedure '" + procedure_name + "'.");
+            }
+
+            // Generate argument                        // TODO: Reference stuff
+            visit(**act_itr);
+            arguments.push_back(values_.back());        // TODO: Maybe: Store "is_pointer" in type table --> change code in assignments/expressions and then remember to falsify/restore the "is_pointer"
+            values_.pop_back();
+
+            act_itr++;
+
+        }
+
+    }
 
     // Create Call
-    builder_->CreateCall(procedures_[procedure_name]);
+    builder_->CreateCall(procedures_[procedure_name],arguments);
 }
 
-void CodeGenerator::visit(RepeatStatementNode &)
+void CodeGenerator::visit(RepeatStatementNode &node)
 {
+    // Create Basic Blocks
+    auto loop = BasicBlock::Create(builder_->getContext(), "loop",builder_->GetInsertBlock()->getParent());
+    auto tail = BasicBlock::Create(builder_->getContext(), "tail",builder_->GetInsertBlock()->getParent());
+
+    // Enter loop
+    builder_->CreateBr(loop);
+    builder_->SetInsertPoint(loop);
+
+    // Loop statements
+    visit(*node.get_statements());
+
+    // Check condition
+    visit(*node.get_expr());
+    auto cond = values_.back();
+
+    // Jump forwards if condition is true, otherwise backwards
+    builder_->CreateCondBr(cond,tail,loop);
+
+    builder_->SetInsertPoint(tail);
+
 }
 
 void CodeGenerator::visit(StatementSequenceNode &node)
@@ -428,8 +595,35 @@ void CodeGenerator::visit(StatementSequenceNode &node)
     }
 }
 
-void CodeGenerator::visit(WhileStatementNode &)
+void CodeGenerator::visit(WhileStatementNode &node)
 {
+
+    // Create Blocks
+    auto check = BasicBlock::Create(builder_->getContext(), "check",builder_->GetInsertBlock()->getParent());
+    auto loop = BasicBlock::Create(builder_->getContext(), "loop",builder_->GetInsertBlock()->getParent());
+    auto tail = BasicBlock::Create(builder_->getContext(), "tail",builder_->GetInsertBlock()->getParent());
+
+
+    // Jump into check
+    builder_->CreateBr(check);
+
+    // Create Loop Block
+    builder_->SetInsertPoint(loop);
+    visit(*node.get_statements());
+    builder_->CreateBr(check);
+
+    // Check Condition
+    builder_->SetInsertPoint(check);
+
+    visit(*node.get_expr());
+    auto cond = values_.back();
+    values_.pop_back();
+
+    builder_->CreateCondBr(cond,loop,tail);
+
+    // Tail
+    builder_->SetInsertPoint(tail);
+
 }
 
 void CodeGenerator::visit(ModuleNode &node)

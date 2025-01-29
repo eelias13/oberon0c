@@ -3,13 +3,15 @@
 #include <string>
 #include <unordered_map>
 
+/*
+
 enum TypeTag
 {
-    RECORD,
-    ARRAY,
-    INTEGER,
-    BOOLEAN,
-}
+    RECORD_TAG,
+    ARRAY_TAG,
+    INTEGER_TAG,
+    BOOLEAN_TAG,
+};
 
 struct TypeInfoClass
 {
@@ -20,7 +22,7 @@ struct TypeInfoClass
         std::pair<TypeInfoClass *, int> array;
         std::vector<std::pair<std::string, TypeInfoClass *>> record;
     } value;
-}
+};
 
 class TypeInfoTable
 {
@@ -32,3 +34,4 @@ public:
     void insert(std::string name, TypeInfoClass type_info);
     TypeInfoClass *lookup(std::string name);
 };
+*/
