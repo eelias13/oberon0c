@@ -266,15 +266,24 @@ void CodeGenerator::LoadIdentSelector(IdentNode& ident, SelectorNode* selector, 
 
 void CodeGenerator::visit(IdentNode &ident)
 {
+    if (ident.get_type_embedding().has_value())
+    {
+        auto a = ident.get_type_embedding().value();
+        assert(a.general == GeneralType::BOOLEAN || a.general == GeneralType::INTEGER);
+        return;
+    }
     LoadIdent(ident, false);
 }
+
+
 
 void CodeGenerator::LoadIdent(IdentNode& ident, bool return_pointer){
     assert(!ident.get_type_embedding().has_value());
     std::string name = ident.get_value();
     auto p = variables_.lookup(name);
 
-    if(!p){
+    if (!p)
+    {
         panic("Failed lookup for identifier '" + ident.get_value() + "'.");
     }
 
@@ -346,6 +355,8 @@ void CodeGenerator::visit(DeclarationsNode &node)
         default:
             panic("unreachable (faulty tag)");
         }
+
+        type_table_.insert(name, type);
     }
 
     auto constants = node.get_constants();
@@ -384,7 +395,6 @@ void CodeGenerator::visit(DeclarationsNode &node)
 
             llvm::AllocaInst *var = builder_->CreateAlloca(type->llvmType[0], nullptr, name);
             variables_.insert(ident->get_value(), var, std::make_shared<TypeInfoClass>(*type));
-
         }
     }
 
@@ -420,7 +430,44 @@ void CodeGenerator::visit(ArrayTypeNode &node)
     auto val = dim.value();
     assert(val > 0);
 
-    auto type = node.get_type_node();
+    string type_name = node.get_base_type_info().name;
+    auto info_class = type_table_.lookup(type_name);
+
+    temp_type_.tag = TypeTag::ARRAY_TAG;
+    get<TypeInfoClass::Array>(temp_type_.value) = {info_class, val};
+    // get<TypeInfoClass::Array>(temp_type_.value).size = ;
+}
+
+void CodeGenerator::visit(RecordTypeNode &node)
+{
+    auto raw_fields = node.get_fields();
+    auto field_types = *node.get_field_types();
+
+    std::vector<std::pair<std::string, TypeInfoClass *>> info_fields;
+    std::vector<llvm::Type *> llvm_fields;
+
+    for (auto it = begin(raw_fields); it != end(raw_fields); ++it)
+    {
+        auto names = it->first;
+        for (auto field_it = begin(names); field_it != end(names); ++field_it)
+        {
+
+            std::string name = *field_it;
+
+            assert(field_types.find(name) != field_types.end());
+
+            TypeInfo type_info = field_types[name];
+
+            TypeInfoClass *info_class = type_table_.lookup(type_info.name);
+            assert(info_class->llvmType.size() == 1);
+            llvm_fields.push_back(info_class->llvmType[0]);
+            info_fields.push_back(std::make_pair(name, info_class));
+        }
+    }
+
+    temp_type_.llvmType = llvm_fields;
+    temp_type_.tag = TypeTag::RECORD_TAG;
+    get<TypeInfoClass::Record>(temp_type_.value).fields = info_fields;
 }
 
 void CodeGenerator::visit(ProcedureDeclarationNode &node)
@@ -489,7 +536,8 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
             }
 
             auto arg_info = variables_.lookup(param->get()->get_value());
-            if(!arg_info){
+            if (!arg_info)
+            {
                 panic("Failed lookup for identifier '" + param->get()->get_value() + "'.");
             }
 
@@ -516,37 +564,6 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
     builder_->SetInsertPoint(prev_block);
 }
 
-void CodeGenerator::visit(RecordTypeNode &node)
-{
-    auto raw_fields = node.get_fields();
-    auto field_types = *node.get_field_types();
-
-    std::vector<std::pair<std::string, TypeInfoClass *>> info_fields;
-    std::vector<llvm::Type *> llvm_fields;
-
-    for (auto it = begin(raw_fields); it != end(raw_fields); ++it)
-    {
-        auto names = it->first;
-        for (auto field_it = begin(names); field_it != end(names); ++field_it)
-        {
-
-            std::string name = *field_it;
-
-            assert(field_types.find(name) != field_types.end());
-
-            TypeInfo type_info = field_types[name];
-
-            TypeInfoClass *info_class = type_table_.lookup(type_info.name);
-            assert(info_class->llvmType.size() == 1);
-            llvm_fields.push_back(info_class->llvmType[0]);
-            info_fields.push_back(std::make_pair(name, info_class));
-        }
-    }
-
-    temp_type_.llvmType = llvm_fields;
-    temp_type_.tag = TypeTag::RECORD_TAG;
-    get<TypeInfoClass::Record>(temp_type_.value).fields = info_fields;
-}
 
 void CodeGenerator::visit(StatementNode &node)
 {
@@ -748,7 +765,6 @@ void CodeGenerator::visit(RepeatStatementNode &node)
     builder_->CreateCondBr(cond, tail, loop);
 
     builder_->SetInsertPoint(tail);
-
 }
 
 void CodeGenerator::visit(StatementSequenceNode &node)
