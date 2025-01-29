@@ -16,7 +16,7 @@ private:
     TypeInfo formal_type_;
     TypeInfo actual_type_;
     TypeNode *type_node_;
-    std::optional<TypeInfo> more_types_yay_;
+    std::optional<TypeInfo> type_embedding_;
 
 public:
     IdentNode(FilePos pos, const string name) : TypeNode(NodeType::ident, pos), name_(name) {};
@@ -25,8 +25,8 @@ public:
     void print(std::ostream &stream) const override;
 
     string get_value();
-    void set_more_types_yay(TypeInfo);
-    std::optional<TypeInfo> get_more_types_yay();
+    void set_type_embedding(TypeInfo);
+    std::optional<TypeInfo> get_type_embedding();
     void set_types(TypeInfo formal, TypeInfo actual, TypeNode *node);
     TypeInfo get_formal_type();
     TypeInfo get_actual_type();

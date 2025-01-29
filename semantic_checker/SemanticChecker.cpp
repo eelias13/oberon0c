@@ -459,17 +459,17 @@ TypeInfo SemanticChecker::get_type(TypeNode &type, const string &alias = "")
 
         if (ident_name == int_string)
         {
-            ident_node.set_more_types_yay(integer_type);
+            ident_node.set_type_embedding(integer_type);
             return integer_type;
         }
         else if (ident_name == bool_string)
         {
-            ident_node.set_more_types_yay(boolean_type);
+            ident_node.set_type_embedding(boolean_type);
             return boolean_type;
         }
         else
         {
-            ident_node.set_more_types_yay({ALIAS, ident_name});
+            ident_node.set_type_embedding({ALIAS, ident_name});
             return {ALIAS, ident_name};
         }
     }

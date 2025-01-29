@@ -25,6 +25,7 @@
 #include <unordered_map>
 #include <utility>
 #include "TypeInfoTable.h"
+#include "VariableTable.h"
 #include "parser/ast/NodeVisitor.h"
 
 enum class OutputFileType
@@ -47,12 +48,12 @@ private:
     const string filename_;
     IRBuilder<> *builder_;
 
-    std::unordered_map<string,Function*> procedures_;
+    std::unordered_map<string, Function *> procedures_;
 
-    std::vector<llvm::Value *> values_;
-    std::unordered_map<string, llvm::AllocaInst *> variables_;
-    //TypeInfoTable type_table_;
-    //TypeInfoClass temp_type_;
+    llvm::Value *value_;
+    VariableTable variables_;
+    TypeInfoTable type_table_;
+    TypeInfoClass temp_type_;
 
     void init_target_machine();
     void init_builder();

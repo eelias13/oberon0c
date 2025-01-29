@@ -90,61 +90,59 @@ void CodeGenerator::visit(BinaryExpressionNode &expr)
     auto op = expr.get_op();
 
     expr.get_lhs()->accept(*this);
-    llvm::Value *lhsValue = values_.back();
-    values_.pop_back();
+    llvm::Value *lhsValue = value_;
 
     // add Short-Circuit Evaluation
 
     expr.get_rhs()->accept(*this);
-    llvm::Value *rhsValue = values_.back();
-    values_.pop_back();
+    llvm::Value *rhsValue = value_;
 
     switch (op)
     {
 
     // math operation
     case SourceOperator::PLUS:
-        values_.push_back(builder_->CreateAdd(lhsValue, rhsValue, "add"));
+        value_ = builder_->CreateAdd(lhsValue, rhsValue, "add");
         break;
     case SourceOperator::MINUS:
-        values_.push_back(builder_->CreateSub(lhsValue, rhsValue, "sub"));
+        value_ = builder_->CreateSub(lhsValue, rhsValue, "sub");
         break;
     case SourceOperator::MULT:
-        values_.push_back(builder_->CreateMul(lhsValue, rhsValue, "mul"));
+        value_ = builder_->CreateMul(lhsValue, rhsValue, "mul");
         break;
     case SourceOperator::DIV:
-        values_.push_back(builder_->CreateSDiv(lhsValue, rhsValue, "div"));
+        value_ = builder_->CreateSDiv(lhsValue, rhsValue, "div");
         break;
 
     case SourceOperator::MOD:
-        values_.push_back(builder_->CreateSRem(lhsValue, rhsValue, "mod"));
+        value_ = builder_->CreateSRem(lhsValue, rhsValue, "mod");
         break;
     // logical operation
     case SourceOperator::OR:
-        values_.push_back(builder_->CreateOr(lhsValue, rhsValue, "or"));
+        value_ = builder_->CreateOr(lhsValue, rhsValue, "or");
         break;
 
     case SourceOperator::AND:
-        values_.push_back(builder_->CreateAnd(lhsValue, rhsValue, "and"));
+        value_ = builder_->CreateAnd(lhsValue, rhsValue, "and");
         break;
     // comp operation
     case SourceOperator::EQ:
-        values_.push_back(builder_->CreateICmpEQ(lhsValue, rhsValue, "eq"));
+        value_ = builder_->CreateICmpEQ(lhsValue, rhsValue, "eq");
         break;
     case SourceOperator::NEQ:
-        values_.push_back(builder_->CreateICmpNE(lhsValue, rhsValue, "neq"));
+        value_ = builder_->CreateICmpNE(lhsValue, rhsValue, "neq");
         break;
     case SourceOperator::LT:
-        values_.push_back(builder_->CreateICmpSLT(lhsValue, rhsValue, "lt"));
+        value_ = builder_->CreateICmpSLT(lhsValue, rhsValue, "lt");
         break;
     case SourceOperator::LEQ:
-        values_.push_back(builder_->CreateICmpSLE(lhsValue, rhsValue, "leq"));
+        value_ = builder_->CreateICmpSLE(lhsValue, rhsValue, "leq");
         break;
     case SourceOperator::GT:
-        values_.push_back(builder_->CreateICmpSGT(lhsValue, rhsValue, "gt"));
+        value_ = builder_->CreateICmpSGT(lhsValue, rhsValue, "gt");
         break;
     case SourceOperator::GEQ:
-        values_.push_back(builder_->CreateICmpSGE(lhsValue, rhsValue, "geq"));
+        value_ = builder_->CreateICmpSGE(lhsValue, rhsValue, "geq");
         break;
 
     default:
@@ -156,24 +154,23 @@ void CodeGenerator::visit(UnaryExpressionNode &expr)
 
 {
     expr.get_expr()->accept(*this);
-    llvm::Value *exprValue = values_.back();
-    values_.pop_back();
+    llvm::Value *exprValue = value_;
 
     SourceOperator op = expr.get_op();
 
     switch (op)
     {
     case SourceOperator::NEG:
-        values_.push_back(builder_->CreateNeg(exprValue, "neg"));
+        value_ = builder_->CreateNeg(exprValue, "neg");
         break;
 
     case SourceOperator::NOT:
-        values_.push_back(builder_->CreateNot(exprValue, "not"));
+        value_ = builder_->CreateNot(exprValue, "not");
         break;
 
     case SourceOperator::NO_OPERATOR:
     case SourceOperator::PAREN:
-        values_.push_back(exprValue);
+        value_ = exprValue;
         break;
 
     default:
@@ -183,38 +180,73 @@ void CodeGenerator::visit(UnaryExpressionNode &expr)
 
 void CodeGenerator::visit(IdentSelectorExpressionNode &node)
 {
-    node.get_identifier()->accept(*this);
-    llvm::Value *ident = values_.back();
-    //values_.pop_back();
 
-    if(node.get_selector()){
-        node.get_selector()->accept(*this);
-        llvm::Value *selector = values_.back();
-        //values_.pop_back();
+    auto ident = node.get_identifier();
+    assert(!ident->get_type_embedding().has_value());
+    std::string name = ident->get_value();
+    auto p = variables_.lookup(name);
+
+    llvm::Value *var = p.first;
+    TypeInfoClass *type = p.second;
+
+    auto selectors = node.get_selector()->get_selector();
+
+    assert(selectors->size() > 0);
+
+    llvm::Value *zero = llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx_), 0);
+
+    for (size_t i = 0; i < selectors->size(); i++)
+    {
+        auto &[is_array, ident_ptr, expr_ptr] = selectors[i];
+
+        if (!expr_ptr) // Record field access
+        {
+            assert(type->tag == TypeTag::RECORD_TAG);
+            auto &record_fields = type->value.record;
+
+            assert(ident_ptr);
+            std::string field_name = ident_ptr->get_value();
+
+            // Find the field index
+            int field_index = -1;
+            for (size_t j = 0; j < record_fields.size(); j++)
+            {
+                if (record_fields[j].first == field_name)
+                {
+                    field_index = j;
+                    break;
+                }
+            }
+            assert(field_index != -1 && "Field not found in record");
+
+            llvm::Value *field_index_val = llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx_), field_index);
+            var = builder_->CreateGEP(type->llvmType[0], var, {zero, field_index_val}, "rec_field_" + field_name);
+
+            type = record_fields[field_index].second; // Update type
+        }
+        else // Array access
+        {
+            assert(type->tag == TypeTag::ARRAY_TAG);
+            assert(!ident_ptr);
+
+            expr_ptr->accept(*this);
+            llvm::Value *index_val = value_;
+
+            assert(type->llvmType.size() == 1);
+            var = builder_->CreateGEP(type->llvmType[0], var, {zero, index_val}, "arr_ptr_" + name);
+
+            type = type->value.array.first; // Update type
+        }
     }
+
+    assert(type->llvmType.size() == 1);
+    llvm::Value *val = builder_->CreateLoad(type->llvmType[0], var, "load_" + name);
+    value_ = val;
 }
 
 void CodeGenerator::visit(IdentNode &node)
 {
-
-    if (node.get_more_types_yay().has_value())
-    {
-        auto type_info = node.get_more_types_yay().value();
-    }
-    else
-    {
-
-        std::string name = node.get_value();
-        auto var = variables_.find(name);
-
-        if (var == variables_.end())
-        {
-            //panic("variable is not defined");
-            values_.push_back(llvm::ConstantInt::get(llvm::Type::getInt64Ty(ctx_), 12));
-            return;
-        }
-        values_.push_back(var->second);
-    }
+    panic("unreachable this should be handled in IdentSelectorExpressionNode");
 }
 
 void CodeGenerator::visit(IntNode &val)
@@ -222,16 +254,17 @@ void CodeGenerator::visit(IntNode &val)
     long int_val = val.get_value();
     llvm::Type *longType = llvm::Type::getInt64Ty(ctx_);
     auto *longValue = llvm::ConstantInt::get(longType, int_val);
-    values_.push_back(longValue);
+    value_ = longValue;
 }
 
-void CodeGenerator::visit(SelectorNode &)
+void CodeGenerator::visit(SelectorNode &node)
 {
+    panic("unreachable this should be handled in IdentSelectorExpressionNode");
 }
 
 void CodeGenerator::visit(DeclarationsNode &node)
 {
-    /*
+
     auto types = node.get_typenames();
     for (auto it = begin(types); it != end(types); ++it)
     {
@@ -242,19 +275,20 @@ void CodeGenerator::visit(DeclarationsNode &node)
         // resolve/create llvm type
         switch (type.tag)
         {
-        case TypeTag::RECORD:
+        case TypeTag::RECORD_TAG:
             assert(type.llvmType.size() >= 1);
             type.llvmType = {llvm::StructType::create(ctx_, type.llvmType, name)};
             break;
-        case TypeTag::ARRAY:
+        case TypeTag::ARRAY_TAG:
             assert(type.llvmType.size() == 1);
-            type.llvmType = {llvm::ArrayType::get(type.llvmType, type.value.array)};
+            type.llvmType = {llvm::ArrayType::get(type.llvmType[0], type.value.array.second)};
+
             break;
-        case TypeTag::INTEGER:
+        case TypeTag::INTEGER_TAG:
             assert(type.llvmType.size() == 1);
-            type.llvmType = {llvm::Type::getInt32Ty(ctx_)};
+            type.llvmType = {llvm::Type::getInt64Ty(ctx_)};
             break;
-        case TypeTag::BOOLEAN:
+        case TypeTag::BOOLEAN_TAG:
             assert(type.llvmType.size() == 1);
             type.llvmType = {llvm::Type::getInt1Ty(ctx_)};
             break;
@@ -270,26 +304,49 @@ void CodeGenerator::visit(DeclarationsNode &node)
 
         auto ident = it->first;
 
-        assert(!ident->get_more_types_yay().has_value());
+        assert(!ident->get_type_embedding().has_value());
         std::string name = ident->get_value();
 
         auto type = type_table_.lookup(ident->get_actual_type().name);
         assert(type->llvmType.size() == 1);
 
         it->second->accept(*this);
-        llvm::Value *value = values_.back();
+        llvm::Value *value = value_;
 
-        llvm::AllocaInst *var = builder_->CreateAlloca(type->llvmType, nullptr, name);
+        llvm::AllocaInst *var = builder_->CreateAlloca(type->llvmType[0], nullptr, name);
         builder_->CreateStore(value, var);
 
-        variables_.insert({ident->get_value(), var}):
+        variables_.insert(ident->get_value(), var, type);
     }
-     */
 
-    auto procedures = node.get_procedures();
-    for(auto itr = procedures.begin(); itr != procedures.end(); itr++){
-        visit(**itr);
+    auto variables = node.get_variables();
+    for (auto it = begin(variables); it != end(variables); ++it)
+    {
+        for(auto ident_itr = it->first.begin(); ident_itr != it->first.end(); ident_itr++){
+            auto ident = *ident_itr;
+
+            assert(!ident->get_type_embedding().has_value());
+            std::string name = ident->get_value();
+
+            auto type = type_table_.lookup(ident->get_actual_type().name);
+            assert(type->llvmType.size() == 1);
+
+            it->second->accept(*this);
+            llvm::Value *value = value_;
+
+            llvm::AllocaInst *var = builder_->CreateAlloca(type->llvmType[0], nullptr, name);
+            builder_->CreateStore(value, var);
+
+            variables_.insert(ident->get_value(), var, type);
+
+            auto procedures = node.get_procedures();
+            for(auto itr = procedures.begin(); itr != procedures.end(); itr++){
+                visit(**itr);
+            }
+
+        }
     }
+
 
 }
 
@@ -384,7 +441,6 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
 
 void CodeGenerator::visit(RecordTypeNode &node)
 {
-    /*
     auto raw_fields = node.get_fields();
     auto field_types = *node.get_field_types();
 
@@ -411,9 +467,8 @@ void CodeGenerator::visit(RecordTypeNode &node)
     }
 
     temp_type_.llvmType = llvm_fields;
-    temp_type_.tag = TypeTag::RECORD;
+    temp_type_.tag = TypeTag::RECORD_TAG;
     temp_type_.value.record = info_fields;
-    */
 }
 
 void CodeGenerator::visit(StatementNode &node)
@@ -470,8 +525,7 @@ void CodeGenerator::visit(IfStatementNode &node)
 
     // Evaluate initial condition
     visit(*node.get_condition());
-    auto initial_cond = values_.back();
-    values_.pop_back();
+    auto initial_cond = value_;
 
     // Create initial branch
     if(cond_branches.empty()){
@@ -484,8 +538,7 @@ void CodeGenerator::visit(IfStatementNode &node)
 
             builder_->SetInsertPoint(cond_branches[i]);
             visit(*(*else_ifs)[i].first);
-            auto cond = values_.back();
-            values_.pop_back();
+            auto cond = value_;
 
             if(i < cond_branches.size() - 1){
                 builder_->CreateCondBr(cond, then_branches[i],cond_branches[i+1]);
@@ -549,8 +602,7 @@ void CodeGenerator::visit(ProcedureCallNode &node)
 
             // Generate argument                        // TODO: Reference stuff
             visit(**act_itr);
-            arguments.push_back(values_.back());        // TODO: Maybe: Store "is_pointer" in type table --> change code in assignments/expressions and then remember to falsify/restore the "is_pointer"
-            values_.pop_back();
+            arguments.push_back(value_);                // TODO: Maybe: Store "is_pointer" in type table --> change code in assignments/expressions and then remember to falsify/restore the "is_pointer"
 
             act_itr++;
 
@@ -577,7 +629,7 @@ void CodeGenerator::visit(RepeatStatementNode &node)
 
     // Check condition
     visit(*node.get_expr());
-    auto cond = values_.back();
+    auto cond = value_;
 
     // Jump forwards if condition is true, otherwise backwards
     builder_->CreateCondBr(cond,tail,loop);
@@ -616,8 +668,7 @@ void CodeGenerator::visit(WhileStatementNode &node)
     builder_->SetInsertPoint(check);
 
     visit(*node.get_expr());
-    auto cond = values_.back();
-    values_.pop_back();
+    auto cond = value_;
 
     builder_->CreateCondBr(cond,loop,tail);
 
