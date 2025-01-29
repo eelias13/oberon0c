@@ -1,13 +1,10 @@
 #include "TypeInfoTable.h"
 
-TypeInfoTable::TypeInfoTable()
-{
-    types_ = std::vector<std::unordered_map<std::string, TypeInfoClass>>();
-}
 void TypeInfoTable::insert(std::string name, TypeInfoClass type_info)
 {
     types_.back().insert({name, type_info});
 }
+
 TypeInfoClass *TypeInfoTable::lookup(std::string name)
 {
 

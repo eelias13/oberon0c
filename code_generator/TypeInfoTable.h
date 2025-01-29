@@ -2,8 +2,10 @@
 #include <utility>
 #include <string>
 #include <unordered_map>
+#include <llvm/IR/Type.h>
 
-
+#ifndef OBERON0C_TYPEINFOTABLE_H
+#define OBERON0C_TYPEINFOTABLE_H
 
 enum TypeTag
 {
@@ -11,17 +13,22 @@ enum TypeTag
     ARRAY_TAG,
     INTEGER_TAG,
     BOOLEAN_TAG,
+    NO_TAG
 };
 
 struct TypeInfoClass
 {
     TypeTag tag;
-    std::vector<llvm::Type *> llvmType;
+    std::vector<llvm::Type*> llvmType;
     union Value
     {
-        std::pair<TypeInfoClass *, int> array;
+        constexpr Value() : record(){};
+        constexpr ~Value(){};
+        constexpr Value(Value& v) { if(v.array.first == nullptr && v.array.second == -1){record = v.record;} else{array = v.array;}}
+        std::pair<TypeInfoClass *, int> array = {nullptr,-1};
         std::vector<std::pair<std::string, TypeInfoClass *>> record;
     } value;
+
 };
 
 class TypeInfoTable
@@ -37,3 +44,5 @@ public:
     void beginScope();
     void endScope();
 };
+
+#endif //OBERON0_TYPEINFOTAG_H
