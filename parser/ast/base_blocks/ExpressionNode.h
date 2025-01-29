@@ -24,7 +24,7 @@ class ExpressionNode : public Node{
         std::optional<long> value_ = std::nullopt;
         TypeInfo formal_type;
         TypeInfo actual_type;
-        TypeNode* type_node;
+        TypeNode* type_node = nullptr;
 
     public:
         explicit ExpressionNode(FilePos pos, NodeType type);

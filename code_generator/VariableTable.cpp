@@ -1,10 +1,10 @@
 #include "VariableTable.h"
 
-void VariableTable::insert(std::string name, llvm::AllocaInst *var, TypeInfoClass *type)
+void VariableTable::insert(std::string name, llvm::AllocaInst *var, TypeInfoClass *type, bool is_pointer)
 {
-    variables_.back().insert({name, {var, type}});
+    variables_.back().insert({name, {var, type, is_pointer}});
 }
-std::pair<llvm::AllocaInst *, TypeInfoClass *> VariableTable::lookup(std::string name)
+std::tuple<llvm::AllocaInst *, TypeInfoClass *, bool> VariableTable::lookup(std::string name)
 {
     for (auto it = variables_.rbegin(); it != variables_.rend(); ++it)
     {
@@ -14,11 +14,11 @@ std::pair<llvm::AllocaInst *, TypeInfoClass *> VariableTable::lookup(std::string
         }
     }
 
-    return {nullptr, nullptr};
+    return {nullptr, nullptr, false};
 }
 void VariableTable::beginScope()
 {
-    variables_.push_back(std::unordered_map<std::string, std::pair<llvm::AllocaInst *, TypeInfoClass *>>());
+    variables_.push_back(std::unordered_map<std::string, std::tuple<llvm::AllocaInst *, TypeInfoClass *, bool>>());
 }
 void VariableTable::endScope()
 {
@@ -27,5 +27,5 @@ void VariableTable::endScope()
 
 VariableTable::VariableTable()
 {
-    variables_ = std::vector<std::unordered_map<std::string, std::pair<llvm::AllocaInst *, TypeInfoClass *>>>();
+    variables_ = std::vector<std::unordered_map<std::string, std::tuple<llvm::AllocaInst *, TypeInfoClass *, bool>>>();
 }

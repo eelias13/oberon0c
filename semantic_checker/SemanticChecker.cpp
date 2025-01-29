@@ -1090,7 +1090,7 @@ void SemanticChecker::visit(ProcedureCallNode &node)
                 // Constants/Literals cannot be passed as "VAR"
                 if (std::get<0>(**fp_section_itr))
                 {
-                    if (evaluate_expression(**act_param_itr, true))
+                    if (evaluate_expression(**act_param_itr, true) || (**act_param_itr).getNodeType() != NodeType::ident_selector_expression)
                     {
                         logger_.error(node.pos(), "Constant/Literal expression passed as 'VAR' in call to procedure '" + ident->get_value() + "'.");
                     }

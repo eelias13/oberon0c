@@ -166,7 +166,7 @@ TypeNode *ExpressionNode::get_type_node() {
 
 TypeInfo ExpressionNode::get_actual_type() {
     return actual_type;
-};
+}
 
 
 UnaryExpressionNode::UnaryExpressionNode(FilePos pos, std::unique_ptr<ExpressionNode> expr, SourceOperator op) : ExpressionNode(pos, NodeType::unary_expression), expr_(std::move(expr)), op_(op){

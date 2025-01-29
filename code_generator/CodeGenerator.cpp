@@ -80,7 +80,6 @@ void CodeGenerator::visit(ExpressionNode &node)
         break;
     default:
         panic("unreachable");
-        return;
     }
 }
 
@@ -186,8 +185,8 @@ void CodeGenerator::visit(IdentSelectorExpressionNode &node)
     std::string name = ident->get_value();
     auto p = variables_.lookup(name);
 
-    llvm::Value *var = p.first;
-    TypeInfoClass *type = p.second;
+    llvm::Value *var = std::get<0>(p);
+    TypeInfoClass *type = std::get<1>(p);
 
     auto selectors = node.get_selector()->get_selector();
 
@@ -197,7 +196,9 @@ void CodeGenerator::visit(IdentSelectorExpressionNode &node)
 
     for (size_t i = 0; i < selectors->size(); i++)
     {
-        auto &[is_array, ident_ptr, expr_ptr] = selectors[i];
+        auto is_array = std::get<0>(selectors->at(i));
+        auto ident_ptr = std::get<1>(selectors->at(i)).get();
+        auto expr_ptr = std::get<2>(selectors->at(i)).get();
 
         if (!expr_ptr) // Record field access
         {
@@ -365,7 +366,6 @@ void CodeGenerator::visit(TypeNode &node)
         break;
     default:
         panic("unreachable");
-        return;
     }
 }
 
@@ -391,6 +391,8 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
         bool is_var = std::get<0>(**itr);
         auto idents = std::get<1>(**itr).get();
         auto typenode = std::get<2>(**itr).get();
+
+        // TODO: Insert the parameters into the variables_ table AND add the information if this is a pointer!
 
         // Determine LLVM Type
         llvm::Type *llvm_type = llvm::IntegerType::getInt64Ty(ctx_);                     // TODO: Get an actual type
@@ -450,10 +452,10 @@ void CodeGenerator::visit(RecordTypeNode &node)
     for (auto it = begin(raw_fields); it != end(raw_fields); ++it)
     {
         auto names = it->first;
-        for (auto it = begin(names); it != end(names); ++it)
+        for (auto field_it = begin(names); field_it != end(names); ++field_it)
         {
 
-            std::string name = *it;
+            std::string name = *field_it;
 
             assert(field_types.find(name) != field_types.end());
 
@@ -600,10 +602,21 @@ void CodeGenerator::visit(ProcedureCallNode &node)
                 panic("Number of actual parameters does not equal number of formal parameters for call to procedure '" + procedure_name + "'.");
             }
 
-            // Generate argument                        // TODO: Reference stuff
+            // Generate argument
+
+            if(is_var){
+                if((**act_itr).getNodeType() != NodeType::ident_selector_expression){
+                    panic("Constant expression for VAR argument in call to '" + procedure_name + "'.");
+                }
+
+                // TODO: Call to a general ident-selector-method with an "treat as pointer" boolean
+                // OR:
+                // TODO: Call to a method that finds the variable info and then sets its "is_pointer" value to true    <-- unneeded probably!
+
+            }
+
             visit(**act_itr);
             arguments.push_back(value_);                // TODO: Maybe: Store "is_pointer" in type table --> change code in assignments/expressions and then remember to falsify/restore the "is_pointer"
-
             act_itr++;
 
         }

@@ -8,12 +8,12 @@
 class VariableTable
 {
 private:
-    std::vector<std::unordered_map<std::string, std::pair<llvm::AllocaInst *, TypeInfoClass *>>> variables_;
+    std::vector<std::unordered_map<std::string, std::tuple<llvm::AllocaInst *, TypeInfoClass *, bool >>> variables_;
 
 public:
     VariableTable(/* args */);
-    void insert(std::string, llvm::AllocaInst *, TypeInfoClass *);
-    std::pair<llvm::AllocaInst *, TypeInfoClass *> lookup(std::string);
+    void insert(std::string, llvm::AllocaInst *, TypeInfoClass *, bool is_pointer = false);
+    std::tuple<llvm::AllocaInst *, TypeInfoClass *, bool> lookup(std::string);
     void beginScope();
     void endScope();
 };
