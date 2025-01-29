@@ -372,7 +372,7 @@ TypeInfo SemanticChecker::check_selector_chain(IdentNode &ident, SelectorNode &s
             }
 
             // Index must evaluate to a non-negative integer
-            auto expr = std::get<2>(*itr).get();
+            auto expr = std::get<2>(*itr);
             if (trace_type(checkType(*expr)).general != INTEGER)
             {
                 logger_.error(selector.pos(), "Array index does not evaluate to an integer.");

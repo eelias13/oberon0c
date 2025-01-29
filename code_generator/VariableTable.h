@@ -5,6 +5,9 @@
 #include <llvm/IR/Type.h>
 #include "TypeInfoTable.h"
 
+#ifndef OBERON0_VARIABLETABLE_H
+#define OBERON0_VARIABLETABLE_H
+
 class VariableTable
 {
 private:
@@ -17,3 +20,5 @@ public:
     void beginScope();
     void endScope();
 };
+
+#endif // OBERON0_VARIABLETABLE_H

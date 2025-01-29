@@ -94,6 +94,8 @@ set(CODEGEN_SOURCES
         code_generator/CodeGenerator.h
         code_generator/TypeInfoTable.cpp
         code_generator/TypeInfoTable.h
+        code_generator/VariableTable.cpp
+        code_generator/VariableTable.h
 )
 
 set(ALL_SOURCES global.h ${UTIL_SOURCES} ${SCANNER_SOURCES} ${PARSER_SOURCES} ${SEMANTIC_SOURCES} ${CODEGEN_SOURCES}

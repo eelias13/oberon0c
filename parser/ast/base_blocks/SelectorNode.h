@@ -13,11 +13,13 @@ class IdentNode;
 class ExpressionNode;
 
 typedef std::tuple<bool,std::unique_ptr<IdentNode>,std::unique_ptr<ExpressionNode>> id_indx_tuple;
+typedef std::tuple<bool,IdentNode*,ExpressionNode*> raw_id_indx_tuple;
 
 class SelectorNode : public Node {
 
     private:
         std::vector<id_indx_tuple> selectors;
+        std::vector<raw_id_indx_tuple> selectors_raw;
 
     public:
         explicit SelectorNode(FilePos pos);
@@ -28,7 +30,7 @@ class SelectorNode : public Node {
         void accept(NodeVisitor &visitor) override;
         void print(std::ostream &stream) const override;
 
-        std::vector<id_indx_tuple>* get_selector();
+        std::vector<raw_id_indx_tuple>* get_selector();
 
 };
 

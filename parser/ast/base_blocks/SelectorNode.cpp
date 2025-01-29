@@ -37,22 +37,23 @@ void SelectorNode::print(ostream &stream) const
 void SelectorNode::add_field(std::unique_ptr<IdentNode> ident)
 {
     selectors.emplace_back(false, std::move(ident), nullptr);
+    selectors_raw.emplace_back(false,ident.get(), nullptr);
 }
 
 void SelectorNode::add_index(std::unique_ptr<ExpressionNode> expr)
 {
     selectors.emplace_back(true, nullptr, std::move(expr));
+    selectors_raw.emplace_back(true, nullptr,expr.get());
 }
 
 SelectorNode::SelectorNode(FilePos pos) : Node(NodeType::selector, pos)
 {
 }
 
-std::vector<id_indx_tuple> *SelectorNode::get_selector() {
+std::vector<raw_id_indx_tuple> *SelectorNode::get_selector() {
     if(selectors.empty()){
         return nullptr;
     }
 
-    return &selectors;
-
+    return &selectors_raw;
 }
