@@ -323,7 +323,7 @@ void CodeGenerator::visit(DeclarationsNode &node)
             type.llvmType = {llvm::Type::getInt1Ty(ctx_)};
             break;
         default:
-            panic("unreachable");
+            panic("unreachable (faulty tag)");
         }
     }
 
@@ -400,6 +400,7 @@ void CodeGenerator::visit(ArrayTypeNode &node)
     assert(val > 0);
 
     auto type = node.get_type_node();
+    visit(*type);
 }
 
 void CodeGenerator::visit(ProcedureDeclarationNode &node)

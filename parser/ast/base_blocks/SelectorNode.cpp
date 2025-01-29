@@ -37,13 +37,13 @@ void SelectorNode::print(ostream &stream) const
 void SelectorNode::add_field(std::unique_ptr<IdentNode> ident)
 {
     selectors.emplace_back(false, std::move(ident), nullptr);
-    selectors_raw.emplace_back(false,ident.get(), nullptr);
+    selectors_raw.emplace_back(false,std::get<1>(selectors.back()).get(), nullptr);
 }
 
 void SelectorNode::add_index(std::unique_ptr<ExpressionNode> expr)
 {
     selectors.emplace_back(true, nullptr, std::move(expr));
-    selectors_raw.emplace_back(true, nullptr,expr.get());
+    selectors_raw.emplace_back(true, nullptr,std::get<2>(selectors.back()).get());
 }
 
 SelectorNode::SelectorNode(FilePos pos) : Node(NodeType::selector, pos)
