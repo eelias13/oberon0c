@@ -76,6 +76,7 @@ public:
     void visit(TypeNode &) override;
     void visit(ArrayTypeNode &) override;
     void visit(DeclarationsNode &) override;
+    void create_declarations(DeclarationsNode &node, bool is_global = false);
     void visit(ProcedureDeclarationNode &) override;
     void visit(RecordTypeNode &) override;
 

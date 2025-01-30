@@ -23,11 +23,11 @@ struct TypeInfoClass
     std::vector<llvm::Type *> llvmType;
     struct Record
     {
-        std::vector<std::pair<std::string, TypeInfoClass *>> fields;
+        std::vector<std::pair<std::string, std::shared_ptr<TypeInfoClass>>> fields;
     };
     struct Array
     {
-        TypeInfoClass *elementType;
+        std::shared_ptr<TypeInfoClass> elementType;
         int size;
     };
     std::variant<Record, Array> value;
