@@ -270,12 +270,18 @@ void CodeGenerator::visit(IdentNode &ident)
     {
         auto a = ident.get_type_embedding().value();
         assert(a.general == GeneralType::BOOLEAN || a.general == GeneralType::INTEGER);
+
+        if(a.general == GeneralType::BOOLEAN){
+            temp_type_ = *type_table_.lookup("BOOLEAN");
+        }
+        else{
+            temp_type_ = *type_table_.lookup("INTEGER");
+        }
+
         return;
     }
     LoadIdent(ident, false);
 }
-
-
 
 void CodeGenerator::LoadIdent(IdentNode& ident, bool return_pointer){
     assert(!ident.get_type_embedding().has_value());
@@ -427,15 +433,15 @@ void CodeGenerator::visit(ArrayTypeNode &node)
 {
     auto dim = node.get_dim();
     assert(dim.has_value());
-    auto val = dim.value();
+    int val = dim.value();
     assert(val > 0);
 
     string type_name = node.get_base_type_info().name;
     auto info_class = type_table_.lookup(type_name);
 
     temp_type_.tag = TypeTag::ARRAY_TAG;
-    get<TypeInfoClass::Array>(temp_type_.value) = {info_class, val};
-    // get<TypeInfoClass::Array>(temp_type_.value).size = ;
+    temp_type_.llvmType = {info_class->llvmType[0]->getPointerTo()};
+    temp_type_.value.emplace<TypeInfoClass::Array>(info_class,val);
 }
 
 void CodeGenerator::visit(RecordTypeNode &node)
