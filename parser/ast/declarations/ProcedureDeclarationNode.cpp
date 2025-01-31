@@ -99,7 +99,7 @@ int ProcedureDeclarationNode::get_parameter_number() {
 
     int nr = 0;
     for(auto itr = params_->begin(); itr != params_->end(); itr++){
-        nr += std::get<1>(**itr)->size();
+        nr += static_cast<int>(std::get<1>(**itr)->size());
     }
 
     parameter_number = std::optional<int>(nr);

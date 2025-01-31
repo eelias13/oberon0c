@@ -71,7 +71,7 @@ public:
 
     void visit(IdentNode &) override;
     void visit(IntNode &) override;
-    void visit(SelectorNode &) override;
+    [[noreturn]] void visit(SelectorNode &) override;
 
     void visit(TypeNode &) override;
     void visit(ArrayTypeNode &) override;
@@ -91,7 +91,6 @@ public:
     void visit(ModuleNode &) override;
 
     void generate_code(ModuleNode &);
-
 };
 
 #endif // OBERON0C_CODEGENERATOR_H

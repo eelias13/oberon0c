@@ -488,7 +488,7 @@ TypeInfo SemanticChecker::get_type(TypeNode &type, const string &alias = "")
         auto elem_type = get_type(*array_node->get_type_node());
         array_node->set_base_type_info(elem_type);
 
-        return {ARRAY, alias.empty() ? "ARRAY" : alias, dim.value(), std::make_shared<TypeInfo>(elem_type)};
+        return {ARRAY, alias.empty() ? "ARRAY" : alias, static_cast<int>(dim.value()), std::make_shared<TypeInfo>(elem_type)};
     }
     else if (type.getNodeType() == NodeType::record_type)
     {
@@ -1054,7 +1054,7 @@ void SemanticChecker::visit(ProcedureCallNode &node)
         }
     }
 
-    if (actual_parameters->size() != formal_parameter_nr)
+    if (static_cast<int>(actual_parameters->size()) != formal_parameter_nr)
     {
         logger_.error(node.pos(), "Number of actual parameters does not match the definition of '" + ident->get_value() + "' (Expected: " + to_string(formal_parameter_nr) + ", got: " + to_string(actual_parameters->size()) + ").");
         return;

@@ -56,7 +56,7 @@ void CodeGenerator::init_builder()
     module_->setTargetTriple(target_->getTargetTriple().getTriple());
 }
 
-CodeGenerator::CodeGenerator(string filename, OutputFileType output_type) : filename_(std::move(filename)), output_type_(output_type)
+CodeGenerator::CodeGenerator(string filename, OutputFileType output_type) : output_type_(output_type), filename_(std::move(filename))
 {
     init_target_machine();
     init_builder();
@@ -185,20 +185,23 @@ void CodeGenerator::visit(IdentSelectorExpressionNode &node)
     LoadIdentSelector(*ident, node.get_selector());
 }
 
-void CodeGenerator::LoadIdentSelector(IdentNode& ident, SelectorNode* selector, bool return_pointer){
+void CodeGenerator::LoadIdentSelector(IdentNode &ident, SelectorNode *selector, bool return_pointer)
+{
     std::string name = ident.get_value();
     auto p = variables_.lookup(name);
 
-    if(!p){
+    if (!p)
+    {
         panic("Failed lookup for identifier '" + ident.get_value() + "'.");
     }
 
     llvm::Value *var = std::get<0>(*p);
     TypeInfoClass *type = (std::get<1>(*p)).get();
 
-    if(!selector || selector->get_selector()->empty()){
+    if (!selector || selector->get_selector()->empty())
+    {
 
-        LoadIdent(ident,return_pointer);
+        LoadIdent(ident, return_pointer);
         return;
     }
 
@@ -231,12 +234,13 @@ void CodeGenerator::LoadIdentSelector(IdentNode& ident, SelectorNode* selector, 
                     break;
                 }
             }
-            assert(field_index != -1 && "Field not found in record");
+            assert(field_index < 0 && "Field not found in record");
+            auto idx = static_cast<uint64_t>(field_index);
 
-            llvm::Value *field_index_val = llvm::ConstantInt::get(llvm::Type::getInt64Ty(ctx_), field_index);
+            llvm::Value *field_index_val = llvm::ConstantInt::get(llvm::Type::getInt64Ty(ctx_), idx);
             var = builder_->CreateGEP(type->llvmType[0], var, {zero, field_index_val}, "rec_field_" + field_name);
 
-            type = record_fields[field_index].second.get();
+            type = record_fields[idx].second.get();
         }
         else // Array access
         {
@@ -255,13 +259,15 @@ void CodeGenerator::LoadIdentSelector(IdentNode& ident, SelectorNode* selector, 
 
     assert(type->llvmType.size() == 1);
 
-    if(return_pointer){
+    if (return_pointer)
+    {
         value_ = var;
-    }else{
+    }
+    else
+    {
         llvm::Value *val = builder_->CreateLoad(type->llvmType[0], var, "load_" + name);
         value_ = val;
     }
-
 }
 
 void CodeGenerator::visit(IdentNode &ident)
@@ -271,10 +277,12 @@ void CodeGenerator::visit(IdentNode &ident)
         auto a = ident.get_type_embedding().value();
         assert(a.general == GeneralType::BOOLEAN || a.general == GeneralType::INTEGER);
 
-        if(a.general == GeneralType::BOOLEAN){
+        if (a.general == GeneralType::BOOLEAN)
+        {
             temp_type_ = *type_table_.lookup("BOOLEAN");
         }
-        else{
+        else
+        {
             temp_type_ = *type_table_.lookup("INTEGER");
         }
 
@@ -283,7 +291,8 @@ void CodeGenerator::visit(IdentNode &ident)
     LoadIdent(ident, false);
 }
 
-void CodeGenerator::LoadIdent(IdentNode& ident, bool return_pointer){
+void CodeGenerator::LoadIdent(IdentNode &ident, bool return_pointer)
+{
     assert(!ident.get_type_embedding().has_value());
     std::string name = ident.get_value();
     auto p = variables_.lookup(name);
@@ -297,18 +306,24 @@ void CodeGenerator::LoadIdent(IdentNode& ident, bool return_pointer){
     TypeInfoClass *type = std::get<1>(*p).get();
     bool is_pointer = std::get<2>(*p);
 
-    llvm::Value *zero = llvm::ConstantInt::get(llvm::Type::getInt64Ty(ctx_), 0);
+    // llvm::Value *zero = llvm::ConstantInt::get(llvm::Type::getInt64Ty(ctx_), 0);
 
     assert(type->llvmType.size() == 1);
-    if(!var->getType()->isPointerTy() || return_pointer){
+    if (!var->getType()->isPointerTy() || return_pointer)
+    {
         value_ = var;
-    }else{
+    }
+    else
+    {
 
-        if(is_pointer){
+        if (is_pointer)
+        {
             auto val = builder_->CreateLoad(type->llvmType[0]->getPointerTo(), var, "load_" + name);
-            auto deref = builder_->CreateLoad(type->llvmType[0],val,"deref_" + name);
+            auto deref = builder_->CreateLoad(type->llvmType[0], val, "deref_" + name);
             value_ = deref;
-        }else{
+        }
+        else
+        {
             llvm::Value *val = builder_->CreateLoad(type->llvmType[0], var, "load_" + name);
             value_ = val;
         }
@@ -319,21 +334,22 @@ void CodeGenerator::visit(IntNode &val)
 {
     long int_val = val.get_value();
     llvm::Type *longType = llvm::Type::getInt64Ty(ctx_);
-    auto *longValue = llvm::ConstantInt::get(longType, int_val);
+    auto *longValue = llvm::ConstantInt::get(longType, static_cast<long unsigned int>(int_val));
     value_ = longValue;
 }
 
-void CodeGenerator::visit(SelectorNode &node)
+void CodeGenerator::visit(SelectorNode &)
 {
     panic("unreachable this should be handled in IdentSelectorExpressionNode");
 }
 
 void CodeGenerator::visit(DeclarationsNode &node)
 {
-    create_declarations(node,false);
+    create_declarations(node, false);
 }
 
-void CodeGenerator::create_declarations(DeclarationsNode&node, bool is_global){
+void CodeGenerator::create_declarations(DeclarationsNode &node, bool is_global)
+{
 
     auto types = node.get_typenames();
     for (auto it = begin(types); it != end(types); ++it)
@@ -345,25 +361,25 @@ void CodeGenerator::create_declarations(DeclarationsNode&node, bool is_global){
         // resolve/create llvm type
         switch (type.tag)
         {
-            case TypeTag::RECORD_TAG:
-                assert(type.llvmType.size() >= 1);
-                type.llvmType = {llvm::StructType::create(ctx_, type.llvmType, name)};
-                break;
-            case TypeTag::ARRAY_TAG:
-                assert(type.llvmType.size() == 1);
-                type.llvmType = {llvm::ArrayType::get(type.llvmType[0], std::get<1>(type.value).size)};
+        case TypeTag::RECORD_TAG:
+            assert(type.llvmType.size() >= 1);
+            type.llvmType = {llvm::StructType::create(ctx_, type.llvmType, name)};
+            break;
+        case TypeTag::ARRAY_TAG:
+            assert(type.llvmType.size() == 1);
+            type.llvmType = {llvm::ArrayType::get(type.llvmType[0], static_cast<long unsigned int>(std::get<1>(type.value).size))};
 
-                break;
-            case TypeTag::INTEGER_TAG:
-                assert(type.llvmType.size() == 1);
-                type.llvmType = {llvm::Type::getInt64Ty(ctx_)};
-                break;
-            case TypeTag::BOOLEAN_TAG:
-                assert(type.llvmType.size() == 1);
-                type.llvmType = {llvm::Type::getInt1Ty(ctx_)};
-                break;
-            default:
-                panic("unreachable (faulty tag)");
+            break;
+        case TypeTag::INTEGER_TAG:
+            assert(type.llvmType.size() == 1);
+            type.llvmType = {llvm::Type::getInt64Ty(ctx_)};
+            break;
+        case TypeTag::BOOLEAN_TAG:
+            assert(type.llvmType.size() == 1);
+            type.llvmType = {llvm::Type::getInt1Ty(ctx_)};
+            break;
+        default:
+            panic("unreachable (faulty tag)");
         }
 
         type_table_.insert(name, type);
@@ -385,10 +401,12 @@ void CodeGenerator::create_declarations(DeclarationsNode&node, bool is_global){
         llvm::Value *value = value_;
 
         llvm::Value *var;
-        if(is_global){
-            var = new GlobalVariable(*module_,type->llvmType[0],true,GlobalValue::InternalLinkage, Constant::getNullValue(type->llvmType[0]), name);
+        if (is_global)
+        {
+            var = new GlobalVariable(*module_, type->llvmType[0], true, GlobalValue::InternalLinkage, Constant::getNullValue(type->llvmType[0]), name);
         }
-        else{
+        else
+        {
             var = builder_->CreateAlloca(type->llvmType[0], nullptr, name);
         }
 
@@ -411,13 +429,16 @@ void CodeGenerator::create_declarations(DeclarationsNode&node, bool is_global){
             assert(type->llvmType.size() == 1);
 
             llvm::Value *var;
-            if(is_global){
-                var = new GlobalVariable(*module_,type->llvmType[0],false,GlobalValue::InternalLinkage, Constant::getNullValue(type->llvmType[0]),name);
-            }else{
+            if (is_global)
+            {
+                var = new GlobalVariable(*module_, type->llvmType[0], false, GlobalValue::InternalLinkage, Constant::getNullValue(type->llvmType[0]), name);
+            }
+            else
+            {
                 var = builder_->CreateAlloca(type->llvmType[0], nullptr, name);
             }
 
-            variables_.insert(ident->get_value(), var, std::make_shared<TypeInfoClass>(*type),is_global);
+            variables_.insert(ident->get_value(), var, std::make_shared<TypeInfoClass>(*type), is_global);
         }
     }
 
@@ -426,7 +447,6 @@ void CodeGenerator::create_declarations(DeclarationsNode&node, bool is_global){
     {
         visit(**itr);
     }
-
 }
 
 void CodeGenerator::visit(TypeNode &node)
@@ -459,7 +479,7 @@ void CodeGenerator::visit(ArrayTypeNode &node)
 
     temp_type_.tag = TypeTag::ARRAY_TAG;
     temp_type_.llvmType = {info_class->llvmType[0]->getPointerTo()};
-    temp_type_.value.emplace<TypeInfoClass::Array>(std::make_shared<TypeInfoClass>(*info_class),val);
+    temp_type_.value.emplace<TypeInfoClass::Array>(std::make_shared<TypeInfoClass>(*info_class), val);
 }
 
 void CodeGenerator::visit(RecordTypeNode &node)
@@ -508,7 +528,8 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
     // Create Signature
     std::vector<Type *> llvm_params;
 
-    if(arguments){
+    if (arguments)
+    {
         for (auto itr = arguments->begin(); itr != arguments->end(); itr++)
         {
 
@@ -550,7 +571,8 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
     procedures_[name] = function;
 
     // Set the argument names and update the variables_ table entries
-    if(arguments){
+    if (arguments)
+    {
         auto arg_itr = function->arg_begin();
         for (auto itr = arguments->begin(); itr != arguments->end(); itr++)
         {
@@ -593,7 +615,6 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
     builder_->SetInsertPoint(prev_block);
 }
 
-
 void CodeGenerator::visit(StatementNode &node)
 {
     switch (node.getNodeType())
@@ -628,9 +649,8 @@ void CodeGenerator::visit(AssignmentNode &node)
     visit(*expr);
     auto value = value_;
 
-    LoadIdentSelector(*ident,selector, true);
-    builder_->CreateStore(value,value_);
-
+    LoadIdentSelector(*ident, selector, true);
+    builder_->CreateStore(value, value_);
 }
 
 void CodeGenerator::visit(IfStatementNode &node)
@@ -643,7 +663,8 @@ void CodeGenerator::visit(IfStatementNode &node)
     std::vector<BasicBlock *> then_branches;
     auto else_ifs = node.get_else_ifs();
     int branch_counter = 0;
-    if(else_ifs){
+    if (else_ifs)
+    {
         for (auto itr = else_ifs->begin(); itr != else_ifs->end(); itr++)
         {
             string cond_branch_name = to_string(branch_counter) + "_cond";
@@ -669,7 +690,8 @@ void CodeGenerator::visit(IfStatementNode &node)
     {
         builder_->CreateCondBr(initial_cond, then, else_block);
     }
-    else if(cond_branches.empty() && !node.get_else()){
+    else if (cond_branches.empty() && !node.get_else())
+    {
         builder_->CreateCondBr(initial_cond, then, post_branch);
     }
     else
@@ -677,7 +699,7 @@ void CodeGenerator::visit(IfStatementNode &node)
         builder_->CreateCondBr(initial_cond, then, cond_branches[0]);
 
         // Populate Condition Branches
-        for (int i = 0; i < cond_branches.size(); i++)
+        for (long unsigned int i = 0; i < cond_branches.size(); i++)
         {
 
             builder_->SetInsertPoint(cond_branches[i]);
@@ -692,7 +714,6 @@ void CodeGenerator::visit(IfStatementNode &node)
             {
                 builder_->CreateCondBr(cond, then_branches[i], else_block);
             }
-
         }
     }
 
@@ -702,8 +723,9 @@ void CodeGenerator::visit(IfStatementNode &node)
     builder_->CreateBr(post_branch);
 
     // Populate "Then" Blocks
-    if(else_ifs){
-        for (int i = 0; i < then_branches.size(); i++)
+    if (else_ifs)
+    {
+        for (long unsigned int i = 0; i < then_branches.size(); i++)
         {
             builder_->SetInsertPoint(then_branches[i]);
             visit(*(*else_ifs)[i].second);
@@ -712,7 +734,8 @@ void CodeGenerator::visit(IfStatementNode &node)
     }
 
     // Populate "Else" Block
-    if(node.get_else()){
+    if (node.get_else())
+    {
         builder_->SetInsertPoint(else_block);
         visit(*node.get_else());
         builder_->CreateBr(post_branch);
@@ -741,7 +764,8 @@ void CodeGenerator::visit(ProcedureCallNode &node)
     auto actual_parameters = node.get_parameters();
     std::vector<Value *> arguments;
 
-    if(formal_parameters && actual_parameters){
+    if (formal_parameters && actual_parameters)
+    {
         auto act_itr = actual_parameters->begin();
         for (auto param_outer = formal_parameters->begin(); param_outer != formal_parameters->end(); param_outer++)
         {
@@ -766,11 +790,11 @@ void CodeGenerator::visit(ProcedureCallNode &node)
                         panic("Constant expression for VAR argument in call to '" + procedure_name + "'.");
                     }
 
-                    auto id_expr = dynamic_cast<IdentSelectorExpressionNode*>((*act_itr).get());
+                    auto id_expr = dynamic_cast<IdentSelectorExpressionNode *>((*act_itr).get());
                     LoadIdentSelector(*(id_expr->get_identifier()), id_expr->get_selector(), true);
-
                 }
-                else{
+                else
+                {
                     visit(**act_itr);
                 }
 
@@ -779,7 +803,6 @@ void CodeGenerator::visit(ProcedureCallNode &node)
             }
         }
     }
-
 
     // Create Call
     builder_->CreateCall(procedures_[procedure_name], arguments);
@@ -811,7 +834,8 @@ void CodeGenerator::visit(RepeatStatementNode &node)
 void CodeGenerator::visit(StatementSequenceNode &node)
 {
     auto statements = node.get_statements();
-    if(!statements){
+    if (!statements)
+    {
         return;
     }
 
@@ -855,8 +879,8 @@ void CodeGenerator::visit(ModuleNode &node)
     variables_.beginScope();
     type_table_.beginScope();
 
-    type_table_.insert("INTEGER", TypeInfoClass(INTEGER_TAG, {llvm::Type::getInt64Ty(ctx_)}));
-    type_table_.insert("BOOLEAN", TypeInfoClass(BOOLEAN_TAG, {llvm::Type::getInt1Ty(ctx_)}));
+    type_table_.insert("INTEGER", TypeInfoClass(INTEGER_TAG, {llvm::Type::getInt64Ty(ctx_)}, {}));
+    type_table_.insert("BOOLEAN", TypeInfoClass(BOOLEAN_TAG, {llvm::Type::getInt1Ty(ctx_)}, {}));
 
     // define main
     auto main = module_->getOrInsertFunction(node.get_name().first->get_value(), builder_->getInt32Ty());
@@ -865,7 +889,7 @@ void CodeGenerator::visit(ModuleNode &node)
     builder_->SetInsertPoint(entry);
 
     // global declarations
-    create_declarations(*node.get_declarations(),true);
+    create_declarations(*node.get_declarations(), true);
 
     // statements
     visit(*node.get_statements());

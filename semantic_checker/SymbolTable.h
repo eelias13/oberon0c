@@ -37,7 +37,7 @@ struct TypeInfo
     GeneralType general;
     string name;
     int array_dim = -1;
-    std::shared_ptr<TypeInfo> element_type;
+    std::shared_ptr<TypeInfo> element_type = nullptr;
     bool operator!=(TypeInfo other);
     bool operator==(TypeInfo other);
 };
