@@ -207,7 +207,7 @@ void CodeGenerator::LoadIdentSelector(IdentNode &ident, SelectorNode *selector, 
 
     auto selectors = *(selector->get_selector());
 
-    assert(selectors.size() > 0);
+    assert(!selectors.empty());
 
     llvm::Value *zero = llvm::ConstantInt::get(llvm::Type::getInt64Ty(ctx_), 0);
 
@@ -352,7 +352,7 @@ void CodeGenerator::create_declarations(DeclarationsNode &node, bool is_global)
 {
 
     auto types = node.get_typenames();
-    for (auto it = begin(types); it != end(types); ++it)
+    for (auto it = types.begin(); it != types.end(); ++it)
     {
         auto name = it->first->get_value();
         it->second->accept(*this);
@@ -367,8 +367,8 @@ void CodeGenerator::create_declarations(DeclarationsNode &node, bool is_global)
             break;
         case TypeTag::ARRAY_TAG:
             assert(type.llvmType.size() == 1);
-            type.llvmType = {llvm::ArrayType::get(type.llvmType[0], static_cast<long unsigned int>(std::get<1>(type.value).size))};
-
+            assert(std::get<1>(type.value).elementType);
+            type.llvmType = {llvm::ArrayType::get(std::get<1>(type.value).elementType->llvmType[0], static_cast<long unsigned int>(std::get<1>(type.value).size))};
             break;
         case TypeTag::INTEGER_TAG:
             assert(type.llvmType.size() == 1);

@@ -14,7 +14,6 @@ enum TypeTag
     ARRAY_TAG,
     INTEGER_TAG,
     BOOLEAN_TAG,
-    // NO_TAG
 };
 
 struct TypeInfoClass
