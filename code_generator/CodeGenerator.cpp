@@ -570,12 +570,17 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
     auto function = cast<Function>(procedure.getCallee());
     procedures_[name] = function;
 
+    // Define BasicBlock
+    auto block = BasicBlock::Create(builder_->getContext(), "entry", function);
+    builder_->SetInsertPoint(block);
+
     // Set the argument names and update the variables_ table entries
     if (arguments)
     {
         auto arg_itr = function->arg_begin();
         for (auto itr = arguments->begin(); itr != arguments->end(); itr++)
         {
+            bool is_var = std::get<0>(**itr);
             auto idents = std::get<1>(**itr).get();
             for (auto param = idents->begin(); param != idents->end(); param++)
             {
@@ -591,7 +596,11 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
                     panic("Failed lookup for identifier '" + param->get()->get_value() + "'.");
                 }
 
-                std::get<0>(*arg_info) = arg_itr;
+                // Reserve place for argument on the stack
+                auto param_type = (is_var)? std::get<1>(*arg_info)->llvmType[0]->getPointerTo() : std::get<1>(*arg_info)->llvmType[0];
+                auto param_value = builder_->CreateAlloca(param_type, nullptr,param->get()->get_value());
+                builder_->CreateStore(arg_itr,param_value);
+                std::get<0>(*arg_info) = param_value;
 
                 arg_itr->setName(param->get()->get_value());
                 arg_itr++;
@@ -599,9 +608,6 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
         }
     }
 
-    // Define BasicBlock
-    auto block = BasicBlock::Create(builder_->getContext(), "entry", function);
-    builder_->SetInsertPoint(block);
 
     // Add Procedure Declaration and Statements
     visit(*node.get_declarations());
@@ -883,7 +889,7 @@ void CodeGenerator::visit(ModuleNode &node)
     type_table_.insert("BOOLEAN", TypeInfoClass(BOOLEAN_TAG, {llvm::Type::getInt1Ty(ctx_)}, {}));
 
     // define main
-    auto main = module_->getOrInsertFunction(node.get_name().first->get_value(), builder_->getInt32Ty());
+    auto main = module_->getOrInsertFunction("main", builder_->getInt32Ty());
     auto main_fct = cast<Function>(main.getCallee());
     auto entry = BasicBlock::Create(builder_->getContext(), "entry", main_fct);
     builder_->SetInsertPoint(entry);
