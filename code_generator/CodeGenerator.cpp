@@ -403,16 +403,15 @@ void CodeGenerator::create_declarations(DeclarationsNode &node, bool is_global)
         llvm::Value *var;
         if (is_global)
         {
-            var = new GlobalVariable(*module_, type->llvmType[0], true, GlobalValue::InternalLinkage, Constant::getNullValue(type->llvmType[0]), name);
+            var = new GlobalVariable(*module_, type->llvmType[0], false, GlobalValue::InternalLinkage, dyn_cast<Constant>(value), name);
         }
         else
         {
             var = builder_->CreateAlloca(type->llvmType[0], nullptr, name);
+            builder_->CreateStore(value, var);
         }
 
-        builder_->CreateStore(value, var);
-
-        variables_.insert(ident->get_value(), var, std::make_shared<TypeInfoClass>(*type), is_global);
+        variables_.insert(ident->get_value(), var, std::make_shared<TypeInfoClass>(*type));
     }
 
     auto variables = node.get_variables();
@@ -438,7 +437,7 @@ void CodeGenerator::create_declarations(DeclarationsNode &node, bool is_global)
                 var = builder_->CreateAlloca(type->llvmType[0], nullptr, name);
             }
 
-            variables_.insert(ident->get_value(), var, std::make_shared<TypeInfoClass>(*type), is_global);
+            variables_.insert(ident->get_value(), var, std::make_shared<TypeInfoClass>(*type));
         }
     }
 
