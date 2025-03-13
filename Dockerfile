@@ -1,32 +1,18 @@
-# Start from a Debian base image
-FROM debian:bullseye-slim
+# Use the official Emscripten image  4.0.5
+FROM emscripten/emsdk:4.0.5
 
-# Set environment variable to non-interactive to prevent prompts
-ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y wget unzip 
 
-# Install dependencies for building CMake
-RUN apt update && \
-    apt install -y software-properties-common lsb-release g++ llvm libboost-all-dev wget build-essential libssl-dev && \
-    apt clean && rm -rf /var/lib/apt/lists/*
+RUN wget -O boost.tar.xz https://github.com/boostorg/boost/releases/download/boost-1.86.0/boost-1.86.0-b2-nodocs.tar.xz && tar xf boost.tar.xz 
+RUN mv boost-1.86.0 /boost &&  rm boost.tar.xz
 
-# Download and install CMake from source
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.30.5/cmake-3.30.5.tar.gz && \
-    tar -zxvf cmake-3.30.5.tar.gz && \
-    cd cmake-3.30.5 && \
-    ./bootstrap && \
-    make -j$(nproc) && \
-    make install && \
-    cd .. && rm -rf cmake-3.30.5* && \
-    cmake --version
+ENV BOOST_ROOT=/boost
+ENV CXX=em++
 
-# Set up the working directory
-WORKDIR /usr/src/app
+WORKDIR /app
 
-# Copy application files
 COPY . .
 
-# Build the project
-RUN mkdir build && cd build && cmake .. && cmake --build .
+RUN  make
 
-# Default to bash for the container's entry point
 CMD ["bash"]

@@ -34,12 +34,20 @@ enum GeneralType
 
 struct TypeInfo
 {
-    GeneralType general;
-    string name;
-    int array_dim = -1;
-    std::shared_ptr<TypeInfo> element_type = nullptr;
+
     bool operator!=(TypeInfo other);
     bool operator==(TypeInfo other);
+
+    GeneralType general;
+    std::string name;
+    int array_dim;
+    std::shared_ptr<TypeInfo> element_type;
+
+    // Constructor that matches the parameters used in SymbolTable.cpp
+    TypeInfo(GeneralType general, std::string name, int array_dim = 0, std::shared_ptr<TypeInfo> element_type = nullptr)
+        : general(general), name(std::move(name)), array_dim(array_dim), element_type(std::move(element_type)) {}
+
+    TypeInfo() : general(ERROR_TYPE), name(""), array_dim(0), element_type(nullptr) {}
 };
 
 /*
@@ -65,6 +73,12 @@ struct IdentInfo
     Kind kind;
     Node *node;
     TypeInfo type;
+
+    // Correct constructor (fixes the error)
+    IdentInfo(std::string name, Kind kind, Node *node, TypeInfo type)
+        : name(std::move(name)), kind(kind), node(node), type(std::move(type)) {}
+        
+    IdentInfo() : name(""), kind(ERROR_KIND), node(nullptr), type() {}
 };
 
 class SymbolTable

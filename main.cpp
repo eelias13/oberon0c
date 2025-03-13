@@ -5,6 +5,8 @@
  */
 
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <string>
 #include "scanner/Scanner.h"
 #include "parser/Parser.h"
@@ -16,11 +18,26 @@ using std::cout;
 using std::endl;
 using std::string;
 
-int main(const int argc, const char *argv[]) {
+std::string readFileToString(const std::string &filename)
+{
+    std::ifstream file(filename, std::ios::binary); // Open in binary mode to avoid newline conversions
+    if (!file)
+    {
+        throw std::runtime_error("Cannot open file: " + filename);
+    }
+
+    std::ostringstream buffer;
+    buffer << file.rdbuf(); // Read file content into stringstream
+    return buffer.str();    // Convert stream buffer to std::string
+}
+
+int main(const int argc, const char *argv[])
+{
 
     const auto usage_string = "Usage: oberon0c <filename> [-o|-s|-ll] [--debug]";
 
-    if (argc < 2 || argc > 4) {
+    if (argc < 2 || argc > 4)
+    {
         cerr << usage_string << endl;
         exit(1);
     }
@@ -28,71 +45,87 @@ int main(const int argc, const char *argv[]) {
     Logger logger;
 
     OutputFileType output_type;
-    if(argc > 2){
+    if (argc > 2)
+    {
         auto flag = string(argv[2]);
-        if(flag == "-o" || flag == "-O"){
+        if (flag == "-o" || flag == "-O")
+        {
             output_type = OutputFileType::ObjectFile;
         }
-        else if(flag == "-s" || flag == "-S"){
+        else if (flag == "-s" || flag == "-S")
+        {
             output_type = OutputFileType::AssemblyFile;
         }
-        else if(flag == "-ll" || flag == "-LL"){
+        else if (flag == "-ll" || flag == "-LL")
+        {
             output_type = OutputFileType::LLVMIRFile;
         }
-        else{
-            cerr << "Invalid argument: " << argv[2] << std::endl << usage_string << std::endl;
+        else
+        {
+            cerr << "Invalid argument: " << argv[2] << std::endl
+                 << usage_string << std::endl;
             exit(1);
         }
     }
-    else{
+    else
+    {
         output_type = OutputFileType::LLVMIRFile;
     }
 
-    if(argc > 3){
-        if(string(argv[3]) == "--debug"){
+    if (argc > 3)
+    {
+        if (string(argv[3]) == "--debug")
+        {
             logger.setLevel(LogLevel::DEBUG);
         }
-        else{
-            cerr << "Invalid argument: " << argv[3] << std::endl << usage_string << std::endl;
+        else
+        {
+            cerr << "Invalid argument: " << argv[3] << std::endl
+                 << usage_string << std::endl;
             exit(1);
         }
     }
-    else{
+    else
+    {
         logger.setLevel(LogLevel::INFO);
     }
 
-
+    std::string content = readFileToString(filename);
 
     // Scanning
-    Scanner scanner(filename, logger);
+    Scanner scanner(content, logger);
 
     // Parsing
-    Parser parser(scanner,logger);
+    Parser parser(scanner, logger);
     auto ast = parser.parse();
-    if(ast && logger.getErrorCount() == 0){
-        std::cout << "Compiled Program:" << std::endl << *ast << std::endl;
+    if (ast && logger.getErrorCount() == 0)
+    {
+        std::cout << "Compiled Program:" << std::endl
+                  << *ast << std::endl;
         logger.info("Parsing successful.");
 
         // Semantic Checking
         SemanticChecker semantics(logger);
         semantics.validate_program(*ast);
 
-        if(logger.getErrorCount() > 0){
+        if (logger.getErrorCount() > 0)
+        {
             logger.info("Errors occurred during semantic checking.");
         }
-        else{
+        else
+        {
 
             logger.info("Semantic checking successful. Starting code generation...");
 
             // Code Generation
-            CodeGenerator code_gen(filename,output_type);
+            CodeGenerator code_gen(filename, output_type);
             code_gen.generate_code(*ast);
 
             logger.info("Code generation successful.");
-
         }
-
-    }else{
+    }
+    else
+    {
         logger.info("Errors occurred during parsing.");
     }
 

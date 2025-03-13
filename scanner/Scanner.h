@@ -1,16 +1,7 @@
-/*
- * Scanner used by the Oberon-0 compiler.
- *
- * Created by Michael Grossniklaus on 12/15/17.
- */
-
 #ifndef OBERON0C_SCANNER_H
 #define OBERON0C_SCANNER_H
 
-
-#include <filesystem>
-#include <fstream>
-#include <sstream>
+#include <sstream> // Use stringstream instead of ifstream
 #include <memory>
 #include <queue>
 #include <string>
@@ -20,25 +11,25 @@
 #include "LiteralToken.h"
 #include "util/Logger.h"
 
-using std::filesystem::path;
-using std::ifstream;
+using std::istringstream; // For scanning from a string instead of a file
 using std::queue;
 using std::streampos;
 using std::string;
 using std::unique_ptr;
 using std::unordered_map;
 
-class Scanner {
+class Scanner
+{
 
 private:
     Logger &logger_;
-    const path &path_;
     queue<unique_ptr<const Token>> tokens_;
     int lineNo_, charNo_;
     char ch_;
     bool eof_;
     unordered_map<string, TokenType> keywords_;
-    ifstream file_;
+    istringstream input_; // Replaces ifstream to read from a string
+    string path_;
 
     void init();
     void read();
@@ -50,16 +41,14 @@ private:
     void scanComment();
 
 public:
-    Scanner(const path &path, Logger &logger);
+    Scanner(const string &source, Logger &logger); // Constructor now takes a string
     ~Scanner();
-    const Token* peek(bool = false);
+    const Token *peek(bool = false);
     unique_ptr<const Token> next();
     void seek(const FilePos &);
 
     static string escape(string str);
     static string unescape(string str);
-
 };
 
-
-#endif //OBERON0C_SCANNER_H
+#endif // OBERON0C_SCANNER_H

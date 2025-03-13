@@ -159,6 +159,8 @@ found in the `build` directory.
 ```bash
 docker build -t oberon0c-build . 
 docker create --name extract-container oberon0c-build
-docker cp extract-container:/usr/src/app/build/oberon0c .
+docker cp extract-container:/app/wasm_lib.wasm .
+docker cp extract-container:/app/wasm_lib.js .
+docker cp extract-container:/app/index.html .
 docker rm extract-container
 ```

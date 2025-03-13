@@ -7,7 +7,6 @@
 #ifndef OBERON0C_LOGGER_H
 #define OBERON0C_LOGGER_H
 
-
 #include "global.h"
 #include <string>
 #include <iostream>
@@ -17,27 +16,47 @@ using std::cout;
 using std::ostream;
 using std::string;
 
-enum class LogLevel : unsigned int { DEBUG = 1, INFO = 2, WARNING = 3, ERROR = 4, QUIET = 5 };
+enum class LogLevel : unsigned int
+{
+    DEBUG = 1,
+    INFO = 2,
+    WARNING = 3,
+    ERROR = 4,
+    QUIET = 5
+};
 
-class Logger {
+class Logger
+{
 
 private:
     LogLevel level_;
     ostream &out_, &err_;
-    int counts_[(unsigned int) LogLevel::QUIET];
+    ostream &json_;
+    int counts_[(unsigned int)LogLevel::QUIET];
     bool werror_;
+    bool is_first_json_;
 
     void log(LogLevel level, const string &fileName, int lineNo, int charNo, const string &msg);
     void log(LogLevel level, const string &fileName, const string &msg);
     void log(LogLevel level, const string &msg);
 
-
 public:
     Logger() : Logger(LogLevel::ERROR, cout, cerr) {};
-    Logger(LogLevel level, ostream &out) : Logger(level, out, out) {};
-    Logger(LogLevel level, ostream &out, ostream &err) : level_(level), out_(out), err_(err), counts_(), werror_(false) {};
+    //  Logger(LogLevel level, ostream &out) : Logger(level, out, out), is_first_json_(false) {};
+    //  Logger(LogLevel level, ostream &out, ostream &err) : level_(level), out_(out), err_(err), counts_(), werror_(false), is_first_json_(false) {};
+    //  Logger(ostream &json, ostream &out, ostream &err) : level_(level), out_(out), err_(err), counts_(), werror_(false), json_(json), is_first_json_(false) {};
+
+    Logger(LogLevel level, ostream &out)
+        : Logger(level, out, out) {}
+
+    Logger(LogLevel level, ostream &out, ostream &err)
+        : level_(level), out_(out), err_(err), json_(out), counts_(), werror_(false), is_first_json_(false) {}
+
+    Logger(ostream &json, ostream &out, ostream &err, LogLevel level = LogLevel::DEBUG)
+        : level_(level), out_(out), err_(err), json_(json), counts_(), werror_(false), is_first_json_(false) {}
+
     Logger(const Logger &) = delete;
-    Logger& operator=(const LogLevel&) = delete;
+    Logger &operator=(const LogLevel &) = delete;
     ~Logger() = default;
 
     void error(const FilePos &pos, const string &msg);
@@ -55,8 +74,6 @@ public:
     void setLevel(LogLevel level);
 
     void setWarnAsError(bool werror);
-
 };
 
-
-#endif //OBERON0C_LOGGER_H
+#endif // OBERON0C_LOGGER_H

@@ -49,3 +49,12 @@ build
 
 # macOS
 *.DS_Store
+
+# boost
+boost.tar.xz
+boost
+
+
+# wasm_lib
+wasm_lib.js
+wasm_lib.wasm

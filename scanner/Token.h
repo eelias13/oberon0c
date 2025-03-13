@@ -49,6 +49,7 @@ public:
     [[nodiscard]] FilePos start() const;
     [[nodiscard]] FilePos end() const;
 
+    virtual std::string json() const;  // Add this function
     virtual void print(std::ostream &stream) const;
     friend std::ostream& operator<<(std::ostream &stream, const Token &symbol);
 
