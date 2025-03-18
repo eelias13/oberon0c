@@ -2,8 +2,8 @@
 // Created by M on 19.01.2025.
 //
 
-#ifndef OBERON0C_CODEGENERATOR_H
-#define OBERON0C_CODEGENERATOR_H
+#ifndef OBERON0C_LLVMCodeGenerator_H
+#define OBERON0C_LLVMCodeGenerator_H
 
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Function.h>
@@ -37,7 +37,7 @@ enum class OutputFileType
 
 using namespace llvm;
 
-class CodeGenerator : public NodeVisitor
+class LLVMCodeGenerator : public NodeVisitor
 {
 
 private:
@@ -60,7 +60,7 @@ private:
     void emit();
 
 public:
-    CodeGenerator(string filename, OutputFileType output_type);
+    LLVMCodeGenerator(string filename, OutputFileType output_type);
 
     void visit(ExpressionNode &) override;
     void visit(BinaryExpressionNode &) override;
@@ -93,4 +93,4 @@ public:
     void generate_code(ModuleNode &);
 };
 
-#endif // OBERON0C_CODEGENERATOR_H
+#endif // OBERON0C_LLVMCodeGenerator_H

@@ -154,7 +154,7 @@ Once the build successfully terminates, the executable of the compiler for the O
 found in the `build` directory. 
 
 
-### docker
+### Docker Wasm
 
 ```bash
 docker build -t oberon0c-build . 
@@ -163,4 +163,27 @@ docker cp extract-container:/app/wasm_lib.wasm .
 docker cp extract-container:/app/wasm_lib.js .
 docker cp extract-container:/app/index.html .
 docker rm extract-container
+```
+
+### Build local
+
+**install boost**
+
+```bash
+wget -O boost.tar.xz https://github.com/boostorg/boost/releases/download/boost-1.86.0/boost-1.86.0-b2-nodocs.tar.xz
+tar xf boost.tar.xz 
+mv boost-1.86.0 ./boost
+rm boost.tar.xz
+```
+
+then export the env `BOOST_ROOT=./boost`
+
+**install emscripten**
+
+```bash
+git clone https://github.com/emscripten-core/emsdk.git
+cd emsdk
+./emsdk install latest
+./emsdk activate latest
+source ./emsdk_env.sh
 ```

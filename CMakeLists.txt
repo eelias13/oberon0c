@@ -90,8 +90,8 @@ set(SEMANTIC_SOURCES
 )
 
 set(CODEGEN_SOURCES
-        code_generator/CodeGenerator.cpp
-        code_generator/CodeGenerator.h
+        code_generator/LLVMCodeGenerator.cpp
+        code_generator/LLVMCodeGenerator.h
         code_generator/TypeInfoTable.cpp
         code_generator/TypeInfoTable.h
         code_generator/VariableTable.cpp

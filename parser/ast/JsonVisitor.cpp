@@ -103,18 +103,18 @@ void JsonVisitor::visit(BinaryExpressionNode &node)
 void JsonVisitor::visit(UnaryExpressionNode &node)
 {
     json_ << "\"UnaryExpressionNode\" : { \"op\" : \"" << sourceOperatorStr(node.get_op()) << "\"";
-    json_ << ", \"expr\" : ";
+    json_ << ", \"expr\" : {";
     visit(*node.get_expr());
-    json_ << "}";
+    json_ << "}}";
 }
 
 void JsonVisitor::visit(IdentSelectorExpressionNode &node)
 {
     json_ << "\"IdentSelectorExpressionNode\":{ \"ident\" : ";
     visit(*node.get_identifier());
-    json_ << ", \"selector\" : ";
+    json_ << ", \"selector\" : {";
     visit(*node.get_selector());
-    json_ << "}";
+    json_ << "}}";
 }
 
 void JsonVisitor::visit(IdentNode &node)
@@ -172,14 +172,57 @@ void JsonVisitor::visit(TypeNode &node)
 }
 void JsonVisitor::visit(ArrayTypeNode &node)
 {
-    // json_ << "\"ArrayTypeNode\":{\"dim\":{";
+    json_ << "\"ArrayTypeNode\":{\"dim\":";
+
+    json_ << "null";
     // visit(*node.get_dim_node());
-    // json_ << "}, \"type\":{";
-    // visit(*node.get_type_node());
-    // json_ << "}}";
+
+    json_ << ", \"type\":";
+
+    if (node.get_type_node() == nullptr)
+    {
+        json_ << "null";
+    }
+    else
+    {
+        json_ << "{";
+        visit(*node.get_type_node());
+        json_ << "}";
+    }
+    json_ << "}";
 }
 void JsonVisitor::visit(RecordTypeNode &node)
 {
+    json_ << "\"RecordTypeNode\": { \"value\":[";
+
+    bool is_first = true;
+    for (auto &p : node.get_fields())
+    {
+
+        if (!is_first)
+        {
+            json_ << ",";
+        }
+        is_first = false;
+
+        json_ << "{ \"names\" : \" [";
+
+        bool is_fist_inner = true;
+        for (auto name : p.first)
+        {
+            if (!is_fist_inner)
+            {
+                json_ << ",";
+            }
+            is_fist_inner = false;
+
+            json_ << "\"" << name << "\"";
+        }
+        json_ << "]\", \"type\": {";
+        visit(*p.second);
+        json_ << "}";
+    }
+    json_ << "]}";
 }
 
 void JsonVisitor::visit(DeclarationsNode &node)
@@ -266,23 +309,228 @@ void JsonVisitor::visit(DeclarationsNode &node)
         json_ << "}";
     }
     json_ << "]";
-
     json_ << "}";
 }
-void JsonVisitor::visit(ProcedureDeclarationNode &node) {}
-void JsonVisitor::visit(StatementNode &node) {}
-void JsonVisitor::visit(AssignmentNode &node) {}
-void JsonVisitor::visit(IfStatementNode &node) {}
-void JsonVisitor::visit(ProcedureCallNode &node) {}
-void JsonVisitor::visit(RepeatStatementNode &node) {}
-void JsonVisitor::visit(StatementSequenceNode &node) {}
-void JsonVisitor::visit(WhileStatementNode &node) {}
+
+void JsonVisitor::visit(ProcedureDeclarationNode &node)
+{
+
+    json_ << "\"ProcedureDeclarationNode\" : { \"name\" : { \"begin\" : {";
+    visit(*node.get_names().first);
+    json_ << "}, \"end\":{";
+    visit(*node.get_names().second);
+    json_ << "}";
+    json_ << "}, \"declaration\": {";
+    visit(*node.get_declarations());
+    json_ << "}, \"statements\" : ";
+
+    if (node.get_statements() == nullptr)
+    {
+        json_ << "null";
+    }
+    else
+    {
+        json_ << "{";
+        visit(*node.get_statements());
+        json_ << "}";
+    }
+    json_ << "}";
+}
+
+void JsonVisitor::visit(StatementNode &node)
+{
+
+    switch (node.getNodeType())
+    {
+    case NodeType::assignment:
+        json_ << "\"assignment\":true";
+        // visit(dynamic_cast<AssignmentNode &>(node));
+        break;
+    case NodeType::if_statement:
+        // json_ << "\"if_statement\":true";
+        //  visit(dynamic_cast<IfStatementNode &>(node));
+        break;
+    case NodeType::procedure_call:
+        json_ << "\"procedure_call\":true";
+        // visit(dynamic_cast<ProcedureCallNode &>(node));
+        break;
+    case NodeType::repeat_statement:
+        // json_ << "\"repeat_statement\":true";
+        visit(dynamic_cast<RepeatStatementNode &>(node));
+        break;
+    case NodeType::while_statement:
+        json_ << "\"while_statement\":true";
+        // visit(dynamic_cast<WhileStatementNode &>(node));
+        break;
+    default:
+        json_ << "error";
+        return;
+    }
+
+    // switch (node.getNodeType())
+    // {
+    // case NodeType::assignment:
+    //     visit(dynamic_cast<AssignmentNode &>(node));
+    //     break;
+    // case NodeType::if_statement:
+    //     visit(dynamic_cast<IfStatementNode &>(node));
+    //     break;
+    // case NodeType::procedure_call:
+    //     visit(dynamic_cast<ProcedureCallNode &>(node));
+    //     break;
+    // case NodeType::repeat_statement:
+    //     visit(dynamic_cast<RepeatStatementNode &>(node));
+    //     break;
+    // case NodeType::while_statement:
+    //     visit(dynamic_cast<WhileStatementNode &>(node));
+    //     break;
+    // default:
+    //     return;
+    // }
+}
+
+void JsonVisitor::visit(AssignmentNode &node)
+{
+
+    json_ << "\"AssignmentNode\": { \"expr\":{";
+    visit(*node.get_expr());
+    json_ << "}, \"selector\":";
+    if (node.get_selector() == nullptr)
+    {
+        json_ << "null";
+    }
+    else
+    {
+        json_ << "{";
+        visit(*node.get_selector());
+        json_ << "}";
+    }
+    json_ << ", \"variable\":{";
+    visit(*node.get_variable());
+    json_ << "}}";
+}
+void JsonVisitor::visit(IfStatementNode &node)
+{
+    json_ << "\"IfStatementNode\" : {\"condition\":{";
+    visit(*node.get_condition());
+    json_ << "}, \"else_ifs\":[";
+
+    if (node.get_else_ifs() != nullptr)
+    {
+        bool is_first = true;
+        for (auto &elseIf : *node.get_else_ifs())
+        {
+            if (!is_first)
+            {
+                json_ << ",";
+            }
+            is_first = false;
+
+            json_ << "{ \"expr\":{";
+            visit(*elseIf.first.get());
+            json_ << "}, \"stmt\":{";
+            visit(*elseIf.second.get());
+            json_ << "}}";
+        }
+    }
+    json_ << "]";
+    if (node.get_else())
+    {
+        json_ << ", \"else\" : {";
+        visit(*node.get_else());
+        json_ << "}";
+    }
+    else
+    {
+        json_ << ", \"else\": null";
+    }
+
+    json_ << ", \"then\":{";
+    visit(*node.get_then());
+    json_ << "}}";
+}
+
+void JsonVisitor::visit(ProcedureCallNode &node)
+{
+
+    json_ << "\"ProcedureCallNode\":{\"declaration\":{";
+    visit(*node.get_declaration());
+    json_ << "}, \"ident\":{";
+    visit(*node.get_ident());
+    json_ << "}, \"parameters\":[";
+
+    if (node.get_parameters() != nullptr)
+    {
+        bool is_first = true;
+        for (auto &expr : *node.get_parameters())
+        {
+            if (!is_first)
+            {
+                json_ << ",";
+            }
+            is_first = false;
+
+            json_ << "{";
+            visit(*expr.get());
+            json_ << "}";
+        }
+    }
+    json_ << "], \"selector\":";
+
+    if (node.get_selector() == nullptr)
+    {
+        json_ << "null";
+    }
+    else
+    {
+        json_ << "{";
+        visit(*node.get_selector());
+        json_ << "}";
+    }
+    json_ << "}";
+}
+
+void JsonVisitor::visit(RepeatStatementNode &node)
+{
+    json_ << "\"RepeatStatementNode\":{ \"expr\":{";
+    visit(*node.get_expr());
+    json_ << "}, \"statements\":{";
+    visit(*node.get_statements());
+    json_ << "}}";
+}
+
+void JsonVisitor::visit(StatementSequenceNode &node)
+{
+    json_ << "\"StatementSequenceNode\":[";
+
+    bool is_first = true;
+    for (auto &stmt : *node.get_statements())
+    {
+        if (!is_first)
+        {
+            json_ << ",";
+        }
+        is_first = false;
+
+        json_ << "{";
+        visit(*stmt.get());
+        json_ << "}";
+    }
+    json_ << "]";
+}
+
+void JsonVisitor::visit(WhileStatementNode &node)
+{
+    json_ << "\"WhileStatementNode\":{ \"expr\":{";
+    visit(*node.get_expr());
+    json_ << "}, \"statements\":{";
+    visit(*node.get_statements());
+    json_ << "}}";
+}
 
 void JsonVisitor::visit(ModuleNode &node)
 {
-
     json_ << "\"ModuleNode\" : { \"name\" : { \"begin\" : {";
-
     visit(*node.get_name().first);
     json_ << "}, \"end\":{";
     visit(*node.get_name().second);

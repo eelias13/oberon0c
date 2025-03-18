@@ -2,11 +2,11 @@
 // Created by M on 19.01.2025.
 //
 
-#include "CodeGenerator.h"
+#include "LLVMCodeGenerator.h"
 #include "../util/panic.h"
 #include <utility>
 
-void CodeGenerator::init_target_machine()
+void LLVMCodeGenerator::init_target_machine()
 {
     // initialize LLVM
     InitializeAllTargetInfos();
@@ -40,7 +40,7 @@ void CodeGenerator::init_target_machine()
     }
 }
 
-void CodeGenerator::init_builder()
+void LLVMCodeGenerator::init_builder()
 {
     init_target_machine();
     builder_ = new IRBuilder<>(ctx_);
@@ -56,13 +56,13 @@ void CodeGenerator::init_builder()
     module_->setTargetTriple(target_->getTargetTriple().getTriple());
 }
 
-CodeGenerator::CodeGenerator(string filename, OutputFileType output_type) : output_type_(output_type), filename_(std::move(filename))
+LLVMCodeGenerator::LLVMCodeGenerator(string filename, OutputFileType output_type) : output_type_(output_type), filename_(std::move(filename))
 {
     init_target_machine();
     init_builder();
 }
 
-void CodeGenerator::visit(ExpressionNode &node)
+void LLVMCodeGenerator::visit(ExpressionNode &node)
 {
     switch (node.getNodeType())
     {
@@ -83,7 +83,7 @@ void CodeGenerator::visit(ExpressionNode &node)
     }
 }
 
-void CodeGenerator::visit(BinaryExpressionNode &expr)
+void LLVMCodeGenerator::visit(BinaryExpressionNode &expr)
 {
 
     auto op = expr.get_op();
@@ -149,7 +149,7 @@ void CodeGenerator::visit(BinaryExpressionNode &expr)
     }
 }
 
-void CodeGenerator::visit(UnaryExpressionNode &expr)
+void LLVMCodeGenerator::visit(UnaryExpressionNode &expr)
 
 {
     expr.get_expr()->accept(*this);
@@ -177,7 +177,7 @@ void CodeGenerator::visit(UnaryExpressionNode &expr)
     }
 }
 
-void CodeGenerator::visit(IdentSelectorExpressionNode &node)
+void LLVMCodeGenerator::visit(IdentSelectorExpressionNode &node)
 {
 
     auto ident = node.get_identifier();
@@ -185,7 +185,7 @@ void CodeGenerator::visit(IdentSelectorExpressionNode &node)
     LoadIdentSelector(*ident, node.get_selector());
 }
 
-void CodeGenerator::LoadIdentSelector(IdentNode &ident, SelectorNode *selector, bool return_pointer)
+void LLVMCodeGenerator::LoadIdentSelector(IdentNode &ident, SelectorNode *selector, bool return_pointer)
 {
     std::string name = ident.get_value();
     auto p = variables_.lookup(name);
@@ -270,7 +270,7 @@ void CodeGenerator::LoadIdentSelector(IdentNode &ident, SelectorNode *selector, 
     }
 }
 
-void CodeGenerator::visit(IdentNode &ident)
+void LLVMCodeGenerator::visit(IdentNode &ident)
 {
     if (ident.get_type_embedding().has_value())
     {
@@ -291,7 +291,7 @@ void CodeGenerator::visit(IdentNode &ident)
     LoadIdent(ident, false);
 }
 
-void CodeGenerator::LoadIdent(IdentNode &ident, bool return_pointer)
+void LLVMCodeGenerator::LoadIdent(IdentNode &ident, bool return_pointer)
 {
     assert(!ident.get_type_embedding().has_value());
     std::string name = ident.get_value();
@@ -330,7 +330,7 @@ void CodeGenerator::LoadIdent(IdentNode &ident, bool return_pointer)
     }
 }
 
-void CodeGenerator::visit(IntNode &val)
+void LLVMCodeGenerator::visit(IntNode &val)
 {
     long int_val = val.get_value();
     llvm::Type *longType = llvm::Type::getInt64Ty(ctx_);
@@ -338,17 +338,17 @@ void CodeGenerator::visit(IntNode &val)
     value_ = longValue;
 }
 
-void CodeGenerator::visit(SelectorNode &)
+void LLVMCodeGenerator::visit(SelectorNode &)
 {
     panic("unreachable this should be handled in IdentSelectorExpressionNode");
 }
 
-void CodeGenerator::visit(DeclarationsNode &node)
+void LLVMCodeGenerator::visit(DeclarationsNode &node)
 {
     create_declarations(node, false);
 }
 
-void CodeGenerator::create_declarations(DeclarationsNode &node, bool is_global)
+void LLVMCodeGenerator::create_declarations(DeclarationsNode &node, bool is_global)
 {
 
     auto types = node.get_typenames();
@@ -448,7 +448,7 @@ void CodeGenerator::create_declarations(DeclarationsNode &node, bool is_global)
     }
 }
 
-void CodeGenerator::visit(TypeNode &node)
+void LLVMCodeGenerator::visit(TypeNode &node)
 {
     switch (node.getNodeType())
     {
@@ -466,7 +466,7 @@ void CodeGenerator::visit(TypeNode &node)
     }
 }
 
-void CodeGenerator::visit(ArrayTypeNode &node)
+void LLVMCodeGenerator::visit(ArrayTypeNode &node)
 {
     auto dim = node.get_dim();
     assert(dim.has_value());
@@ -481,7 +481,7 @@ void CodeGenerator::visit(ArrayTypeNode &node)
     temp_type_.value.emplace<TypeInfoClass::Array>(std::make_shared<TypeInfoClass>(*info_class), val);
 }
 
-void CodeGenerator::visit(RecordTypeNode &node)
+void LLVMCodeGenerator::visit(RecordTypeNode &node)
 {
     auto raw_fields = node.get_fields();
     auto field_types = *node.get_field_types();
@@ -513,7 +513,7 @@ void CodeGenerator::visit(RecordTypeNode &node)
     get<TypeInfoClass::Record>(temp_type_.value).fields = info_fields;
 }
 
-void CodeGenerator::visit(ProcedureDeclarationNode &node)
+void LLVMCodeGenerator::visit(ProcedureDeclarationNode &node)
 {
 
     variables_.beginScope();
@@ -620,7 +620,7 @@ void CodeGenerator::visit(ProcedureDeclarationNode &node)
     builder_->SetInsertPoint(prev_block);
 }
 
-void CodeGenerator::visit(StatementNode &node)
+void LLVMCodeGenerator::visit(StatementNode &node)
 {
     switch (node.getNodeType())
     {
@@ -644,7 +644,7 @@ void CodeGenerator::visit(StatementNode &node)
     }
 }
 
-void CodeGenerator::visit(AssignmentNode &node)
+void LLVMCodeGenerator::visit(AssignmentNode &node)
 {
 
     auto ident = node.get_variable();
@@ -658,7 +658,7 @@ void CodeGenerator::visit(AssignmentNode &node)
     builder_->CreateStore(value, value_);
 }
 
-void CodeGenerator::visit(IfStatementNode &node)
+void LLVMCodeGenerator::visit(IfStatementNode &node)
 {
 
     // Set up initial Blocks
@@ -750,7 +750,7 @@ void CodeGenerator::visit(IfStatementNode &node)
     builder_->SetInsertPoint(post_branch);
 }
 
-void CodeGenerator::visit(ProcedureCallNode &node)
+void LLVMCodeGenerator::visit(ProcedureCallNode &node)
 {
     // Get ProcedureName
     auto procedure_name = node.get_name();
@@ -813,7 +813,7 @@ void CodeGenerator::visit(ProcedureCallNode &node)
     builder_->CreateCall(procedures_[procedure_name], arguments);
 }
 
-void CodeGenerator::visit(RepeatStatementNode &node)
+void LLVMCodeGenerator::visit(RepeatStatementNode &node)
 {
     // Create Basic Blocks
     auto loop = BasicBlock::Create(builder_->getContext(), "loop", builder_->GetInsertBlock()->getParent());
@@ -836,7 +836,7 @@ void CodeGenerator::visit(RepeatStatementNode &node)
     builder_->SetInsertPoint(tail);
 }
 
-void CodeGenerator::visit(StatementSequenceNode &node)
+void LLVMCodeGenerator::visit(StatementSequenceNode &node)
 {
     auto statements = node.get_statements();
     if (!statements)
@@ -850,7 +850,7 @@ void CodeGenerator::visit(StatementSequenceNode &node)
     }
 }
 
-void CodeGenerator::visit(WhileStatementNode &node)
+void LLVMCodeGenerator::visit(WhileStatementNode &node)
 {
 
     // Create Blocks
@@ -878,7 +878,7 @@ void CodeGenerator::visit(WhileStatementNode &node)
     builder_->SetInsertPoint(tail);
 }
 
-void CodeGenerator::visit(ModuleNode &node)
+void LLVMCodeGenerator::visit(ModuleNode &node)
 {
 
     variables_.beginScope();
@@ -907,7 +907,7 @@ void CodeGenerator::visit(ModuleNode &node)
     verifyFunction(*main_fct, &errs());
 }
 
-void CodeGenerator::emit()
+void LLVMCodeGenerator::emit()
 {
     std::string ext;
     switch (output_type_)
@@ -973,7 +973,7 @@ void CodeGenerator::emit()
     output.flush();
 }
 
-void CodeGenerator::generate_code(ModuleNode &node)
+void LLVMCodeGenerator::generate_code(ModuleNode &node)
 {
 
     visit(node);

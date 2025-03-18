@@ -11,7 +11,7 @@
 #include "scanner/Scanner.h"
 #include "parser/Parser.h"
 #include "semantic_checker/SemanticChecker.h"
-#include "code_generator/CodeGenerator.h"
+#include "code_generator/LLVMCodeGenerator.h"
 
 using std::cerr;
 using std::cout;
@@ -118,7 +118,7 @@ int main(const int argc, const char *argv[])
             logger.info("Semantic checking successful. Starting code generation...");
 
             // Code Generation
-            CodeGenerator code_gen(filename, output_type);
+            LLVMCodeGenerator code_gen(filename, output_type);
             code_gen.generate_code(*ast);
 
             logger.info("Code generation successful.");

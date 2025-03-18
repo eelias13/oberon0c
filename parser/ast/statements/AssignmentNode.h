@@ -12,23 +12,22 @@ class IdentNode;
 class SelectorNode;
 class ExpressionNode;
 
-class AssignmentNode : public StatementNode{
-    private:
-        std::unique_ptr<IdentNode> variable_;
-        std::unique_ptr<SelectorNode> selector_;
-        std::unique_ptr<ExpressionNode> expr_;
+class AssignmentNode : public StatementNode
+{
+private:
+    std::unique_ptr<IdentNode> variable_;
+    std::unique_ptr<SelectorNode> selector_;
+    std::unique_ptr<ExpressionNode> expr_;
 
-    public:
-        AssignmentNode(FilePos pos, std::unique_ptr<IdentNode> variable,std::unique_ptr<SelectorNode> selector, std::unique_ptr<ExpressionNode> expr);
+public:
+    AssignmentNode(FilePos pos, std::unique_ptr<IdentNode> variable, std::unique_ptr<SelectorNode> selector, std::unique_ptr<ExpressionNode> expr);
 
-        void accept(NodeVisitor &visitor) override;
-        void print(std::ostream &stream) const override;
+    void accept(NodeVisitor &visitor) override;
+    void print(std::ostream &stream) const override;
 
-        IdentNode* get_variable();
-        SelectorNode* get_selector();
-        ExpressionNode* get_expr();
-
+    IdentNode *get_variable();
+    SelectorNode *get_selector();
+    ExpressionNode *get_expr();
 };
 
-
-#endif //OBERON0C_ASSIGNMENTNODE_H
+#endif // OBERON0C_ASSIGNMENTNODE_H
