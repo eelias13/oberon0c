@@ -16,38 +16,43 @@ using std::string;
 void Logger::log(LogLevel level, const string &fileName, int lineNo, int charNo, const string &msg)
 {
 
-    if (is_first_json_)
+    if (level != LogLevel::DEBUG)
     {
-        json_ << ", ";
-    }
-    is_first_json_ = true;
 
-    json_ << "{ \"fileName\" : \"" << fileName << "\", ";
-    json_ << "\"lineNo\" : " << lineNo << ", ";
-    json_ << "\"charNo\" : " << charNo << ", ";
-    json_ << "\"msg\" : \"" << msg << "\", \"level\": \"";
-    switch (level)
-    {
-    case LogLevel::DEBUG:
-        json_ << "DEBUG";
-        break;
-    case LogLevel::INFO:
-        json_ << "INFO";
-        break;
-    case LogLevel::WARNING:
-        json_ << "WARNING";
-        break;
-    case LogLevel::ERROR:
-        json_ << "ERROR";
-        break;
-    case LogLevel::QUIET:
-        json_ << "QUIET";
-        break;
-    default:
-        json_ << "UNDEFINED";
-        break;
+        if (is_first_json_)
+        {
+            json_ << ", ";
+        }
+        is_first_json_ = true;
+
+        json_ << "{ \"fileName\" : \"" << fileName << "\", ";
+        json_ << "\"lineNo\" : " << lineNo << ", ";
+        json_ << "\"charNo\" : " << charNo << ", ";
+        json_ << "\"msg\" : \"" << msg << "\", \"level\": \"";
+
+        switch (level)
+        {
+        case LogLevel::DEBUG:
+            json_ << "DEBUG";
+            break;
+        case LogLevel::INFO:
+            json_ << "INFO";
+            break;
+        case LogLevel::WARNING:
+            json_ << "WARNING";
+            break;
+        case LogLevel::ERROR:
+            json_ << "ERROR";
+            break;
+        case LogLevel::QUIET:
+            json_ << "QUIET";
+            break;
+        default:
+            json_ << "UNDEFINED";
+            break;
+        }
+        json_ << "\" }";
     }
-    json_ << "\" }";
 
     if (werror_ && level == LogLevel::WARNING)
     {

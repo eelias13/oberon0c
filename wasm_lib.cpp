@@ -31,8 +31,12 @@ extern "C"
         SemanticChecker semantics(logger);
         semantics.validate_program(*ast);
 
+        JsonVisitor jv;
+        jv.visit(*ast.get());
+
         ostringstream result_st;
-        result_st << "{ \"logs\" : [" << json_logs.str() << "]}";
+        result_st << "{ \"logs\" : [" << json_logs.str() << "]";
+        result_st << ",\"ast\" : {" << jv.getJson() << "}}";
 
         // Allocate memory for the output string
         string result = result_st.str();
@@ -42,9 +46,8 @@ extern "C"
         return output;
     }
 
-    // TODO add ast json
     EMSCRIPTEN_KEEPALIVE
-    char *parser(const char *source_code)
+    char *parse(const char *source_code)
     {
         ostringstream json_logs;
         ostringstream out;
@@ -59,8 +62,8 @@ extern "C"
         jv.visit(*ast.get());
 
         ostringstream result_st;
-        //  result_st << "{ \"logs\" : [" << json_logs.str() << "],";
-        result_st << "{ \"ast\" : {" << jv.getJson() << "}}";
+        result_st << "{ \"logs\" : [" << json_logs.str() << "]";
+        result_st << ",\"ast\" : {" << jv.getJson() << "}}";
 
         // Allocate memory for the output string
         string result = result_st.str();

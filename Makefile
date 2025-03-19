@@ -11,10 +11,10 @@ INCLUDES = -I. -I$(EMSCRIPTEN)/cache/sysroot/include -I$(BOOST_ROOT)
 CXXFLAGS = -O2 -Wall $(INCLUDES)
 
 # Linker Flags (Only for Linking) 
-LDFLAGS = -s MODULARIZE=1 -s EXPORT_ES6=1 -s ENVIRONMENT=web \
-          -s EXPORTED_FUNCTIONS="['_scanner', '_parser']" \
+LDFLAGS = -s MODULARIZE=1 -s EXPORT_ES6=0 -s ENVIRONMENT=web \
+          -s EXPORTED_FUNCTIONS="['_scanner', '_parse', '_check']" \
           -s EXPORTED_RUNTIME_METHODS='["ccall", "cwrap", "UTF8ToString"]' \
-          -s INITIAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1 -L./boost/stage/lib/
+          -s TOTAL_STACK=64MB -s ALLOW_MEMORY_GROWTH=1 -L./boost/stage/lib/
 
 # Source Files
 SCANNER_SRC = scanner/Scanner.cpp scanner/Token.cpp scanner/UndefinedToken.cpp \

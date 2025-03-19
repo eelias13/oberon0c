@@ -596,9 +596,9 @@ void LLVMCodeGenerator::visit(ProcedureDeclarationNode &node)
                 }
 
                 // Reserve place for argument on the stack
-                auto param_type = (is_var)? std::get<1>(*arg_info)->llvmType[0]->getPointerTo() : std::get<1>(*arg_info)->llvmType[0];
-                auto param_value = builder_->CreateAlloca(param_type, nullptr,param->get()->get_value());
-                builder_->CreateStore(arg_itr,param_value);
+                auto param_type = (is_var) ? std::get<1>(*arg_info)->llvmType[0]->getPointerTo() : std::get<1>(*arg_info)->llvmType[0];
+                auto param_value = builder_->CreateAlloca(param_type, nullptr, param->get()->get_value());
+                builder_->CreateStore(arg_itr, param_value);
                 std::get<0>(*arg_info) = param_value;
 
                 arg_itr->setName(param->get()->get_value());
@@ -606,7 +606,6 @@ void LLVMCodeGenerator::visit(ProcedureDeclarationNode &node)
             }
         }
     }
-
 
     // Add Procedure Declaration and Statements
     visit(*node.get_declarations());
