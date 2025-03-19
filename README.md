@@ -2,7 +2,7 @@
 
 ## About This Project
 
-This project is a compiler for the [Oberon-0](#about-oberon-0) programming language. The compiler was initially created by [Max Galetskiy](https://github.com/max-galetskiy) and me as part of the **"Compiler Construction"** course at the [University of Konstanz](https://www.uni-konstanz.de/en/). This course was taught by **Prof. Dr. Michael Grossniklaus**, who also developed a more comprehensive [Oberon compiler](https://github.com/zaskar9/oberon-lang) repository. Max is also extending the project in this [oberon0c](https://github.com/max-galetskiy/oberon0c) repository.
+This project is a compiler for the [Oberon-0](#about-oberon-0) programming language. The compiler was initially created by [Max Galetskiy](https://github.com/max-galetskiy) and me as part of the **"Compiler Construction"** course at the [University of Konstanz](https://www.uni-konstanz.de/en/). This course was taught by **Prof. Dr. Michael Grossniklaus**, who also developed a more comprehensive [Oberon compiler](https://github.com/zaskar9/oberon-lang). Max is also extending the project in this [oberon0c](https://github.com/max-galetskiy/oberon0c) repository.
 
 Our compiler was originally built as a command-line application (CLI) and uses LLVM for code generation. In this repository, I am extending the compiler by adding a **WebAssembly (WASM)** backend, enabling it to run directly in the browser.
 
