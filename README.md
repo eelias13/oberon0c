@@ -1,14 +1,14 @@
 # A Compiler for the Oberon-0 Programming Language
 
-## About This Project  
+## About This Project
 
-This project is a compiler for the [Oberon-0](https://oberon.org/en) programming language, originally developed by [Max Galetskiy](https://github.com/max-galetskiy) and me as part of the **"Compiler Construction"** course at the [University of Konstanz](https://www.uni-konstanz.de/en/), taught by **Prof. Dr. Michael Grossniklaus**. A more complete Oberon compiler can be found in his project, [oberon-lang](https://github.com/zaskar9/oberon-lang).  
+This project is a compiler for the [Oberon-0](#about-oberon-0) programming language. The compiler was initially created by [Max Galetskiy](https://github.com/max-galetskiy) and me as part of the **"Compiler Construction"** course at the [University of Konstanz](https://www.uni-konstanz.de/en/). This course was taught by **Prof. Dr. Michael Grossniklaus**, who also developed a more comprehensive Oberon compiler, available in the [oberon-lang](https://github.com/zaskar9/oberon-lang) repository. Max is also extending the project in this [oberon0c](https://github.com/max-galetskiy/oberon0c) repository.
 
-Our compiler was initially built as a command-line application (CLI) and uses LLVM for code generation. In this repository, I am extending it with a **WebAssembly (WASM)** backend, allowing it to run directly in the browser.
+Our compiler was originally built as a command-line application (CLI) and uses LLVM for code generation. In this repository, I am extending the compiler by adding a **WebAssembly (WASM)** backend, enabling it to run directly in the browser.
 
 ## About Oberon-0
 
-Oberon-0 is a simplified subset of the [Oberon](https://oberon.org/en) programming language, created by [Niklaus Wirth](https://people.inf.ethz.ch/wirth/) as a successor to Pascal and Modula-2. It is a strongly-typed, imperative language that emphasizes modularity and simplicity. The goal of this project is to provide a functional Oberon-0 compiler for different execution environments.
+Oberon-0 is a simplified subset of the [Oberon](https://oberon.org/en) programming language, designed by [Niklaus Wirth](https://people.inf.ethz.ch/wirth/) as a successor to Pascal and Modula-2. It is a strongly typed, imperative language that emphasizes modularity and simplicity. This project aims to provide a fully functional Oberon-0 compiler for various execution environments.
 
 ## Compilation Targets
 
@@ -79,7 +79,11 @@ make
 This will produce the `wasm_lib.wasm` and `wasm_lib.js` files needed to run the compiled Oberon-0 programs in a browser or a WASM runtime.
 
 ### Running the WebAssembly Compiler
+
 To test the compiled WebAssembly module, open `index.html` in a browser, or run:
+
 ```bash
-node wasm_lib.js
+python3 -m http.server
 ```
+
+then go to [localhost:8000](http://localhost:8000/)
