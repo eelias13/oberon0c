@@ -1,9 +1,10 @@
 # A Compiler for the Oberon-0 Programming Language
 
-## About This Project
+## About This Project  
 
-This project is a compiler for the [Oberon-0](https://oberon.org/en) programming language, originally developed by [Max Galetskiy](https://github.com/max-galetskiy) and [Elias Maier](https://github.com/eelias13) as part of the "Compiler Construction" course at the [University of Konstanz](https://www.uni-konstanz.de/en/). The original compiler supports was written as a command-line app (CLI) and uses llvm for code generation. 
-In this repo I extend the project by add a WebAssembly (WASM) version that can be executed in the browser.
+This project is a compiler for the [Oberon-0](https://oberon.org/en) programming language, originally developed by [Max Galetskiy](https://github.com/max-galetskiy) and me as part of the **"Compiler Construction"** course at the [University of Konstanz](https://www.uni-konstanz.de/en/), taught by **Prof. Dr. Michael Grossniklaus**. A more complete Oberon compiler can be found in his project, [oberon-lang](https://github.com/zaskar9/oberon-lang).  
+
+Our compiler was initially built as a command-line application (CLI) and uses LLVM for code generation. In this repository, I am extending it with a **WebAssembly (WASM)** backend, allowing it to run directly in the browser.
 
 ## About Oberon-0
 
@@ -86,5 +87,4 @@ node wasm_lib.js
 ## Authors and Acknowledgements  
 
 - **Max Galetskiy**: Co-author of the initial compiler, continuing its development in [oberon0c](https://github.com/max-galetskiy/oberon0c).  
-- **Elias Maier**: Co-author of the initial compiler, continuing my working on WebAssembly support.  
 - **Prof. Dr. Michael Grossniklaus**: Lecturer of the course at the University of Konstanz, where this project was developed. He is also developing a more compleat version [oberon-lang](https://github.com/zaskar9/oberon-lang).
