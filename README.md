@@ -83,8 +83,3 @@ To test the compiled WebAssembly module, open `index.html` in a browser, or run:
 ```bash
 node wasm_lib.js
 ```
-
-## Authors and Acknowledgements  
-
-- **Max Galetskiy**: Co-author of the initial compiler, continuing its development in [oberon0c](https://github.com/max-galetskiy/oberon0c).  
-- **Prof. Dr. Michael Grossniklaus**: Lecturer of the course at the University of Konstanz, where this project was developed. He is also developing a more compleat version [oberon-lang](https://github.com/zaskar9/oberon-lang).
