@@ -3,14 +3,7 @@
 void JsonVisitor::visit(ExpressionNode &node)
 {
 
-    // int precedence_ = ;
-    // std::optional<long> value_ = std::nullopt;
-    // TypeInfo formal_type;
-    // TypeInfo actual_type;
-    // TypeNode *type_node = nullptr;
-
-    // json_ << "\"ExpressionNode\" : { ";
-    // json_ << "\"actualType\" : " << node.get_actual_type() ? node.get_actual_type() : "null";
+    json_ << "\"ExpressionNode\" : { ";
     switch (node.getNodeType())
     {
     case NodeType::unary_expression:
@@ -29,7 +22,7 @@ void JsonVisitor::visit(ExpressionNode &node)
         return;
     }
 
-    // json_ << "}"
+    json_ << "}";
 }
 
 std::string sourceOperatorStr(SourceOperator op)
@@ -110,11 +103,20 @@ void JsonVisitor::visit(UnaryExpressionNode &node)
 
 void JsonVisitor::visit(IdentSelectorExpressionNode &node)
 {
-    json_ << "\"IdentSelectorExpressionNode\":{ \"ident\" : ";
+    json_ << "\"IdentSelectorExpressionNode\":{ \"ident\" : {";
     visit(*node.get_identifier());
-    json_ << ", \"selector\" : {";
-    visit(*node.get_selector());
-    json_ << "}}";
+    json_ << "}, \"selector\" : ";
+    if (node.get_selector() == nullptr)
+    {
+        json_ << "null";
+    }
+    else
+    {
+        json_ << "{";
+        visit(*node.get_selector());
+        json_ << "}";
+    }
+    json_ << "}";
 }
 
 void JsonVisitor::visit(IdentNode &node)
@@ -152,9 +154,12 @@ void JsonVisitor::visit(SelectorNode &node)
         }
         json_ << "}";
     }
+    json_ << "]";
 }
 void JsonVisitor::visit(TypeNode &node)
 {
+
+    json_ << "\"TypeNode\":{";
     switch (node.getNodeType())
     {
     case NodeType::ident:
@@ -169,15 +174,13 @@ void JsonVisitor::visit(TypeNode &node)
     default:
         break;
     }
+    json_ << "}";
 }
 void JsonVisitor::visit(ArrayTypeNode &node)
 {
-    json_ << "\"ArrayTypeNode\":{\"dim\":";
-
-    json_ << "null";
-    // visit(*node.get_dim_node());
-
-    json_ << ", \"type\":";
+    json_ << "\"ArrayTypeNode\":{\"dim\":{";
+    visit(*node.get_dim_node());
+    json_ << "}, \"type\":";
 
     if (node.get_type_node() == nullptr)
     {
@@ -194,7 +197,6 @@ void JsonVisitor::visit(ArrayTypeNode &node)
 void JsonVisitor::visit(RecordTypeNode &node)
 {
     json_ << "\"RecordTypeNode\": { \"value\":[";
-
     bool is_first = true;
     for (auto &p : node.get_fields())
     {
@@ -343,56 +345,28 @@ void JsonVisitor::visit(StatementNode &node)
     switch (node.getNodeType())
     {
     case NodeType::assignment:
-        json_ << "\"assignment\":true";
-        // visit(dynamic_cast<AssignmentNode &>(node));
+        visit(dynamic_cast<AssignmentNode &>(node));
         break;
     case NodeType::if_statement:
-        // json_ << "\"if_statement\":true";
-        //  visit(dynamic_cast<IfStatementNode &>(node));
+        visit(dynamic_cast<IfStatementNode &>(node));
         break;
     case NodeType::procedure_call:
-        json_ << "\"procedure_call\":true";
-        // visit(dynamic_cast<ProcedureCallNode &>(node));
+        visit(dynamic_cast<ProcedureCallNode &>(node));
         break;
     case NodeType::repeat_statement:
-        // json_ << "\"repeat_statement\":true";
         visit(dynamic_cast<RepeatStatementNode &>(node));
         break;
     case NodeType::while_statement:
-        json_ << "\"while_statement\":true";
-        // visit(dynamic_cast<WhileStatementNode &>(node));
+        visit(dynamic_cast<WhileStatementNode &>(node));
         break;
     default:
-        json_ << "error";
         return;
     }
-
-    // switch (node.getNodeType())
-    // {
-    // case NodeType::assignment:
-    //     visit(dynamic_cast<AssignmentNode &>(node));
-    //     break;
-    // case NodeType::if_statement:
-    //     visit(dynamic_cast<IfStatementNode &>(node));
-    //     break;
-    // case NodeType::procedure_call:
-    //     visit(dynamic_cast<ProcedureCallNode &>(node));
-    //     break;
-    // case NodeType::repeat_statement:
-    //     visit(dynamic_cast<RepeatStatementNode &>(node));
-    //     break;
-    // case NodeType::while_statement:
-    //     visit(dynamic_cast<WhileStatementNode &>(node));
-    //     break;
-    // default:
-    //     return;
-    // }
 }
 
 void JsonVisitor::visit(AssignmentNode &node)
 {
-
-    json_ << "\"AssignmentNode\": { \"expr\":{";
+    json_ << "\"AssignmentNode\": { \"expr\": {";
     visit(*node.get_expr());
     json_ << "}, \"selector\":";
     if (node.get_selector() == nullptr)
@@ -411,6 +385,7 @@ void JsonVisitor::visit(AssignmentNode &node)
 }
 void JsonVisitor::visit(IfStatementNode &node)
 {
+
     json_ << "\"IfStatementNode\" : {\"condition\":{";
     visit(*node.get_condition());
     json_ << "}, \"else_ifs\":[";
@@ -521,6 +496,7 @@ void JsonVisitor::visit(StatementSequenceNode &node)
 
 void JsonVisitor::visit(WhileStatementNode &node)
 {
+
     json_ << "\"WhileStatementNode\":{ \"expr\":{";
     visit(*node.get_expr());
     json_ << "}, \"statements\":{";
