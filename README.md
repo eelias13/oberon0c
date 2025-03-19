@@ -83,10 +83,8 @@ To test the compiled WebAssembly module, open `index.html` in a browser, or run:
 node wasm_lib.js
 ```
 
-## Authors and Acknowledgements
-- **Max Galetskiy**: Co-author of the compiler.
-- **Elias Maier**: Co-author of the compiler, developing the WebAssembly target.
-- **Michael Grossniklaus**: Provided the initial skeleton and scanner as part of the University of Konstanz course.
+## Authors and Acknowledgements  
 
-For the another direction of the same project, see [max-galetskiy/oberon0c](https://github.com/max-galetskiy/oberon0c).
-
+- **Max Galetskiy**: Co-author of the initial compiler, continuing its development in [oberon0c](https://github.com/max-galetskiy/oberon0c).  
+- **Elias Maier**: Co-author of the initial compiler, continuing my working on WebAssembly support.  
+- **Prof. Dr. Michael Grossniklaus**: Lecturer of the course at the University of Konstanz, where this project was developed. He is also developing a more compleat version [oberon-lang](https://github.com/zaskar9/oberon-lang).
