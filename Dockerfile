@@ -15,6 +15,6 @@ COPY . .
 
 RUN make
 RUN cp wasm_lib.js web/wasm_loader.js
-RUN cp wasm_lib.wasm export/
+RUN cp wasm_lib.wasm web/
 
 CMD ["bash"]
