@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playground</title>
+
+    <script src="wasm_loader.js"></script>
+    <script src="script.js"></script>
+    <script src="monaco/vs/loader.js"></script>
+    <link rel="stylesheet" href="monaco/vs/editor/editor.main.css">
+    <script>
+        function init() {
+            // set title
+            const title = get_title();
+            if (title) {
+                document.getElementById("title").innerText = title;
+            }
+
+            // focus input
+            document.getElementById("console").addEventListener("click", () => {
+                document.getElementById("input").focus();
+            });
+
+
+            let commands;
+
+            // setup editor
+            window.require.config({ paths: { 'vs': 'monaco/vs' } });
+            window.MonacoEnvironment = { getWorkerUrl: () => 'monaco/vs/base/worker/workerMain.js' };
+
+            window.require(['vs/editor/editor.main'], function () {
+                let editor = setup_editor(monaco, document.getElementById('editor'));
+
+
+                const runBtnEl = document.getElementById("runBtn");
+                runBtnEl.addEventListener("click", () => {
+
+                    run_code(editor, document.getElementById("output"));
+                });
+
+                // setup_cmd
+                commands = setup_cmd(editor, document.getElementById("output"));
+            });
+
+            const inputEl = document.getElementById("input");
+            const outputEl = document.getElementById("output");
+            const history = [];
+            let historyIndex = -1;
+
+            inputEl.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                    const input = e.target.value.trim();
+                    if (input === "") return;
+
+                    history.push(input);
+                    historyIndex = history.length;
+
+                    outputEl.innerText += `> ${input}\n`;
+                    e.target.value = "";
+
+                    let args = input.split(" ");
+                    const cmd = args.shift()
+                    const func = commands[cmd];
+
+                    if (func) {
+                        const result = func(args);
+                        if (result) outputEl.innerHTML += `${result}\n`;
+                    } else {
+                        outputEl.innerText += `Command not found: ${cmd}\n`;
+                    }
+                    outputEl.scrollTop = outputEl.scrollHeight;
+
+                } else if (e.key === "ArrowUp") {
+                    if (historyIndex > 0) {
+                        historyIndex--;
+                        inputEl.value = history[historyIndex];
+                    }
+                    e.preventDefault();
+                } else if (e.key === "ArrowDown") {
+                    if (historyIndex < history.length - 1) {
+                        historyIndex++;
+                        inputEl.value = history[historyIndex];
+                    } else {
+                        historyIndex = history.length;
+                        inputEl.value = "";
+                    }
+                    e.preventDefault();
+                }
+            });
+        }
+    </script>
+
+    <style>
+        @font-face {
+            font-family: 'Codicon';
+            src: url('monaco/vs/base/browser/ui/codicons/codicon/codicon.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            font-family: sans-serif;
+        }
+
+        nav {
+            background: #2d2d2d;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #444;
+        }
+
+        button {
+            background: #444;
+            color: white;
+            border: none;
+            padding: 0.5em 1em;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-left: 1em;
+            margin-right: 1em;
+        }
+
+        button:hover {
+            background: #666;
+        }
+
+        #container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #editor {
+            flex: 1;
+            width: 100%;
+            border: 1px solid grey;
+        }
+
+        #console {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Codicon', monospace;
+            padding: 1em;
+            height: 20vh;
+            overflow-y: auto;
+            border: 1px solid grey;
+        }
+
+        #output {
+            white-space: pre-wrap;
+        }
+
+        .input-line {
+            display: flex;
+            gap: 0.5em;
+        }
+
+        input {
+            background: none;
+            border: none;
+            color: inherit;
+            outline: none;
+            width: 100%;
+            font-family: 'Codicon', monospace;
+        }
+    </style>
+</head>
+
+<body onload="init()">
+    <nav>
+        <button onclick="history.back()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-arrow-big-left">
+                <path d="M18 15h-6v4l-7-7 7-7v4h6v6z" />
+            </svg>
+        </button>
+        <h1 id="title">My Code Playground</h1>
+        <button id="runBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-play">
+                <polygon points="6 3 20 12 6 21 6 3" />
+            </svg>
+        </button>
+    </nav>
+    <div id="container">
+        <div id="editor"></div>
+        <div id="console">
+            <div id="output"></div>
+            <div class="input-line">
+                <span>&gt;</span>
+                <input id="input" type="text" autocomplete="off" autofocus />
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

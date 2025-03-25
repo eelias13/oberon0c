@@ -58,6 +58,8 @@ boost
 # wasm_lib
 wasm_lib.js
 wasm_lib.wasm
+/web/wasm_loader.js
+
 
 # env
 .env

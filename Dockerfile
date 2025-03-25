@@ -14,11 +14,7 @@ WORKDIR /app
 COPY . .
 
 RUN make
-RUN mkdir export
-RUN cp -r monaco-editor/ export/
-RUN cp wasm_lib.js export/
+RUN cp wasm_lib.js web/wasm_loader.js
 RUN cp wasm_lib.wasm export/
-RUN cp index.html export/
-RUN cp script.js export/
 
 CMD ["bash"]

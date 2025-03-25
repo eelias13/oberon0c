@@ -1,2 +1,3 @@
+# https://github.com/eelias13/jonah
 docker = "./Dockerfile"
-exports = [{ path = "/app/export/", name = "oberon0c" }]
+exports = [{ path = "/app/web/", name = "oberon0c" }]
